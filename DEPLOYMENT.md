@@ -6,7 +6,7 @@ Quick reference for deploying the service across different environments.
 
 | Environment | Purpose | Infrastructure | App Location | Resources |
 |-------------|---------|----------------|--------------|-----------|
-| **Local** | Developer laptop | Kubernetes (Docker Desktop/Minikube) | Outside K8s | Minimal |
+| **Local** | Developer laptop | Docker Compose | Host | Minimal |
 | **Dev** | Shared dev/staging | Cloud K8s cluster | Inside K8s | Moderate |
 | **Prod** | Production | Cloud K8s cluster | Inside K8s | High |
 
@@ -14,9 +14,8 @@ Quick reference for deploying the service across different environments.
 
 ## Local Development (Your Laptop)
 
-**Goal**: Run infrastructure in Kubernetes, app outside for fast iteration.
+**Goal**: Run infrastructure via Docker Compose, app on host for fast iteration.
 
-### Option 1: Docker Compose (Fastest)
 ```bash
 # Start all services
 docker-compose up -d
@@ -27,28 +26,9 @@ docker-compose up -d
 # App connects to localhost:5432, localhost:6379, etc.
 ```
 
-### Option 2: Helm on Local Kubernetes (Production-like)
-```bash
-# Install infrastructure only
-helm install local ./helm/service-chart -f ./helm/service-chart/values-local.yaml
-
-# Port-forward Kafka UI (optional)
-kubectl port-forward svc/local-service-chart-kafka-ui 8080:8080 &
-
-# Run your app with K8s profile
-./gradlew bootRun --args='--spring.profiles.active=k8s'
-
-# Update service names in application-k8s.yaml to match "local-service-chart-*"
-```
-
 **Cleanup:**
 ```bash
-# Docker Compose
 docker-compose down -v
-
-# Helm
-helm uninstall local
-kubectl delete pvc -l app.kubernetes.io/instance=local
 ```
 
 ---

@@ -88,7 +88,6 @@ jobs:
 
           # Lint all value files
           helm lint ./helm/service-chart
-          helm lint ./helm/service-chart -f ./helm/service-chart/values-local.yaml
           helm lint ./helm/service-chart -f ./helm/service-chart/values-dev.yaml
           helm lint ./helm/service-chart -f ./helm/service-chart/values-prod.yaml
 

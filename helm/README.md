@@ -10,33 +10,18 @@ This Helm chart deploys a complete Spring Boot service stack with PostgreSQL, Re
 - Helm 3.x installed
 - kubectl configured to access your cluster
 
-## Three-Tier Environment Strategy
+## Two-Tier Environment Strategy
 
 | Environment | Use Case | Cluster Type | App Deployment |
 |-------------|----------|--------------|----------------|
-| **local** | Developer laptop | Docker Desktop/Minikube/kind | Run outside K8s with `./gradlew bootRun` |
 | **dev** | Shared dev/staging | Cloud K8s cluster | Deployed in cluster |
 | **prod** | Production | Cloud K8s cluster | Deployed in cluster |
 
+**Local development** uses Docker Compose (`docker-compose up -d` + `./gradlew bootRun`), not Helm.
+
 ## Quick Start
 
-### 1. Local Development (Your Laptop)
-
-```bash
-# Install infrastructure only (minimal resources, no persistence)
-helm install local ./helm/service-chart -f ./helm/service-chart/values-local.yaml
-
-# Wait for pods to be ready
-kubectl get pods -w
-
-# Run your Spring Boot app locally (outside K8s)
-./gradlew bootRun --args='--spring.profiles.active=k8s'
-
-# Access services via port-forward
-kubectl port-forward svc/local-service-chart-kafka-ui 8080:8080
-```
-
-### 2. Development Cluster (Shared Staging)
+### 1. Development Cluster (Shared Staging)
 
 ```bash
 # Deploy everything including the app
@@ -46,7 +31,7 @@ helm install dev ./helm/service-chart \
   --create-namespace
 ```
 
-### 3. Production Cluster
+### 2. Production Cluster
 
 ```bash
 # Deploy with production settings
@@ -57,7 +42,7 @@ helm install prod ./helm/service-chart \
   --create-namespace
 ```
 
-### 2. Access Services
+### 3. Access Services
 
 After installation, you can access services using port-forwarding:
 
@@ -75,7 +60,7 @@ kubectl port-forward svc/myservice-service-chart-prometheus 9090:9090
 # Open http://localhost:9090
 ```
 
-### 3. Connect Your Spring Boot App
+### 4. Connect Your Spring Boot App
 
 Update your `application.yaml` or use environment variables to point to Kubernetes services:
 
@@ -100,7 +85,6 @@ management:
 ### Values Files
 
 - **`values.yaml`** - Base configuration (defaults)
-- **`values-local.yaml`** - **Local development** on your laptop (minimal resources, no persistence)
 - **`values-dev.yaml`** - **Shared dev/staging** cluster (moderate resources, includes app deployment)
 - **`values-prod.yaml`** - **Production** cluster (high resources, HA settings, includes app deployment)
 
@@ -132,9 +116,6 @@ helm install myservice ./helm/service-chart \
 
 ### Install
 ```bash
-# Local (on your laptop)
-helm install local ./helm/service-chart -f ./helm/service-chart/values-local.yaml
-
 # Development cluster
 helm install dev ./helm/service-chart -f ./helm/service-chart/values-dev.yaml --namespace development --create-namespace
 
@@ -216,25 +197,6 @@ helm install myservice ./helm/service-chart \
 ```
 
 ## Environment-Specific Deployments
-
-### Local (Developer Laptop)
-```bash
-helm install local ./helm/service-chart -f ./helm/service-chart/values-local.yaml
-```
-**Characteristics:**
-- Ultra-minimal resources (runs on laptop)
-- No persistence (emptyDir for observability)
-- Infrastructure only - run app with `./gradlew bootRun`
-- Optional observability (can disable to save RAM)
-
-**Disable observability to save resources:**
-```bash
-helm install local ./helm/service-chart \
-  -f ./helm/service-chart/values-local.yaml \
-  --set grafana.enabled=false \
-  --set tempo.enabled=false \
-  --set prometheus.enabled=false
-```
 
 ### Development (Shared Dev/Staging Cluster)
 ```bash
