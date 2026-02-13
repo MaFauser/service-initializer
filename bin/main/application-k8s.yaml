@@ -1,9 +1,14 @@
+# Kubernetes-specific application configuration
+# Use this profile when running the app inside Kubernetes
+# Activate with: spring.profiles.active=k8s
+
 spring:
   application:
     name: service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/servicedb
+    # Use the Kubernetes service name (update 'myservice' to match your Helm release name)
+    url: jdbc:postgresql://myservice-service-chart-postgresql:5432/servicedb
     username: service
     password: service123
     driver-class-name: org.postgresql.Driver
@@ -23,7 +28,8 @@ spring:
 
   data:
     redis:
-      host: localhost
+      # Use the Kubernetes service name
+      host: myservice-service-chart-redis
       port: 6379
 
   cache:
@@ -32,7 +38,8 @@ spring:
       time-to-live: 600000
 
   kafka:
-    bootstrap-servers: localhost:9092
+    # Use the Kubernetes service name
+    bootstrap-servers: myservice-service-chart-kafka:9092
     consumer:
       group-id: ${spring.application.name}
       auto-offset-reset: earliest
@@ -62,7 +69,8 @@ management:
   otlp:
     metrics:
       export:
-        endpoint: http://localhost:4318/v1/traces
+        # Use the Kubernetes service name for Tempo
+        endpoint: http://myservice-service-chart-tempo:4318/v1/traces
 
 server:
   port: 8081

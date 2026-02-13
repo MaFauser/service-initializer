@@ -3,5 +3,16 @@
   "java.import.gradle.enabled": true,
   "kotlin.languageServer.enabled": true,
   "kotlin.externalSources.useKlsScheme": true,
-  "kotlin.java.home": "/Users/marlon.fauser/Library/Java/JavaVirtualMachines/corretto-21.0.8/Contents/Home"
+  "kotlin.java.home": "/Users/marlon.fauser/Library/Java/JavaVirtualMachines/corretto-21.0.8/Contents/Home",
+  "kotlin.compiler.jvm.target": "21",
+  "editor.formatOnSave": true,
+  "[kotlin]": {
+    "editor.defaultFormatter": "fwcd.kotlin",
+    "editor.formatOnSave": true
+  },
+  "[kotlin-script]": {
+    "editor.defaultFormatter": "fwcd.kotlin",
+    "editor.formatOnSave": true
+  },
+  "java.configuration.updateBuildConfiguration": "interactive"
 }

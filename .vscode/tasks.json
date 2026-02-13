@@ -1,0 +1,21 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "ktlintCheck",
+      "type": "shell",
+      "command": "./gradlew",
+      "args": ["ktlintCheck", "-q"],
+      "group": "test",
+      "presentation": { "reveal": "silent", "panel": "shared" }
+    },
+    {
+      "label": "ktlintFormat",
+      "type": "shell",
+      "command": "./gradlew",
+      "args": ["ktlintFormat", "-q"],
+      "group": "build",
+      "presentation": { "reveal": "silent", "panel": "shared" }
+    }
+  ]
+}
