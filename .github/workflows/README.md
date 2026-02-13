@@ -2,12 +2,23 @@
 
 ## Workflows
 
-### 1. Deploy to Dev (`deploy-dev.yml`)
+### 1. PR Validation (`pr-validation.yml`)
+- **Trigger**: Pull requests to `main` or `dev` branches
+- **Purpose**: Validate code quality before merging
+- **Steps**:
+  - Run tests
+  - Build application
+  - Build Docker image
+  - Lint Kotlin code
+  - Validate Helm charts
+  - Comment on PR with results
+
+### 2. Deploy to Dev (`deploy-dev.yml`)
 - **Trigger**: Push to `dev` branch
 - **Deploys to**: Development cluster
 - **Image tag**: `dev-{commit-sha}` and `dev-latest`
 
-### 2. Release to Production (`release.yml`)
+### 3. Release to Production (`release.yml`)
 - **Trigger**: GitHub Release published
 - **Deploys to**: Production cluster
 - **Image tag**: `{version}` (e.g., `v1.0.0`) and `latest`
