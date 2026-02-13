@@ -1,0 +1,7 @@
+{
+  "java.compile.nullAnalysis.mode": "automatic",
+  "java.import.gradle.enabled": true,
+  "kotlin.languageServer.enabled": true,
+  "kotlin.externalSources.useKlsScheme": true,
+  "kotlin.java.home": "/Users/marlon.fauser/Library/Java/JavaVirtualMachines/corretto-21.0.8/Contents/Home"
+}
