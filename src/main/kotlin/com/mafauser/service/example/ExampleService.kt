@@ -48,7 +48,6 @@ class ExampleService(
             example.name = name
         }
         input.description?.let { example.description = it }
-        example.updatedAt = java.time.Instant.now()
         return exampleRepository.save(example)
     }
 

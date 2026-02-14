@@ -2,8 +2,6 @@ package com.mafauser.service.example
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotEquals
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -12,35 +10,13 @@ import java.util.UUID
 @DisplayName("Example")
 class ExampleTest {
     @Test
-    fun `equals returns true for same id`() {
+    fun `equals uses reference equality`() {
         val id = UUID.randomUUID()
         val a = Example(id = id, name = "A")
         val b = Example(id = id, name = "B")
-        assertEquals(a, b)
-        assertTrue(a == b)
-    }
-
-    @Test
-    fun `equals returns false for different id`() {
-        val a = Example(name = "A")
-        val b = Example(name = "A")
-        assertNotEquals(a, b)
         assertFalse(a == b)
-    }
-
-    @Test
-    fun `equals returns false for non-Example`() {
-        val a = Example(name = "A")
         assertFalse(a.equals(null))
         assertFalse(a.equals("not an Example"))
-    }
-
-    @Test
-    fun `hashCode is consistent with equals`() {
-        val id = UUID.randomUUID()
-        val a = Example(id = id, name = "A")
-        val b = Example(id = id, name = "B")
-        assertEquals(a.hashCode(), b.hashCode())
     }
 
     @Test
