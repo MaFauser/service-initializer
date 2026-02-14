@@ -109,6 +109,13 @@ tasks.withType<Test> {
 
 tasks.test {
     outputs.dir(project.extra["snippetsDir"]!!)
+    testLogging {
+        events("passed", "skipped", "failed")
+        showExceptions = true
+        showStackTraces = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        displayGranularity = 0
+    }
 }
 
 tasks.asciidoctor {

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
@@ -21,6 +22,7 @@ import org.springframework.web.context.WebApplicationContext
 @Import(TestcontainersConfiguration::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
+@DisplayName("Example GraphQL API (integration)")
 class ExampleControllerIntegrationTest {
     @Autowired
     private lateinit var applicationContext: WebApplicationContext

@@ -15,14 +15,12 @@ import java.util.UUID
 class ExampleGraphQLController(
     private val exampleService: ExampleService,
 ) {
-    @QueryMapping fun ping(): String = "pong"
-
     @QueryMapping fun examples(): List<Example> = exampleService.findAll()
 
     @QueryMapping
     fun example(
         @Argument id: String,
-    ): Example? = parseUuidOrNull(id)?.let { exampleService.findById(it) } ?: null
+    ): Example? = parseUuidOrNull(id)?.let { exampleService.findById(it) }
 
     @MutationMapping
     fun createExample(

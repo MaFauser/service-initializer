@@ -5,26 +5,28 @@
       "label": "bootRun (debug)",
       "type": "shell",
       "command": "./gradlew",
-      "args": [
-        "bootRun",
-        "-Pdebug=true",
-        "-PdebugSuspend=n"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
+      "args": ["bootRun", "-Pdebug=true", "-PdebugSuspend=n"],
+      "options": { "cwd": "${workspaceFolder}" },
       "isBackground": true,
       "problemMatcher": {
         "owner": "java",
-        "pattern": {
-          "regexp": "^$"
-        },
+        "pattern": { "regexp": "^$" },
         "background": {
           "activeOnStart": true,
           "beginsPattern": ".*",
-          "endsPattern": "Started ServiceApplication"
+          "endsPattern": "Started Application"
         }
       }
+    },
+    {
+      "label": "ktlintFormat",
+      "type": "shell",
+      "command": "./gradlew",
+      "args": ["ktlintFormat", "--warning-mode=none"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "detail": "Format Kotlin with ktlint (4 spaces, 120 chars). Run before commit.",
+      "presentation": { "reveal": "silent", "panel": "shared" }
     }
   ]
 }

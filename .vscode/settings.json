@@ -6,24 +6,38 @@
   "kotlin.externalSources.useKlsScheme": true,
   "kotlin.java.home": "/Users/marlon.fauser/Library/Java/JavaVirtualMachines/corretto-21.0.8/Contents/Home",
   "kotlin.compiler.jvm.target": "21",
-  "editor.formatOnSave": true,
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "files.encoding": "utf8",
   "[kotlin]": {
     "editor.defaultFormatter": "fwcd.kotlin",
-    "editor.formatOnSave": true,
+    "editor.formatOnSave": false,
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
-    "editor.detectIndentation": false
+    "editor.detectIndentation": false,
+    "editor.rulers": [
+      120
+    ]
   },
   "[kotlin-script]": {
     "editor.defaultFormatter": "fwcd.kotlin",
-    "editor.formatOnSave": true,
+    "editor.formatOnSave": false,
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
-    "editor.detectIndentation": false
+    "editor.detectIndentation": false,
+    "editor.rulers": [
+      120
+    ]
   },
   "java.configuration.updateBuildConfiguration": "automatic",
   "gradle.javaDebug.cleanOutput": true,
-  "java.project.resourceFilters": ["node_modules", ".git", "bin", "build", ".gradle"],
+  "java.project.resourceFilters": [
+    "node_modules",
+    ".git",
+    "bin",
+    "build",
+    ".gradle"
+  ],
   "files.exclude": {
     "**/build": true,
     "**/.gradle": true,

@@ -2,8 +2,6 @@
 # Spring GraphQL merges this with other schema files under graphql/.
 
 type Query {
-  """Health check."""
-  ping: String
   """List all examples."""
   examples: [Example!]!
   """Get one example by id."""
