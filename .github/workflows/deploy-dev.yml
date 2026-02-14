@@ -11,6 +11,7 @@ env:
 
 jobs:
   deploy-dev:
+    name: Build, Push & Deploy
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -23,9 +24,12 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: gradle
+          java-version: "21"
+          distribution: "temurin"
+          cache: "gradle"
+
+      - name: Run tests
+        run: ./gradlew test --warning-mode=none
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -37,11 +41,12 @@ jobs:
       - name: Build Docker image
         run: |
           ./gradlew bootBuildImage \
-            --imageName=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ github.sha }} \
-            --imageName=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-latest
+            --imageName=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ github.sha }}
 
-      - name: Push Docker images
+      - name: Tag and push images
         run: |
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ github.sha }} \
+                     ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-latest
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ github.sha }}
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-latest
 
@@ -54,7 +59,7 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v3
         with:
-          version: 'latest'
+          version: "latest"
 
       - name: Deploy with Helm
         run: |
@@ -71,5 +76,5 @@ jobs:
           echo "## ✅ Deployed to Dev" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Branch:** dev" >> $GITHUB_STEP_SUMMARY
