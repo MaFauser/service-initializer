@@ -11,6 +11,11 @@
     - Uploads JaCoCo HTML report as artifact (`jacoco-report`, 7 days)
     - Builds Docker image for validation
     - Comments on PR with success or failure
+  - **Coverage (≥90%)**
+    - Runs `./gradlew jacocoTestCoverageVerification` (fails the job if line coverage &lt; 90%)
+  - **Sonar**
+    - Runs `./gradlew test jacocoTestReport sonar` (SonarCloud analysis). **Skipped** if `SONAR_TOKEN` is not set.
+    - Requires: repo secret `SONAR_TOKEN`; optional repo variables `SONAR_ORGANIZATION`, `SONAR_PROJECT_KEY` (default: `github.repository`).
   - **Lint (ktlint + Helm)**
     - Runs `./gradlew ktlintCheck` (fails the job if Kotlin style violations)
     - Lints Helm chart and value files (dev + prod)
@@ -51,3 +56,29 @@ See [SETUP.md](SETUP.md) for configuration.
 - JaCoCo runs as part of `./gradlew build` (test is finalized by jacocoTestReport).
 - PR Validation uploads the HTML report; download the `jacoco-report` artifact to view it.
 - Entity classes are excluded from coverage (see `.cursor/rules/coverage.mdc` and `build.gradle.kts`).
+- The **Coverage (≥90%)** job fails the PR if line coverage is below 90%.
+
+## SonarCloud (optional)
+
+1. Create a project at [sonarcloud.io](https://sonarcloud.io) and get your organization key and project key.
+2. Generate a token in SonarCloud (My Account → Security → Generate Tokens).
+3. In the repo: **Settings → Secrets and variables → Actions**:
+   - Add secret **`SONAR_TOKEN`** (the SonarCloud token).
+   - Optionally add variables **`SONAR_ORGANIZATION`** and **`SONAR_PROJECT_KEY`** (default project key is `owner/repo`).
+4. The **Sonar** job runs only when `SONAR_TOKEN` is set; it runs `./gradlew test jacocoTestReport sonar` and reports to SonarCloud.
+
+## Qodana (optional)
+
+Qodana runs **JetBrains-style code analysis** (IntelliJ inspections) on JVM code (Java/Kotlin). It complements ktlint (style) and Sonar (coverage, security, duplication) with IDE-level checks in CI.
+
+**What it runs:** Profile `qodana.starter` + linter `jetbrains/qodana-jvm-community` (see `qodana.yaml`). Results appear as PR comments and annotations.
+
+**Types of checks (examples):**
+
+- **Potential bugs:** Possible NPE, unreachable code, suspicious type comparisons.
+- **Code quality:** Method/class complexity, duplicate code, long parameter lists.
+- **Dead code:** Unused variables, parameters, private methods, unused imports.
+- **Style / conventions:** Naming (e.g. constants), redundant modifiers.
+- **Kotlin:** Prefer `require`/`check`, safe calls, scope functions; redundant `else`, unnecessary `run`/`let`.
+
+**Setup:** Add secret **`QODANA_TOKEN`** in repo Settings → Secrets and variables → Actions. The Qodana workflow runs on manual, PR, and push to `main`; full features (e.g. PR comments) require the token.
