@@ -25,8 +25,8 @@ This Helm chart deploys a complete Spring Boot service stack with PostgreSQL, Re
 
 ```bash
 # Deploy everything including the app
-helm install dev ./helm/service-chart \
-  -f ./helm/service-chart/values-dev.yaml \
+helm install dev ./helm/stack \
+  -f ./helm/stack/values-dev.yaml \
   --namespace development \
   --create-namespace
 ```
@@ -35,8 +35,8 @@ helm install dev ./helm/service-chart \
 
 ```bash
 # Deploy with production settings
-helm install prod ./helm/service-chart \
-  -f ./helm/service-chart/values-prod.yaml \
+helm install prod ./helm/stack \
+  -f ./helm/stack/values-prod.yaml \
   --set postgresql.auth.password=$DB_PASSWORD \
   --namespace production \
   --create-namespace
@@ -48,15 +48,15 @@ After installation, you can access services using port-forwarding:
 
 ```bash
 # Kafka UI
-kubectl port-forward svc/myservice-service-chart-kafka-ui 8080:8080
+kubectl port-forward svc/myservice-stack-kafka-ui 8080:8080
 # Open http://localhost:8080
 
 # Grafana
-kubectl port-forward svc/myservice-service-chart-grafana 3000:3000
+kubectl port-forward svc/myservice-stack-grafana 3000:3000
 # Open http://localhost:3000 (admin/admin)
 
 # Prometheus
-kubectl port-forward svc/myservice-service-chart-prometheus 9090:9090
+kubectl port-forward svc/myservice-stack-prometheus 9090:9090
 # Open http://localhost:9090
 ```
 
@@ -67,17 +67,17 @@ Update your `application.yaml` or use environment variables to point to Kubernet
 ```yaml
 spring:
   datasource:
-    url: jdbc:postgresql://myservice-service-chart-postgresql:5432/servicedb
+    url: jdbc:postgresql://myservice-stack-postgresql:5432/servicedb
   data:
     redis:
-      host: myservice-service-chart-redis
+      host: myservice-stack-redis
   kafka:
-    bootstrap-servers: myservice-service-chart-kafka:9092
+    bootstrap-servers: myservice-stack-kafka:9092
 
 management:
   otlp:
     tracing:
-      endpoint: http://myservice-service-chart-tempo:4318/v1/traces
+      endpoint: http://myservice-stack-tempo:4318/v1/traces
 ```
 
 ## Configuration
@@ -92,19 +92,19 @@ management:
 
 ```bash
 # Override specific values
-helm install myservice ./helm/service-chart \
+helm install myservice ./helm/stack \
   --set postgresql.persistence.size=20Gi \
   --set kafka.resources.limits.memory=3Gi
 
 # Use custom values file
-helm install myservice ./helm/service-chart -f my-custom-values.yaml
+helm install myservice ./helm/stack -f my-custom-values.yaml
 ```
 
 ### Enable/Disable Services
 
 ```bash
 # Install only database and cache (no Kafka or observability)
-helm install myservice ./helm/service-chart \
+helm install myservice ./helm/stack \
   --set kafka.enabled=false \
   --set kafkaUi.enabled=false \
   --set grafana.enabled=false \
@@ -117,16 +117,16 @@ helm install myservice ./helm/service-chart \
 ### Install
 ```bash
 # Development cluster
-helm install dev ./helm/service-chart -f ./helm/service-chart/values-dev.yaml --namespace development --create-namespace
+helm install dev ./helm/stack -f ./helm/stack/values-dev.yaml --namespace development --create-namespace
 
 # Production cluster
-helm install prod ./helm/service-chart -f ./helm/service-chart/values-prod.yaml --namespace production --create-namespace
+helm install prod ./helm/stack -f ./helm/stack/values-prod.yaml --namespace production --create-namespace
 ```
 
 ### Upgrade
 ```bash
 # After changing values
-helm upgrade myservice ./helm/service-chart -f ./helm/service-chart/values-dev.yaml
+helm upgrade myservice ./helm/stack -f ./helm/stack/values-dev.yaml
 ```
 
 ### Uninstall
@@ -142,7 +142,7 @@ kubectl delete pvc -l app.kubernetes.io/instance=myservice
 ### Debugging
 ```bash
 # Dry run (see what would be deployed)
-helm install myservice ./helm/service-chart --dry-run --debug
+helm install myservice ./helm/stack --dry-run --debug
 
 # Check current values
 helm get values myservice
@@ -151,7 +151,7 @@ helm get values myservice
 helm status myservice
 
 # View rendered templates
-helm template myservice ./helm/service-chart
+helm template myservice ./helm/stack
 ```
 
 ## Architecture
@@ -192,7 +192,7 @@ All stateful services use PersistentVolumeClaims (PVCs):
 
 To use a specific storage class:
 ```bash
-helm install myservice ./helm/service-chart \
+helm install myservice ./helm/stack \
   --set global.storageClass=fast-ssd
 ```
 
@@ -200,8 +200,8 @@ helm install myservice ./helm/service-chart \
 
 ### Development (Shared Dev/Staging Cluster)
 ```bash
-helm install dev ./helm/service-chart \
-  -f ./helm/service-chart/values-dev.yaml \
+helm install dev ./helm/stack \
+  -f ./helm/stack/values-dev.yaml \
   --namespace development \
   --create-namespace
 ```
@@ -213,8 +213,8 @@ helm install dev ./helm/service-chart \
 
 ### Production (Cloud Kubernetes)
 ```bash
-helm install prod ./helm/service-chart \
-  -f ./helm/service-chart/values-prod.yaml \
+helm install prod ./helm/stack \
+  -f ./helm/stack/values-prod.yaml \
   --set postgresql.auth.password=$DB_PASSWORD \
   --namespace production \
   --create-namespace
@@ -231,8 +231,8 @@ helm install prod ./helm/service-chart \
 ```yaml
 - name: Deploy to Kubernetes
   run: |
-    helm upgrade --install myservice ./helm/service-chart \
-      -f ./helm/service-chart/values-prod.yaml \
+    helm upgrade --install myservice ./helm/stack \
+      -f ./helm/stack/values-prod.yaml \
       --set application.image.tag=${{ github.sha }} \
       --namespace production
 ```
@@ -247,7 +247,7 @@ spec:
   source:
     repoURL: https://github.com/your-org/service-initializer
     targetRevision: HEAD
-    path: helm/service-chart
+    path: helm/stack
     helm:
       valueFiles:
         - values-prod.yaml

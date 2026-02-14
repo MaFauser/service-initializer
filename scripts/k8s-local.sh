@@ -5,7 +5,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-HELM_CHART="$PROJECT_ROOT/helm/service-chart"
+HELM_CHART="$PROJECT_ROOT/helm/stack"
 NAMESPACE="development"
 RELEASE_NAME="dev"
 
@@ -72,13 +72,13 @@ forward() {
     trap kill_forwards EXIT
 
     echo -e "${YELLOW}Starting port-forwards...${NC}"
-    kubectl port-forward -n $NAMESPACE svc/${RELEASE_NAME}-service-chart-app 8081:8081 &
+    kubectl port-forward -n $NAMESPACE svc/${RELEASE_NAME}-stack-app 8081:8081 &
     PIDS+=($!)
-    kubectl port-forward -n $NAMESPACE svc/${RELEASE_NAME}-service-chart-grafana 3000:3000 &
+    kubectl port-forward -n $NAMESPACE svc/${RELEASE_NAME}-stack-grafana 3000:3000 &
     PIDS+=($!)
-    kubectl port-forward -n $NAMESPACE svc/${RELEASE_NAME}-service-chart-kafka-ui 8080:8080 &
+    kubectl port-forward -n $NAMESPACE svc/${RELEASE_NAME}-stack-kafka-ui 8080:8080 &
     PIDS+=($!)
-    kubectl port-forward -n $NAMESPACE svc/${RELEASE_NAME}-service-chart-prometheus 9090:9090 &
+    kubectl port-forward -n $NAMESPACE svc/${RELEASE_NAME}-stack-prometheus 9090:9090 &
     PIDS+=($!)
 
     sleep 1

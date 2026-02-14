@@ -7,6 +7,7 @@ This project uses **package-by-feature** (domain-driven layout): each business d
 - **`com.mafauser.service.example.Example`** – JPA entity: UUID id, version (optimistic locking), name, description, createdAt, updatedAt.
 - **`ExampleRepository`** – `JpaRepository<Example, UUID>` with `findByName` and `existsByName`.
 - **`ExampleService`** – `@Transactional` CRUD; uses `CreateExampleInput` / `UpdateExampleInput`; throws `ExampleNotFoundException`, `DuplicateExampleNameException`.
+- **`ExampleController`** – REST `@RestController`: CRUD at `/examples` (GET, POST, PUT, DELETE).
 - **`ExampleGraphQLController`** – GraphQL `@Controller`: queries `examples`, `example(id)`; mutations `createExample`, `updateExample`, `deleteExample`.
 - **`graphql/example/schema.graphqls`** – Type `Example`, inputs `CreateExampleInput`, `UpdateExampleInput`, and `extend type Query` / `extend type Mutation`.
 - **`db/migration/V1__create_example_table.sql`** – Table `examples` and unique index on `name`.
@@ -18,6 +19,7 @@ This project uses **package-by-feature** (domain-driven layout): each business d
    - `Product.kt` (entity)
    - `ProductRepository.kt` (extends `JpaRepository<Product, UUID>`)
    - `ProductService.kt` (constructor-inject repository, input DTOs, domain exceptions)
+   - `ProductController.kt` (REST `@RestController`)
    - `ProductGraphQLController.kt` (GraphQL `@Controller`)
 
 2. **GraphQL schema**  
@@ -46,5 +48,6 @@ This project uses **Spring GraphQL**, which is **schema-first**: you write `.gra
 ## Tests
 
 - **Unit**: `ExampleServiceTest` – mocks `ExampleRepository`, tests all service methods (findAll, findById, create, update, delete) and domain exceptions. Run with `./gradlew test --tests "com.mafauser.service.example.ExampleServiceTest"`.
-- **Integration**: `ExampleControllerIntegrationTest` – full stack with Testcontainers (PostgreSQL, Redis, Kafka, etc.), uses `GraphQlTester` and `MockMvcWebTestClient` against the Example GraphQL API. Requires Docker. Run with `./gradlew test --tests "com.mafauser.service.example.ExampleControllerIntegrationTest"`.
+- **Integration (GraphQL)**: `ExampleControllerIntegrationTest` – full stack with Testcontainers (PostgreSQL, Redis, Kafka, etc.), uses `GraphQlTester` and `MockMvcWebTestClient` against the Example GraphQL API. Requires Docker. Run with `./gradlew test --tests "com.mafauser.service.example.ExampleControllerIntegrationTest"`.
+- **Integration (REST)**: `ExampleRestControllerIntegrationTest` – same stack, uses `MockMvc` against the Example REST API (`/examples`). Run with `./gradlew test --tests "com.mafauser.service.example.ExampleRestControllerIntegrationTest"`.
 - GraphQL documents for integration tests live in `src/test/resources/graphql-test/` (e.g. `examples-query.graphql`, `example-by-id-query.graphql`, `delete-example-mutation.graphql`).

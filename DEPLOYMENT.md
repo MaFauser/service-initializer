@@ -78,8 +78,8 @@ brew install helm
 #### 4. Deploy with Helm
 
 ```bash
-helm install dev ./helm/service-chart \
-  -f ./helm/service-chart/values-dev.yaml \
+helm install dev ./helm/stack \
+  -f ./helm/stack/values-dev.yaml \
   --set application.image.repository=service \
   --set application.image.tag=dev \
   --set application.image.pullPolicy=IfNotPresent \
@@ -98,9 +98,9 @@ kubectl get pods -n development -w
 
 ```bash
 # In separate terminals, or run in background with &
-kubectl port-forward -n development svc/dev-service-chart-app 8081:8081       # App
-kubectl port-forward -n development svc/dev-service-chart-grafana 3000:3000   # Grafana
-kubectl port-forward -n development svc/dev-service-chart-kafka-ui 8080:8080  # Kafka UI
+kubectl port-forward -n development svc/dev-stack-app 8081:8081       # App
+kubectl port-forward -n development svc/dev-stack-grafana 3000:3000   # Grafana
+kubectl port-forward -n development svc/dev-stack-kafka-ui 8080:8080  # Kafka UI
 ```
 
 - **App**: http://localhost:8081
@@ -136,8 +136,8 @@ kind load docker-image service:dev
 ### Initial Deployment
 ```bash
 # Deploy everything (infrastructure + app)
-helm install dev ./helm/service-chart \
-  -f ./helm/service-chart/values-dev.yaml \
+helm install dev ./helm/stack \
+  -f ./helm/stack/values-dev.yaml \
   --namespace development \
   --create-namespace
 
@@ -149,9 +149,9 @@ helm status dev -n development
 ### Access Services
 ```bash
 # Port-forward for local access
-kubectl port-forward -n development svc/dev-service-chart-kafka-ui 8080:8080
-kubectl port-forward -n development svc/dev-service-chart-grafana 3000:3000
-kubectl port-forward -n development svc/dev-service-chart-app 8081:8081
+kubectl port-forward -n development svc/dev-stack-kafka-ui 8080:8080
+kubectl port-forward -n development svc/dev-stack-grafana 3000:3000
+kubectl port-forward -n development svc/dev-stack-app 8081:8081
 
 # Or create Ingress resources (recommended for shared cluster)
 ```
@@ -163,8 +163,8 @@ kubectl port-forward -n development svc/dev-service-chart-app 8081:8081
 docker push your-registry/service:v1.2.0
 
 # Update deployment
-helm upgrade dev ./helm/service-chart \
-  -f ./helm/service-chart/values-dev.yaml \
+helm upgrade dev ./helm/stack \
+  -f ./helm/stack/values-dev.yaml \
   --set application.image.tag=v1.2.0 \
   --namespace development
 ```
@@ -200,8 +200,8 @@ kubectl create secret generic app-secret \
 ### Initial Deployment
 ```bash
 # Deploy with production settings
-helm install prod ./helm/service-chart \
-  -f ./helm/service-chart/values-prod.yaml \
+helm install prod ./helm/stack \
+  -f ./helm/stack/values-prod.yaml \
   --set postgresql.auth.password=$DB_PASSWORD \
   --set application.image.tag=v1.0.0 \
   --namespace production
@@ -215,13 +215,13 @@ helm status prod -n production
 ### Production Updates (Rolling Deployment)
 ```bash
 # Update to new version
-helm upgrade prod ./helm/service-chart \
-  -f ./helm/service-chart/values-prod.yaml \
+helm upgrade prod ./helm/stack \
+  -f ./helm/stack/values-prod.yaml \
   --set application.image.tag=v1.1.0 \
   --namespace production
 
 # Watch rollout
-kubectl rollout status deployment/prod-service-chart-app -n production
+kubectl rollout status deployment/prod-stack-app -n production
 
 # Rollback if needed
 helm rollback prod -n production
@@ -233,7 +233,7 @@ helm rollback prod -n production
 kubectl get svc -n production
 
 # View logs
-kubectl logs -f deployment/prod-service-chart-app -n production
+kubectl logs -f deployment/prod-stack-app -n production
 
 # Check metrics
 kubectl top pods -n production
@@ -264,8 +264,8 @@ jobs:
 
       - name: Deploy to Dev
         run: |
-          helm upgrade --install dev ./helm/service-chart \
-            -f ./helm/service-chart/values-dev.yaml \
+          helm upgrade --install dev ./helm/stack \
+            -f ./helm/stack/values-dev.yaml \
             --set application.image.tag=${{ github.sha }} \
             --namespace development
 ```
@@ -282,7 +282,7 @@ spec:
   source:
     repoURL: https://github.com/your-org/service-initializer
     targetRevision: main
-    path: helm/service-chart
+    path: helm/stack
     helm:
       valueFiles:
         - values-prod.yaml
@@ -352,10 +352,10 @@ kubectl get all,pvc,configmap,secret -n <namespace>
 
 ```bash
 # Install
-helm install <name> ./helm/service-chart -f ./helm/service-chart/values-<env>.yaml --namespace <ns> --create-namespace
+helm install <name> ./helm/stack -f ./helm/stack/values-<env>.yaml --namespace <ns> --create-namespace
 
 # Upgrade
-helm upgrade <name> ./helm/service-chart -f ./helm/service-chart/values-<env>.yaml --namespace <ns>
+helm upgrade <name> ./helm/stack -f ./helm/stack/values-<env>.yaml --namespace <ns>
 
 # Uninstall
 helm uninstall <name> --namespace <ns>

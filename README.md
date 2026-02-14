@@ -11,7 +11,8 @@ Code is organized **by domain** so each feature lives in one place and is easy t
 | Entity       | `example/Example.kt`              | JPA entity, table mapping |
 | Repository   | `example/ExampleRepository.kt`    | Spring Data JPA, persistence |
 | Service      | `example/ExampleService.kt`       | Business logic, transactions |
-| Controller   | `example/ExampleGraphQLController.kt` | GraphQL queries/mutations |
+| REST         | `example/ExampleController.kt`    | REST CRUD at `/examples` |
+| GraphQL      | `example/ExampleGraphQLController.kt` | GraphQL queries/mutations |
 | Schema       | `graphql/example/schema.graphqls` | GraphQL types and operations |
 | Migration    | `db/migration/V*__*.sql`          | Flyway, table DDL |
 

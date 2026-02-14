@@ -233,7 +233,7 @@ gh run view --log-failed
 
 # Check cluster
 kubectl get pods -n development
-kubectl logs -f deployment/dev-service-chart-app -n development
+kubectl logs -f deployment/dev-stack-app -n development
 ```
 
 ### Image not found

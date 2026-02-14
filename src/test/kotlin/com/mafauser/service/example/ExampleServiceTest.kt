@@ -9,15 +9,16 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentMatchers.any
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.util.Optional
+import java.util.Optional.empty
+import java.util.Optional.of
 import java.util.UUID
 
 @ExtendWith(MockitoExtension::class)
@@ -66,7 +67,7 @@ class ExampleServiceTest {
         @Test
         fun `returns null when not found`() {
             val id = UUID.randomUUID()
-            whenever(exampleRepository.findById(id)).thenReturn(Optional.empty())
+            whenever(exampleRepository.findById(id)).thenReturn(empty())
 
             val result = exampleService.findById(id)
 
@@ -78,7 +79,7 @@ class ExampleServiceTest {
         fun `returns example when found`() {
             val id = UUID.randomUUID()
             val example = Example(id = id, name = "Found")
-            whenever(exampleRepository.findById(id)).thenReturn(Optional.of(example))
+            whenever(exampleRepository.findById(id)).thenReturn(of(example))
 
             val result = exampleService.findById(id)
 
@@ -94,9 +95,7 @@ class ExampleServiceTest {
         @Test
         fun `saves and returns new example`() {
             whenever(exampleRepository.existsByName("New")).thenReturn(false)
-            whenever(
-                exampleRepository.save(org.mockito.kotlin.any<Example>()),
-            ).thenReturn(Example(name = "New", description = "Desc"))
+            whenever(exampleRepository.save(any<Example>())).thenReturn(Example(name = "New", description = "Desc"))
 
             val input = CreateExampleInput(name = "New", description = "Desc")
             val result = exampleService.create(input)
@@ -104,7 +103,7 @@ class ExampleServiceTest {
             assertEquals("New", result.name)
             assertEquals("Desc", result.description)
             verify(exampleRepository).existsByName("New")
-            verify(exampleRepository).save(org.mockito.kotlin.any<Example>())
+            verify(exampleRepository).save(any<Example>())
         }
 
         @Test
@@ -128,9 +127,9 @@ class ExampleServiceTest {
         fun `updates and returns example`() {
             val id = UUID.randomUUID()
             val existing = Example(id = id, name = "Old", description = "OldDesc")
-            whenever(exampleRepository.findById(id)).thenReturn(Optional.of(existing))
+            whenever(exampleRepository.findById(id)).thenReturn(of(existing))
             whenever(exampleRepository.existsByName("NewName")).thenReturn(false)
-            whenever(exampleRepository.save(org.mockito.kotlin.any<Example>())).thenReturn(existing)
+            whenever(exampleRepository.save(any<Example>())).thenReturn(existing)
 
             val input = UpdateExampleInput(name = "NewName", description = "NewDesc")
             val result = exampleService.update(id, input)
@@ -145,7 +144,7 @@ class ExampleServiceTest {
         @Test
         fun `throws ExampleNotFoundException when not found`() {
             val id = UUID.randomUUID()
-            whenever(exampleRepository.findById(id)).thenReturn(Optional.empty())
+            whenever(exampleRepository.findById(id)).thenReturn(empty())
 
             assertThrows<ExampleNotFoundException> {
                 exampleService.update(id, UpdateExampleInput(name = "Any"))
@@ -159,7 +158,7 @@ class ExampleServiceTest {
         fun `throws DuplicateExampleNameException when new name already exists`() {
             val id = UUID.randomUUID()
             val existing = Example(id = id, name = "Current")
-            whenever(exampleRepository.findById(id)).thenReturn(Optional.of(existing))
+            whenever(exampleRepository.findById(id)).thenReturn(of(existing))
             whenever(exampleRepository.existsByName("Taken")).thenReturn(true)
 
             assertThrows<DuplicateExampleNameException> {
@@ -175,15 +174,15 @@ class ExampleServiceTest {
         fun `keeps same name without duplicate check`() {
             val id = UUID.randomUUID()
             val existing = Example(id = id, name = "Same")
-            whenever(exampleRepository.findById(id)).thenReturn(Optional.of(existing))
-            whenever(exampleRepository.save(org.mockito.kotlin.any<Example>())).thenReturn(existing)
+            whenever(exampleRepository.findById(id)).thenReturn(of(existing))
+            whenever(exampleRepository.save(any<Example>())).thenReturn(existing)
 
             val result = exampleService.update(id, UpdateExampleInput(name = "Same", description = "Updated"))
 
             assertEquals("Same", result.name)
             assertEquals("Updated", result.description)
             verify(exampleRepository).findById(id)
-            verify(exampleRepository, never()).existsByName(org.mockito.ArgumentMatchers.anyString())
+            verify(exampleRepository, never()).existsByName(any<String>())
             verify(exampleRepository).save(existing)
         }
 
@@ -191,15 +190,15 @@ class ExampleServiceTest {
         fun `updates only description when name is null`() {
             val id = UUID.randomUUID()
             val existing = Example(id = id, name = "Keep")
-            whenever(exampleRepository.findById(id)).thenReturn(Optional.of(existing))
-            whenever(exampleRepository.save(org.mockito.kotlin.any<Example>())).thenReturn(existing)
+            whenever(exampleRepository.findById(id)).thenReturn(of(existing))
+            whenever(exampleRepository.save(any<Example>())).thenReturn(existing)
 
             val result = exampleService.update(id, UpdateExampleInput(description = "Only desc"))
 
             assertEquals("Keep", result.name)
             assertEquals("Only desc", result.description)
             verify(exampleRepository).findById(id)
-            verify(exampleRepository, never()).existsByName(org.mockito.ArgumentMatchers.anyString())
+            verify(exampleRepository, never()).existsByName(any<String>())
             verify(exampleRepository).save(existing)
         }
 
@@ -207,9 +206,9 @@ class ExampleServiceTest {
         fun `updates only name when description is null in input`() {
             val id = UUID.randomUUID()
             val existing = Example(id = id, name = "Old", description = "Keep desc")
-            whenever(exampleRepository.findById(id)).thenReturn(Optional.of(existing))
+            whenever(exampleRepository.findById(id)).thenReturn(of(existing))
             whenever(exampleRepository.existsByName("NewOnly")).thenReturn(false)
-            whenever(exampleRepository.save(org.mockito.kotlin.any<Example>())).thenReturn(existing)
+            whenever(exampleRepository.save(any<Example>())).thenReturn(existing)
 
             val result = exampleService.update(id, UpdateExampleInput(name = "NewOnly"))
 
@@ -245,7 +244,7 @@ class ExampleServiceTest {
 
             assertFalse(result)
             verify(exampleRepository).existsById(id)
-            verify(exampleRepository, never()).deleteById(any())
+            verify(exampleRepository, never()).deleteById(any<UUID>())
         }
     }
 }

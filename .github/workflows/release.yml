@@ -81,8 +81,8 @@ jobs:
 
       - name: Deploy with Helm
         run: |
-          helm upgrade --install prod ./helm/service-chart \
-            -f ./helm/service-chart/values-prod.yaml \
+          helm upgrade --install prod ./helm/stack \
+            -f ./helm/stack/values-prod.yaml \
             --set application.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
             --set application.image.tag=${{ steps.version.outputs.version }} \
             --set postgresql.auth.password=${{ secrets.DB_PASSWORD }} \

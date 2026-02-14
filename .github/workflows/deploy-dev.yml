@@ -63,8 +63,8 @@ jobs:
 
       - name: Deploy with Helm
         run: |
-          helm upgrade --install dev ./helm/service-chart \
-            -f ./helm/service-chart/values-dev.yaml \
+          helm upgrade --install dev ./helm/stack \
+            -f ./helm/stack/values-dev.yaml \
             --set application.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
             --set application.image.tag=dev-${{ github.sha }} \
             --namespace development \

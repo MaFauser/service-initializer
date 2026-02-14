@@ -7,8 +7,8 @@ spring:
     name: service
 
   datasource:
-    # Use the Kubernetes service name (update 'myservice' to match your Helm release name)
-    url: jdbc:postgresql://myservice-service-chart-postgresql:5432/servicedb
+    # Use the Kubernetes service name (update 'myservice' to match your Helm release name; chart name is 'stack')
+    url: jdbc:postgresql://myservice-stack-postgresql:5432/servicedb
     username: service
     password: service123
     driver-class-name: org.postgresql.Driver
@@ -29,7 +29,7 @@ spring:
   data:
     redis:
       # Use the Kubernetes service name
-      host: myservice-service-chart-redis
+      host: myservice-stack-redis
       port: 6379
 
   cache:
@@ -39,7 +39,7 @@ spring:
 
   kafka:
     # Use the Kubernetes service name
-    bootstrap-servers: myservice-service-chart-kafka:9092
+    bootstrap-servers: myservice-stack-kafka:9092
     consumer:
       group-id: ${spring.application.name}
       auto-offset-reset: earliest
@@ -70,7 +70,7 @@ management:
     tracing:
       export:
         otlp:
-          endpoint: http://myservice-service-chart-tempo:4318/v1/traces
+          endpoint: http://myservice-stack-tempo:4318/v1/traces
   otlp:
     metrics:
       export:

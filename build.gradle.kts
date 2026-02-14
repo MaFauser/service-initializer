@@ -5,7 +5,6 @@ plugins {
     kotlin("plugin.allopen") version "2.2.0"
     id("org.springframework.boot") version "4.1.0-SNAPSHOT"
     id("io.spring.dependency-management") version "1.1.7"
-    id("org.asciidoctor.jvm.convert") version "4.0.5"
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     jacoco
 }
@@ -25,8 +24,6 @@ repositories {
     maven { url = uri("https://repo.spring.io/snapshot") }
 }
 
-extra["snippetsDir"] = file("build/generated-snippets")
-
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-cache")
@@ -44,7 +41,6 @@ dependencies {
     implementation("tools.jackson.module:jackson-module-kotlin")
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.boot:spring-boot-restdocs")
     testImplementation("org.springframework.boot:spring-boot-starter-actuator-test")
     testImplementation("org.springframework.boot:spring-boot-starter-cache-test")
     testImplementation("org.springframework.boot:spring-boot-starter-data-redis-test")
@@ -59,7 +55,6 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     testImplementation("org.mockito.kotlin:mockito-kotlin:6.2.3")
-    testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
     testImplementation("org.testcontainers:testcontainers-grafana")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("org.testcontainers:testcontainers-kafka")
@@ -111,7 +106,6 @@ tasks.withType<Test> {
 }
 
 tasks.test {
-    outputs.dir(project.extra["snippetsDir"]!!)
     finalizedBy(tasks.jacocoTestReport)
     testLogging {
         events("passed", "skipped", "failed")
@@ -144,11 +138,6 @@ tasks.jacocoTestReport {
             }
         },
     )
-}
-
-tasks.asciidoctor {
-    inputs.dir(project.extra["snippetsDir"]!!)
-    dependsOn(tasks.test)
 }
 
 // ktlint configuration

@@ -43,7 +43,7 @@
     "**/.gradle": true,
     "**/node_modules": true,
     "**/bin": true,
-    "**/helm/service-chart/dashboards": true,
+    "**/helm/stack/dashboards": true,
     "**/grafana/dashboards": true
   },
   "search.exclude": {
@@ -51,7 +51,7 @@
     "**/.gradle": true,
     "**/node_modules": true,
     "**/bin": true,
-    "**/helm/service-chart/dashboards": true,
+    "**/helm/stack/dashboards": true,
     "**/grafana/dashboards": true
   }
 }

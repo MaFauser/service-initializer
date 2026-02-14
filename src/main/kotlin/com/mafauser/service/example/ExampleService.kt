@@ -2,7 +2,6 @@ package com.mafauser.service.example
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.Optional
 import java.util.UUID
 
 /**
@@ -17,10 +16,7 @@ class ExampleService(
     fun findAll(): List<Example> = exampleRepository.findAll()
 
     @Transactional(readOnly = true)
-    fun findById(id: UUID): Example? {
-        val opt: Optional<Example> = exampleRepository.findById(id)
-        return opt.orElse(null)
-    }
+    fun findById(id: UUID): Example? = exampleRepository.findById(id).orElse(null)
 
     @Transactional
     fun create(input: CreateExampleInput): Example {

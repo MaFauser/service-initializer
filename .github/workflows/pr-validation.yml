@@ -99,12 +99,12 @@ jobs:
 
       - name: Lint Helm chart
         run: |
-          helm lint ./helm/service-chart
-          helm lint ./helm/service-chart -f ./helm/service-chart/values-dev.yaml
-          helm lint ./helm/service-chart -f ./helm/service-chart/values-prod.yaml
+          helm lint ./helm/stack
+          helm lint ./helm/stack -f ./helm/stack/values-dev.yaml
+          helm lint ./helm/stack -f ./helm/stack/values-prod.yaml
 
       - name: Validate Kubernetes manifests
         run: |
-          helm template test ./helm/service-chart -f ./helm/service-chart/values-dev.yaml > /dev/null
-          helm template test ./helm/service-chart -f ./helm/service-chart/values-prod.yaml > /dev/null
+          helm template test ./helm/stack -f ./helm/stack/values-dev.yaml > /dev/null
+          helm template test ./helm/stack -f ./helm/stack/values-prod.yaml > /dev/null
           echo "✅ Kubernetes manifests are valid"

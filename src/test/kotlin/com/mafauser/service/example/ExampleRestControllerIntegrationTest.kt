@@ -12,8 +12,12 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
+import org.springframework.test.json.JsonCompareMode
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.util.UUID
@@ -31,7 +35,7 @@ class ExampleRestControllerIntegrationTest {
     @Test
     fun `GET examples returns 200 and list`() {
         mockMvc
-            .perform(MockMvcRequestBuilders.get("/examples"))
+            .perform(get("/examples"))
             .andExpect(status().isOk)
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
     }
@@ -42,8 +46,7 @@ class ExampleRestControllerIntegrationTest {
         val result =
             mockMvc
                 .perform(
-                    MockMvcRequestBuilders
-                        .post("/examples")
+                    post("/examples")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body),
                 ).andExpect(status().isCreated)
@@ -61,8 +64,7 @@ class ExampleRestControllerIntegrationTest {
         val createResult =
             mockMvc
                 .perform(
-                    MockMvcRequestBuilders
-                        .post("/examples")
+                    post("/examples")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody),
                 ).andExpect(status().isCreated)
@@ -71,16 +73,16 @@ class ExampleRestControllerIntegrationTest {
         val id = created.id!!
 
         mockMvc
-            .perform(MockMvcRequestBuilders.get("/examples/$id"))
+            .perform(get("/examples/$id"))
             .andExpect(status().isOk)
-            .andExpect(content().json("""{"id":"$id","name":"For Get By Id"}""", false))
+            .andExpect(content().json("""{"id":"$id","name":"For Get By Id"}""", JsonCompareMode.LENIENT))
     }
 
     @Test
     fun `GET examples by id returns 404 when not found`() {
         val id = UUID.randomUUID()
         mockMvc
-            .perform(MockMvcRequestBuilders.get("/examples/$id"))
+            .perform(get("/examples/$id"))
             .andExpect(status().isNotFound)
     }
 
@@ -90,8 +92,7 @@ class ExampleRestControllerIntegrationTest {
         val createResult =
             mockMvc
                 .perform(
-                    MockMvcRequestBuilders
-                        .post("/examples")
+                    post("/examples")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody),
                 ).andExpect(status().isCreated)
@@ -102,17 +103,23 @@ class ExampleRestControllerIntegrationTest {
         val updateBody = """{"name":"Updated REST","description":"Updated desc"}"""
         mockMvc
             .perform(
-                MockMvcRequestBuilders
-                    .put("/examples/$id")
+                put("/examples/$id")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(updateBody),
             ).andExpect(status().isOk)
-            .andExpect(content().json("""{"name":"Updated REST","description":"Updated desc"}""", false))
+            .andExpect(
+                content().json(
+                    """{"name":"Updated REST","description":"Updated desc"}""",
+                    JsonCompareMode.LENIENT,
+                ),
+            )
 
         mockMvc
-            .perform(MockMvcRequestBuilders.get("/examples/$id"))
+            .perform(get("/examples/$id"))
             .andExpect(status().isOk)
-            .andExpect(content().json("""{"name":"Updated REST"}""", false))
+            .andExpect(
+                content().json("""{"name":"Updated REST"}""", JsonCompareMode.LENIENT),
+            )
     }
 
     @Test
@@ -121,8 +128,7 @@ class ExampleRestControllerIntegrationTest {
         val updateBody = """{"name":"Any"}"""
         mockMvc
             .perform(
-                MockMvcRequestBuilders
-                    .put("/examples/$id")
+                put("/examples/$id")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(updateBody),
             ).andExpect(status().isNotFound)
@@ -134,8 +140,7 @@ class ExampleRestControllerIntegrationTest {
         val createResult =
             mockMvc
                 .perform(
-                    MockMvcRequestBuilders
-                        .post("/examples")
+                    post("/examples")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody),
                 ).andExpect(status().isCreated)
@@ -144,11 +149,11 @@ class ExampleRestControllerIntegrationTest {
         val id = created.id!!
 
         mockMvc
-            .perform(MockMvcRequestBuilders.delete("/examples/$id"))
+            .perform(delete("/examples/$id"))
             .andExpect(status().isNoContent)
 
         mockMvc
-            .perform(MockMvcRequestBuilders.get("/examples/$id"))
+            .perform(get("/examples/$id"))
             .andExpect(status().isNotFound)
     }
 
@@ -156,7 +161,7 @@ class ExampleRestControllerIntegrationTest {
     fun `DELETE examples by id returns 404 when not found`() {
         val id = UUID.randomUUID()
         mockMvc
-            .perform(MockMvcRequestBuilders.delete("/examples/$id"))
+            .perform(delete("/examples/$id"))
             .andExpect(status().isNotFound)
     }
 
@@ -165,16 +170,14 @@ class ExampleRestControllerIntegrationTest {
         val body = """{"name":"Duplicate REST Name"}"""
         mockMvc
             .perform(
-                MockMvcRequestBuilders
-                    .post("/examples")
+                post("/examples")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body),
             ).andExpect(status().isCreated)
 
         mockMvc
             .perform(
-                MockMvcRequestBuilders
-                    .post("/examples")
+                post("/examples")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body),
             ).andExpect(status().isConflict)
