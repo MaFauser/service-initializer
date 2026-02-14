@@ -186,6 +186,39 @@ class ExampleServiceTest {
             verify(exampleRepository, never()).existsByName(org.mockito.ArgumentMatchers.anyString())
             verify(exampleRepository).save(existing)
         }
+
+        @Test
+        fun `updates only description when name is null`() {
+            val id = UUID.randomUUID()
+            val existing = Example(id = id, name = "Keep")
+            whenever(exampleRepository.findById(id)).thenReturn(Optional.of(existing))
+            whenever(exampleRepository.save(org.mockito.kotlin.any<Example>())).thenReturn(existing)
+
+            val result = exampleService.update(id, UpdateExampleInput(description = "Only desc"))
+
+            assertEquals("Keep", result.name)
+            assertEquals("Only desc", result.description)
+            verify(exampleRepository).findById(id)
+            verify(exampleRepository, never()).existsByName(org.mockito.ArgumentMatchers.anyString())
+            verify(exampleRepository).save(existing)
+        }
+
+        @Test
+        fun `updates only name when description is null in input`() {
+            val id = UUID.randomUUID()
+            val existing = Example(id = id, name = "Old", description = "Keep desc")
+            whenever(exampleRepository.findById(id)).thenReturn(Optional.of(existing))
+            whenever(exampleRepository.existsByName("NewOnly")).thenReturn(false)
+            whenever(exampleRepository.save(org.mockito.kotlin.any<Example>())).thenReturn(existing)
+
+            val result = exampleService.update(id, UpdateExampleInput(name = "NewOnly"))
+
+            assertEquals("NewOnly", result.name)
+            assertEquals("Keep desc", result.description)
+            verify(exampleRepository).findById(id)
+            verify(exampleRepository).existsByName("NewOnly")
+            verify(exampleRepository).save(existing)
+        }
     }
 
     @Nested

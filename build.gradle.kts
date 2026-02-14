@@ -7,6 +7,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("org.asciidoctor.jvm.convert") version "4.0.5"
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
+    jacoco
 }
 
 group = "com.mafauser"
@@ -56,6 +57,7 @@ dependencies {
     testImplementation("org.springframework:spring-webflux")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     testImplementation("org.mockito.kotlin:mockito-kotlin:6.2.3")
     testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
     testImplementation("org.testcontainers:testcontainers-grafana")
@@ -95,9 +97,10 @@ tasks.bootRun {
     }
 }
 
-// Used by Kotlin Language Server (e.g. kls-classpath script) to resolve dependencies in the IDE
+// Used by Kotlin Language Server (e.g. kls-classpath script) to resolve dependencies in the IDE.
+// Use test compileClasspath so both main and test sources resolve (test classpath includes main).
 tasks.register("printClasspath") {
-    val cp = sourceSets["main"].compileClasspath
+    val cp = sourceSets["test"].compileClasspath
     doLast {
         println(cp.asPath)
     }
@@ -109,6 +112,7 @@ tasks.withType<Test> {
 
 tasks.test {
     outputs.dir(project.extra["snippetsDir"]!!)
+    finalizedBy(tasks.jacocoTestReport)
     testLogging {
         events("passed", "skipped", "failed")
         showExceptions = true
@@ -116,6 +120,30 @@ tasks.test {
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
         displayGranularity = 0
     }
+}
+
+// JaCoCo: report after test; exclude main entry, entities, and generated/config
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+    classDirectories.setFrom(
+        sourceSets.main.get().output.classesDirs.files.map { dir ->
+            fileTree(dir) {
+                exclude(
+                    "**/Application.class",
+                    "**/ApplicationKt.class",
+                    "**/com/mafauser/service/Application*.class",
+                    // JPA entities: skip from coverage (see .cursor/rules/coverage.mdc)
+                    "**/*Entity.class", // convention: entity classes named XxxEntity
+                    "**/entity/**/*.class", // convention: entity classes in package segment "entity"
+                    "**/Example.class", // legacy: entity not following convention above
+                )
+            }
+        },
+    )
 }
 
 tasks.asciidoctor {

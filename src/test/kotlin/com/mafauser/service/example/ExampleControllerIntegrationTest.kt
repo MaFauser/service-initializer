@@ -221,6 +221,63 @@ class ExampleControllerIntegrationTest {
     }
 
     @Test
+    fun `example query returns null for invalid UUID string`() {
+        graphQlTester
+            .documentName("example-by-id-query")
+            .variable("id", "not-a-valid-uuid")
+            .execute()
+            .path("example")
+            .valueIsNull()
+    }
+
+    @Test
+    fun `updateExample with invalid UUID returns error`() {
+        graphQlTester
+            .document(
+                """
+                mutation {
+                    updateExample(id: "invalid-uuid", input: { name: "Any" }) {
+                        id
+                    }
+                }
+                """.trimIndent(),
+            ).execute()
+            .errors()
+            .satisfy { errors ->
+                assertTrue(errors.isNotEmpty()) { "Expected error for invalid UUID, got: $errors" }
+                val hasRelevantError =
+                    errors.any {
+                        val msg = it.message ?: ""
+                        val ext = it.extensions?.toString() ?: ""
+                        msg.contains("UUID", ignoreCase = true) ||
+                            msg.contains("invalid", ignoreCase = true) ||
+                            msg.contains("INTERNAL_ERROR") ||
+                            ext.contains("IllegalArgumentException")
+                    }
+                assertTrue(hasRelevantError) { "Expected error for invalid UUID, got: ${errors.map { it.message }}" }
+            }
+    }
+
+    @Test
+    fun `deleteExample with invalid UUID returns error`() {
+        graphQlTester
+            .documentName("delete-example-mutation")
+            .variable("id", "bad-uuid")
+            .execute()
+            .errors()
+            .satisfy { errors ->
+                assertTrue(errors.isNotEmpty()) { "Expected error for invalid UUID, got: $errors" }
+                // GraphQL may return INTERNAL_ERROR when parseUuid throws
+                val hasError =
+                    errors.any {
+                        val msg = it.message ?: ""
+                        msg.contains("INTERNAL_ERROR") || msg.contains("UUID", ignoreCase = true)
+                    }
+                assertTrue(hasError) { "Expected INTERNAL_ERROR or UUID error, got: ${errors.map { it.message }}" }
+            }
+    }
+
+    @Test
     fun `createExample with duplicate name returns error`() {
         val createDoc =
             """
