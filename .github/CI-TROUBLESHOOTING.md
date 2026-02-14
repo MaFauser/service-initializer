@@ -14,7 +14,7 @@ CI often uses a clean environment (new Gradle cache, same or newer JDK). Depreca
 
 ## 3. **Testcontainers / Docker**
 
-Integration tests start PostgreSQL, Redis, Kafka, and the LGTM stack via Testcontainers. GitHub's `ubuntu-latest` has Docker, so Testcontainers usually works, but:
+Integration tests start PostgreSQL, Redis, and Kafka via Testcontainers. GitHub's `ubuntu-latest` has Docker, so Testcontainers usually works, but:
 
 - **Slower:** CI has less CPU/memory; containers start slower. Flaky timeouts can appear only in CI.
 - **Network:** Image pulls or DNS can fail occasionally in the runner.

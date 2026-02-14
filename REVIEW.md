@@ -50,7 +50,7 @@ Review focused on **simplicity**, **quality**, and **using built-in libraries** 
 ### Tests
 - **ApplicationTests** – Context load with Testcontainers; good.
 - **TestApplication** – Optional entry point with Testcontainers; useful for IDE/local runs.
-- **TestcontainersConfiguration** – PostgreSQL, Redis, Kafka, LGTM stack; appropriate for stack coverage.
+- **TestcontainersConfiguration** – PostgreSQL, Redis, Kafka; tracing disabled in tests for CI stability.
 - **ExampleTest** – Covers reference equality, `toString`, setters; sufficient for the entity.
 - **ExampleControllerIntegrationTest** – GraphQL integration with `GraphQlTester`; good.
 - **ExampleRestControllerIntegrationTest** – REST integration with MockMvc; good. Keeps `jacksonObjectMapper()` after revert.

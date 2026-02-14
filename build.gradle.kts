@@ -57,7 +57,6 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     testImplementation("org.mockito.kotlin:mockito-kotlin:6.2.3")
-    testImplementation("org.testcontainers:testcontainers-grafana")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("org.testcontainers:testcontainers-kafka")
     testImplementation("org.testcontainers:testcontainers-postgresql")

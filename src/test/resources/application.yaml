@@ -1,0 +1,8 @@
+# Test configuration: disable tracing to avoid LGTM stack (heavy, flaky in CI)
+management:
+  tracing:
+    enabled: false
+  otlp:
+    tracing:
+      export:
+        enabled: false

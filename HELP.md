@@ -45,7 +45,6 @@ This project uses [Testcontainers at development time](https://docs.spring.io/sp
 
 Testcontainers has been configured to use the following Docker images:
 
-* [`grafana/otel-lgtm:latest`](https://hub.docker.com/r/grafana/otel-lgtm)
 * [`apache/kafka-native:latest`](https://hub.docker.com/r/apache/kafka-native)
 * [`postgres:latest`](https://hub.docker.com/_/postgres)
 * [`redis:latest`](https://hub.docker.com/_/redis)
