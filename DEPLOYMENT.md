@@ -10,6 +10,10 @@ Quick reference for deploying the service across different environments.
 | **Dev** | Shared dev/staging | Cloud K8s cluster | Inside K8s | Moderate |
 | **Prod** | Production | Cloud K8s cluster | Inside K8s | High |
 
+### Cloud Provider Guides
+
+- **[Oracle Kubernetes Engine (OKE)](./docs/ORACLE.md)** – Local access, ServiceAccount setup, CI/CD deployment
+
 ---
 
 ## Local Development (Your Laptop)

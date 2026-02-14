@@ -16,6 +16,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 ensure_kubeconfig() {
+    echo -e "${YELLOW}[1/2] Loading kubeconfig...${NC}"
     if [ ! -f "$KUBECONFIG_B64" ]; then
         echo -e "${RED}Error: Base64 kubeconfig not found.${NC}"
         echo ""
@@ -30,27 +31,32 @@ ensure_kubeconfig() {
         exit 1
     fi
     export KUBECONFIG="$(mktemp -t kubeconfig-dev-XXXXXX)"
+    echo "  Decoding .kubeconfig-dev.b64..."
     if ! base64 -d < "$KUBECONFIG_B64" > "$KUBECONFIG" 2>/dev/null; then
         echo -e "${RED}Error: Invalid base64 in .kubeconfig-dev.b64${NC}"
         echo "Encode with: kubectl config view --flatten --minify | base64 > .kubeconfig-dev.b64"
         exit 1
     fi
+    echo -e "  ${GREEN}✓ Kubeconfig ready${NC}"
 }
 
 check_cluster() {
+    echo -e "${YELLOW}[2/2] Connecting to cluster...${NC}"
+    echo "  (If using OCI exec plugin, this may take a few seconds to fetch token)"
     local err ret
     set +e
-    err=$(kubectl cluster-info 2>&1)
+    err=$(kubectl cluster-info --request-timeout=30 2>&1)
     ret=$?
     set -e
     if [ $ret -ne 0 ]; then
         echo -e "${RED}Error: Cannot connect to cluster.${NC}"
         echo ""
-        echo "$err" | head -5
+        echo "$err" | head -10
         echo ""
         echo "Common causes: VPN not connected, cluster unreachable, expired credentials."
         exit 1
     fi
+    echo -e "  ${GREEN}✓ Cluster reachable${NC}"
 }
 
 print_usage() {
