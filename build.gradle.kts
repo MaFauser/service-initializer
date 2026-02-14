@@ -6,6 +6,7 @@ plugins {
     id("org.springframework.boot") version "4.1.0-SNAPSHOT"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
+    id("org.sonarqube") version "6.0.2.5190"
     jacoco
 }
 
@@ -180,4 +181,14 @@ tasks.named("check") {
 // Make build fail if ktlint fails
 tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask> {
     mustRunAfter(tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>())
+}
+
+// SonarQube / SonarCloud: run with ./gradlew sonar (CI passes -Dsonar.token, -Dsonar.organization, -Dsonar.projectKey)
+sonar {
+    properties {
+        property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.projectKey", System.getenv("SONAR_PROJECT_KEY") ?: rootProject.name)
+        property("sonar.organization", System.getenv("SONAR_ORGANIZATION") ?: "")
+        property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
+    }
 }
