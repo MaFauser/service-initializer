@@ -31,6 +31,8 @@ Thumbs.db
 # Local config (secrets, overrides)
 .env
 .env.local
+.kubeconfig-dev.b64
+.kubeconfig-prod.b64
 *.local.yaml
 application-local.yaml
 application-local.yml
