@@ -1,6 +1,8 @@
 plugins {
     kotlin("jvm") version "2.2.0"
     kotlin("plugin.spring") version "2.2.0"
+    kotlin("plugin.jpa") version "2.2.0"
+    kotlin("plugin.allopen") version "2.2.0"
     id("org.springframework.boot") version "4.1.0-SNAPSHOT"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.asciidoctor.jvm.convert") version "4.0.5"
@@ -29,6 +31,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-flyway")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-graphql")
     implementation("org.springframework.boot:spring-boot-starter-kafka")
     implementation("org.springframework.boot:spring-boot-starter-opentelemetry")
@@ -39,6 +42,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("tools.jackson.module:jackson-module-kotlin")
     runtimeOnly("org.postgresql:postgresql")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-restdocs")
     testImplementation("org.springframework.boot:spring-boot-starter-actuator-test")
     testImplementation("org.springframework.boot:spring-boot-starter-cache-test")
@@ -49,8 +53,10 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-opentelemetry-test")
     testImplementation("org.springframework.boot:spring-boot-starter-validation-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+    testImplementation("org.springframework:spring-webflux")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:6.2.3")
     testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
     testImplementation("org.testcontainers:testcontainers-grafana")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
@@ -65,13 +71,26 @@ kotlin {
     }
 }
 
-// Debug agent for bootRun: run with -Pdebug=true, then attach. Use -PdebugPort=5006 if 5005 is in use.
+// JPA plugin provides noarg for @Entity; allOpen required for Hibernate proxies
+allOpen {
+    annotation("jakarta.persistence.Entity")
+    annotation("jakarta.persistence.MappedSuperclass")
+    annotation("jakarta.persistence.Embeddable")
+}
+
+// Debug agent for bootRun: add only when -Pdebug=true AND Gradle extension hasn't
+// already injected jdwp via JAVA_TOOL_OPTIONS (avoid "Cannot load JVM TI agent twice").
+// Use -PdebugPort=5006 if 5005 is in use.
 tasks.bootRun {
-    if (project.findProperty("debug") == "true") {
+    val javaToolOptions = System.getenv("JAVA_TOOL_OPTIONS") ?: ""
+    val extensionProvidesDebug = javaToolOptions.contains("jdwp")
+    val enableDebug = project.findProperty("debug") == "true" && !extensionProvidesDebug
+    if (enableDebug) {
         val port = project.findProperty("debugPort") ?: "5005"
+        val suspend = if (project.findProperty("debugSuspend") == "n") "n" else "y"
         jvmArgs =
             listOf(
-                "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:$port",
+                "-agentlib:jdwp=transport=dt_socket,server=y,suspend=$suspend,address=*:$port",
             )
     }
 }

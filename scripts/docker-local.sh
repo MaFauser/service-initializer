@@ -46,6 +46,7 @@ case $ACTION in
         echo -e "${GREEN}✓ Services started!${NC}"
         echo ""
         echo "Access points:"
+        echo "  pgAdmin:    http://localhost:5050 (admin@local.dev / admin)"
         echo "  Kafka UI:   http://localhost:8080"
         echo "  Grafana:    http://localhost:3000 (admin/admin)"
         echo "  Prometheus: http://localhost:9090"

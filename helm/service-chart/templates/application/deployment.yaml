@@ -1,0 +1,58 @@
+{{- if .Values.application.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "service-chart.fullname" . }}-app
+  labels:
+    {{- include "service-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: app
+spec:
+  replicas: {{ .Values.application.replicas }}
+  selector:
+    matchLabels:
+      {{- include "service-chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: app
+  template:
+    metadata:
+      labels:
+        {{- include "service-chart.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: app
+    spec:
+      containers:
+      - name: app
+        image: "{{ .Values.application.image.repository }}:{{ .Values.application.image.tag }}"
+        imagePullPolicy: {{ .Values.application.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.application.service.port }}
+          protocol: TCP
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: k8s
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:postgresql://{{ include "service-chart.fullname" . }}-postgresql:5432/servicedb
+        - name: SPRING_DATA_REDIS_HOST
+          value: {{ include "service-chart.fullname" . }}-redis
+        - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+          value: {{ include "service-chart.fullname" . }}-kafka:9092
+        - name: MANAGEMENT_OTLP_TRACING_ENDPOINT
+          value: http://{{ include "service-chart.fullname" . }}-tempo:4318/v1/traces
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          {{- toYaml .Values.application.resources | nindent 10 }}
+{{- end }}

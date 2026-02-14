@@ -1,0 +1,10 @@
+---
+description: Never use package naming in this project
+alwaysApply: true
+---
+
+# Never Use Package Naming
+
+- **NEVER use package naming** — do not suggest, introduce, or refactor code to follow package-based naming conventions (e.g. naming classes, files, or modules after the package path).
+- Use domain/feature-based names for classes and files (e.g. `Example`, `ExampleService`, `ExampleGraphQLController`), not package-derived names.
+- When creating or referencing code, use clear semantic names; avoid redundant or derived names from the package structure.

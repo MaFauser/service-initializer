@@ -1,0 +1,10 @@
+query examples {
+  examples {
+    id
+    name
+    description
+    version
+    createdAt
+    updatedAt
+  }
+}

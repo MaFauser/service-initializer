@@ -7,7 +7,37 @@
   "kotlin.java.home": "/Users/marlon.fauser/Library/Java/JavaVirtualMachines/corretto-21.0.8/Contents/Home",
   "kotlin.compiler.jvm.target": "21",
   "editor.formatOnSave": true,
-  "[kotlin]": { "editor.defaultFormatter": "fwcd.kotlin", "editor.formatOnSave": true },
-  "[kotlin-script]": { "editor.defaultFormatter": "fwcd.kotlin", "editor.formatOnSave": true },
-  "java.configuration.updateBuildConfiguration": "automatic"
+  "[kotlin]": {
+    "editor.defaultFormatter": "fwcd.kotlin",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false
+  },
+  "[kotlin-script]": {
+    "editor.defaultFormatter": "fwcd.kotlin",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false
+  },
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "gradle.javaDebug.cleanOutput": true,
+  "java.project.resourceFilters": ["node_modules", ".git", "bin", "build", ".gradle"],
+  "files.exclude": {
+    "**/build": true,
+    "**/.gradle": true,
+    "**/node_modules": true,
+    "**/bin": true,
+    "**/helm/service-chart/dashboards": true,
+    "**/grafana/dashboards": true
+  },
+  "search.exclude": {
+    "**/build": true,
+    "**/.gradle": true,
+    "**/node_modules": true,
+    "**/bin": true,
+    "**/helm/service-chart/dashboards": true,
+    "**/grafana/dashboards": true
+  }
 }

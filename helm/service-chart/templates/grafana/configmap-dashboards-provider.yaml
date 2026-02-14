@@ -1,0 +1,22 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "service-chart.fullname" . }}-grafana-dashboards-provider
+  labels:
+    {{- include "service-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana
+data:
+  dashboards.yml: |
+    apiVersion: 1
+
+    providers:
+      - name: default
+        orgId: 1
+        folder: Service
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /etc/grafana/dashboards
+{{- end }}

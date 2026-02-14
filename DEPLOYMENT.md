@@ -33,6 +33,102 @@ docker-compose down -v
 
 ---
 
+## Local Kubernetes (Docker Desktop)
+
+**Goal**: Run the full stack in Kubernetes on your laptop using Docker Desktop's built-in cluster.
+
+### Quick start (script)
+
+```bash
+./scripts/k8s-local.sh up
+```
+
+This will: build the app image, deploy with Helm, wait for pods, and port-forward all services. Press Ctrl+C to stop port-forwards.
+
+Other commands:
+- `./scripts/k8s-local.sh deploy` - Deploy only (no port-forward)
+- `./scripts/k8s-local.sh forward` - Port-forward only (after deploy)
+- `./scripts/k8s-local.sh stop` - Stop port-forwards
+- `./scripts/k8s-local.sh down` - Uninstall everything
+
+### Manual setup
+
+#### 1. Enable Kubernetes in Docker Desktop
+
+- Open **Docker Desktop** → **Settings** → **Kubernetes**
+- Check **Enable Kubernetes**
+- Click **Apply & Restart**
+- Wait until the status shows "Kubernetes running" (green)
+
+#### 2. Install Helm (if needed)
+
+```bash
+# macOS (Homebrew)
+brew install helm
+
+# Or download from https://helm.sh/docs/intro/install/
+```
+
+#### 3. Build the app image
+
+```bash
+./gradlew bootBuildImage --imageName=service:dev
+```
+
+#### 4. Deploy with Helm
+
+```bash
+helm install dev ./helm/service-chart \
+  -f ./helm/service-chart/values-dev.yaml \
+  --set application.image.repository=service \
+  --set application.image.tag=dev \
+  --set application.image.pullPolicy=IfNotPresent \
+  --namespace development \
+  --create-namespace
+```
+
+#### 5. Wait for pods to be ready
+
+```bash
+kubectl get pods -n development -w
+# Press Ctrl+C when all pods show "Running"
+```
+
+#### 6. Access services (port-forward)
+
+```bash
+# In separate terminals, or run in background with &
+kubectl port-forward -n development svc/dev-service-chart-app 8081:8081       # App
+kubectl port-forward -n development svc/dev-service-chart-grafana 3000:3000   # Grafana
+kubectl port-forward -n development svc/dev-service-chart-kafka-ui 8080:8080  # Kafka UI
+```
+
+- **App**: http://localhost:8081
+- **Grafana**: http://localhost:3000 (admin/admin)
+- **Kafka UI**: http://localhost:8080
+
+### Cleanup
+
+```bash
+helm uninstall dev -n development
+kubectl delete namespace development
+```
+
+### Troubleshooting
+
+**Image pull error for the app**: Docker Desktop K8s shares the local Docker daemon; `IfNotPresent` uses the image you built. If it still fails, try:
+```bash
+# Use kind instead (loads images into the cluster)
+brew install kind
+kind create cluster
+kind load docker-image service:dev
+# Then run the helm install again
+```
+
+**Pods stuck in Pending**: Check `kubectl describe pod <pod-name> -n development` for resource limits. Docker Desktop defaults may need more CPU/memory in Settings.
+
+---
+
 ## Development Cluster (Shared Staging)
 
 **Goal**: Full deployment in a shared Kubernetes cluster for team testing.

@@ -14,6 +14,7 @@ The `docker-compose.yml` file includes the following services:
 - **Kafka** (port 9092) - Message broker (KRaft mode, no Zookeeper needed)
 
 ### UI & Monitoring
+- **pgAdmin** (port 5050) - PostgreSQL admin UI; pre-configured to connect to the `postgres` service (login: admin@local.dev / admin)
 - **Kafka UI** (port 8080) - Web interface for Kafka management
 - **Grafana** (port 3000) - Observability dashboards (admin/admin)
 - **Tempo** (port 4317/4318) - Distributed tracing backend
@@ -48,10 +49,10 @@ docker-compose down -v
 
 ## Service URLs
 
+- **pgAdmin**: http://localhost:5050 — Login with **admin@local.dev** / **admin**. The server **PostgreSQL (servicedb)** is pre-configured (connection is loaded on first startup when the pgAdmin config DB is created). If the server prompts for a password, run `chmod 600 docker/pgadmin/pgpass` and restart the pgadmin container.
 - **Kafka UI**: http://localhost:8080
 - **Grafana**: http://localhost:3000 (admin/admin)
 - **Prometheus**: http://localhost:9090
-- **GraphiQL** (when app is running): http://localhost:8081/graphiql
 
 ## Database Connection
 

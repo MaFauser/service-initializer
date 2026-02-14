@@ -1,0 +1,30 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "bootRun (debug)",
+      "type": "shell",
+      "command": "./gradlew",
+      "args": [
+        "bootRun",
+        "-Pdebug=true",
+        "-PdebugSuspend=n"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "java",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*",
+          "endsPattern": "Started ServiceApplication"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+# Example domain: types and operations (template for new domains).
+# Spring GraphQL merges this with other schema files under graphql/.
+
+type Query {
+  """Health check."""
+  ping: String
+  """List all examples."""
+  examples: [Example!]!
+  """Get one example by id."""
+  example(id: ID!): Example
+}
+
+type Mutation {
+  """Create a new example."""
+  createExample(input: CreateExampleInput!): Example!
+  """Update an existing example."""
+  updateExample(id: ID!, input: UpdateExampleInput!): Example!
+  """Delete an example. Returns true if deleted."""
+  deleteExample(id: ID!): Boolean!
+}
+
+type Example {
+  """Unique identifier."""
+  id: ID!
+  """Display name."""
+  name: String!
+  """Optional description."""
+  description: String
+  """Optimistic locking version (GraphQL Int)."""
+  version: Int!
+  """Creation time (ISO-8601)."""
+  createdAt: String!
+  """Last update time (ISO-8601)."""
+  updatedAt: String!
+}
+
+input CreateExampleInput {
+  name: String!
+  description: String
+}
+
+input UpdateExampleInput {
+  name: String
+  description: String
+}

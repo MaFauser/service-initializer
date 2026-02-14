@@ -1,4 +1,7 @@
 spring:
+  output:
+    ansi:
+      enabled: always  # Force Spring colors in terminal (banner + logs)
   application:
     name: service
 
@@ -31,6 +34,11 @@ spring:
     redis:
       time-to-live: 600000
 
+  graphql:
+    graphiql:
+      enabled: true
+      path: /graphiql
+
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
@@ -41,11 +49,6 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
-
-  graphql:
-    graphiql:
-      enabled: true
-      path: /graphiql
 
 management:
   endpoints:

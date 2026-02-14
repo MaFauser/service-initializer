@@ -59,6 +59,12 @@ spec:
         - name: datasources
           mountPath: /etc/grafana/provisioning/datasources
           readOnly: true
+        - name: dashboards-provider
+          mountPath: /etc/grafana/provisioning/dashboards
+          readOnly: true
+        - name: dashboards
+          mountPath: /etc/grafana/dashboards
+          readOnly: true
       volumes:
       - name: data
         {{- if .Values.grafana.persistence.enabled }}
@@ -70,4 +76,10 @@ spec:
       - name: datasources
         configMap:
           name: {{ include "service-chart.fullname" . }}-grafana-datasources
+      - name: dashboards-provider
+        configMap:
+          name: {{ include "service-chart.fullname" . }}-grafana-dashboards-provider
+      - name: dashboards
+        configMap:
+          name: {{ include "service-chart.fullname" . }}-grafana-dashboards
 {{- end }}
