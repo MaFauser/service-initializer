@@ -1,0 +1,80 @@
+# Kubernetes-specific application configuration
+# Use this profile when running the app inside Kubernetes
+# Activate with: spring.profiles.active=k8s
+
+spring:
+  application:
+    name: service
+
+  datasource:
+    # Use the Kubernetes service name (update 'myservice' to match your Helm release name; chart name is 'stack')
+    url: jdbc:postgresql://myservice-stack-postgresql:5432/servicedb
+    username: service
+    password: service123
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        '[format_sql]': true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  data:
+    redis:
+      # Use the Kubernetes service name
+      host: myservice-stack-redis
+      port: 6379
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+
+  kafka:
+    # Use the Kubernetes service name
+    bootstrap-servers: myservice-stack-kafka:9092
+    consumer:
+      group-id: ${spring.application.name}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+  graphql:
+    graphiql:
+      enabled: true
+      path: /graphiql
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: http://myservice-stack-tempo:4318/v1/traces
+  otlp:
+    metrics:
+      export:
+        enabled: false
+
+server:
+  port: 8081

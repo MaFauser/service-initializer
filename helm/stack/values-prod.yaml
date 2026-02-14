@@ -1,0 +1,98 @@
+# Production environment values
+# Override specific values for production deployment
+
+# Production-grade resource allocations
+postgresql:
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+  persistence:
+    enabled: true
+    size: 50Gi
+  # In production, consider using a managed database service instead
+  # enabled: false
+
+redis:
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  persistence:
+    enabled: true
+    size: 20Gi
+
+kafka:
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "1000m"
+    limits:
+      memory: "4Gi"
+      cpu: "4000m"
+  persistence:
+    enabled: true
+    size: 100Gi
+  config:
+    replicationFactor: 3
+  # In production, consider using a managed Kafka service (MSK, Confluent Cloud, etc.)
+
+grafana:
+  persistence:
+    enabled: true
+    size: 20Gi
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+
+tempo:
+  persistence:
+    enabled: true
+    size: 50Gi
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
+
+prometheus:
+  persistence:
+    enabled: true
+    size: 50Gi
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
+  scrapeInterval: 30s
+  evaluationInterval: 30s
+
+# Disable Kafka UI in production (or use with authentication)
+kafkaUi:
+  enabled: false
+
+# Application settings for production
+application:
+  enabled: true
+  replicas: 3
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "1000m"
+    limits:
+      memory: "4Gi"
+      cpu: "4000m"

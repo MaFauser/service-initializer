@@ -1,10 +1,12 @@
 # Gradle
 .gradle/
 build/
+bin/
 
 # Kotlin
 *.class
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.log
 *.iml
