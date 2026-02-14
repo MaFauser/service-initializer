@@ -30,8 +30,4 @@ data:
           source: tempo
       storage:
         path: /tmp/tempo/generator/wal
-
-    compactor:
-      compaction:
-        block_retention: 1h
 {{- end }}

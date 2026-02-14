@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm") version "2.3.10"
-    kotlin("plugin.spring") version "2.3.10"
+    kotlin("jvm") version "2.2.0"
+    kotlin("plugin.spring") version "2.2.0"
     id("org.springframework.boot") version "4.1.0-SNAPSHOT"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.asciidoctor.jvm.convert") version "4.0.5"
@@ -32,6 +32,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-graphql")
     implementation("org.springframework.boot:spring-boot-starter-kafka")
     implementation("org.springframework.boot:spring-boot-starter-opentelemetry")
+    implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.flywaydb:flyway-database-postgresql")
@@ -61,6 +62,25 @@ dependencies {
 kotlin {
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property")
+    }
+}
+
+// Debug agent for bootRun: run with -Pdebug=true, then attach. Use -PdebugPort=5006 if 5005 is in use.
+tasks.bootRun {
+    if (project.findProperty("debug") == "true") {
+        val port = project.findProperty("debugPort") ?: "5005"
+        jvmArgs =
+            listOf(
+                "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:$port",
+            )
+    }
+}
+
+// Used by Kotlin Language Server (e.g. kls-classpath script) to resolve dependencies in the IDE
+tasks.register("printClasspath") {
+    val cp = sourceSets["main"].compileClasspath
+    doLast {
+        println(cp.asPath)
     }
 }
 
