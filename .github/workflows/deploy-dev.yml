@@ -8,6 +8,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  HELM_VERSION: "v1.34.2"
 
 jobs:
   deploy-dev:
@@ -59,7 +60,7 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v3
         with:
-          version: "latest"
+          version: ${{ env.HELM_VERSION }}
 
       - name: Deploy with Helm
         run: |
