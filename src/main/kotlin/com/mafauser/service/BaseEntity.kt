@@ -3,10 +3,10 @@ package com.mafauser.service
 import jakarta.persistence.Column
 import jakarta.persistence.Id
 import jakarta.persistence.MappedSuperclass
-import java.time.Instant
-import java.util.UUID
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
+import java.time.Instant
+import java.util.UUID
 
 /**
  * Base for JPA entities: default [id], [createdAt], [updatedAt].
