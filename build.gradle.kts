@@ -13,6 +13,8 @@ group = "com.mafauser"
 version = "0.0.1-SNAPSHOT"
 description = "Default Backend Service Initializer"
 
+defaultTasks("build")
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
@@ -116,6 +118,16 @@ tasks.test {
     }
 }
 
+val jacocoExcludes =
+    listOf(
+        "**/Application.class",
+        "**/ApplicationKt.class",
+        "**/com/mafauser/service/Application*.class",
+        "**/*Entity.class",
+        "**/entity/**/*.class",
+        "**/Example.class",
+    )
+
 // JaCoCo: report after test; exclude main entry, entities, and generated/config
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
@@ -125,19 +137,28 @@ tasks.jacocoTestReport {
     }
     classDirectories.setFrom(
         sourceSets.main.get().output.classesDirs.files.map { dir ->
-            fileTree(dir) {
-                exclude(
-                    "**/Application.class",
-                    "**/ApplicationKt.class",
-                    "**/com/mafauser/service/Application*.class",
-                    // JPA entities: skip from coverage (see .cursor/rules/coverage.mdc)
-                    "**/*Entity.class", // convention: entity classes named XxxEntity
-                    "**/entity/**/*.class", // convention: entity classes in package segment "entity"
-                    "**/Example.class", // legacy: entity not following convention above
-                )
-            }
+            fileTree(dir) { exclude(jacocoExcludes) }
         },
     )
+}
+
+// JaCoCo: coverage verification (90% line minimum). Run explicitly or from CI job; not part of build/check.
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+    classDirectories.setFrom(
+        sourceSets.main.get().output.classesDirs.files.map { dir ->
+            fileTree(dir) { exclude(jacocoExcludes) }
+        },
+    )
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.90".toBigDecimal()
+            }
+        }
+    }
 }
 
 // ktlint configuration
