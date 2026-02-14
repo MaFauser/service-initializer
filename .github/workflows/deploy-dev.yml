@@ -8,7 +8,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  HELM_VERSION: "v1.34.2"
+  HELM_VERSION: "v3.14.2"
 
 jobs:
   deploy-dev:
