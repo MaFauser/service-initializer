@@ -69,7 +69,7 @@ tempo:
 
 opensearch:
   enabled: true
-  disableSecurity: false  # Enable auth/TLS in production
+  disableSecurity: false  # Auth/TLS in production
   persistence:
     size: 50Gi
   resources:

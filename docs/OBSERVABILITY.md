@@ -4,9 +4,13 @@
 |------|----------------|---------------|
 | **Prometheus** | **Metrics** (request counts, latencies, JVM, CPU) | Grafana dashboards, Prometheus UI |
 | **Tempo** | **Traces** (distributed spans) | Grafana → Explore → Tempo, Tempo Traces dashboard |
-| **OpenSearch** | **Logs** (pod stdout: request logs, errors, debug) | OpenSearch Dashboards → Discover |
+| **OpenSearch** | **Logs** (pod stdout: request logs, errors, debug) | OpenSearch Dashboards → Discover, or Grafana → Explore → OpenSearch |
 
 **Dashboards** (Service folder in Grafana): Spring Boot, Tempo Traces, Observability Overview
+
+**End-to-end tracing:** Logs include `traceId` and `spanId` (from OpenTelemetry). Grafana links them:
+- **Trace → logs:** In Tempo (trace view), click "Logs for this span" to see related logs in OpenSearch
+- **Logs → trace:** In Grafana Explore with OpenSearch, click a `traceId` value to open the trace in Tempo
 
 **Prometheus does NOT store logs.** It stores numeric metrics (counters, gauges, histograms).
 

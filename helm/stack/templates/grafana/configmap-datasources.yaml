@@ -25,4 +25,34 @@ data:
         editable: true
         jsonData:
           httpMethod: GET
+          {{- if and .Values.opensearch.enabled .Values.fluentBit.enabled }}
+          tracesToLogsV2:
+            datasourceUid: opensearch
+            spanStartTimeShift: -5m
+            spanEndTimeShift: 5m
+            filterByTraceID: true
+            customQuery: true
+            query: 'traceId:"$${__span.traceId}"'
+          {{- end }}
+      {{- if and .Values.opensearch.enabled .Values.fluentBit.enabled }}
+      - name: OpenSearch
+        uid: opensearch
+        type: elasticsearch
+        access: proxy
+        url: http://{{ include "stack.fullname" . }}-opensearch:9200
+        database: "{{ .Values.opensearchDashboards.indexPattern | default "kubernetes-logs-*" }}"
+        editable: true
+        jsonData:
+          timeField: "@timestamp"
+          logMessageField: message
+          logLevelField: level
+          traceIdField: traceId
+          dataLinks:
+            - title: View trace in Tempo
+              url: ""
+              internal:
+                datasourceUid: tempo
+                datasourceName: Tempo
+                query: "$${__value.raw}"
+      {{- end }}
 {{- end }}

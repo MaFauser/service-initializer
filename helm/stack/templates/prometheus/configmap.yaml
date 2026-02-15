@@ -16,9 +16,10 @@ data:
       - job_name: 'prometheus'
         static_configs:
           - targets: ['localhost:9090']
-
+      {{- if .Values.application.enabled }}
       - job_name: 'service-app'
         metrics_path: '/actuator/prometheus'
         static_configs:
-          - targets: ['{{ include "stack.fullname" . }}-app:8081']
+          - targets: ['{{ include "stack.fullname" . }}-app:{{ .Values.application.service.port }}']
+      {{- end }}
 {{- end }}

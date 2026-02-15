@@ -56,11 +56,17 @@ tempo:
   persistence:
     size: 5Gi
 
-# OpenSearch
+# OpenSearch (logs)
 opensearch:
   enabled: true
   persistence:
     size: 5Gi
+
+opensearchDashboards:
+  enabled: true
+
+fluentBit:
+  enabled: true
 
 # Prometheus
 prometheus:

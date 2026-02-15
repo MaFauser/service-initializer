@@ -47,3 +47,10 @@ Selector labels
 app.kubernetes.io/name: {{ include "stack.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+{{/*
+Grafana datasources checksum (triggers rollout when datasources change)
+*/}}
+{{- define "stack.grafanaDatasourcesChecksum" -}}
+prometheus,tempo,{{ include "stack.fullname" . }}{{ if and .Values.opensearch.enabled .Values.fluentBit.enabled }},opensearch{{ end }}
+{{- end }}

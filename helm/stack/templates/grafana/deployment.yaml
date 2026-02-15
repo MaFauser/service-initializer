@@ -19,7 +19,7 @@ spec:
         app.kubernetes.io/component: grafana
       annotations:
         # Forces rollout when datasources change (Grafana only reads provisioning at startup)
-        checksum/datasources: {{ printf "prometheus,tempo,%s" (include "stack.fullname" .) | sha256sum }}
+        checksum/datasources: {{ include "stack.grafanaDatasourcesChecksum" . | sha256sum }}
     spec:
       securityContext:
         fsGroup: 472  # Grafana runs as grafana (uid=472), needed for OKE block volume write access
