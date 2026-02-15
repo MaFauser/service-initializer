@@ -1,13 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
   <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-  <!-- Use Spring Boot default colored pattern (faint date, level colors, cyan logger) -->
-  <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+  <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="service"/>
+
+  <!-- K8s: JSON logs with traceId/spanId for OpenSearch and Grafana trace linking -->
+  <springProfile name="k8s">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <includeMdcKeyName>traceId</includeMdcKeyName>
+        <includeMdcKeyName>spanId</includeMdcKeyName>
+        <customFields>{"application":"${appName}"}</customFields>
+      </encoder>
+    </appender>
+  </springProfile>
+
+  <!-- Local: human-readable pattern with colors in TTY -->
+  <springProfile name="!k8s">
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+  </springProfile>
+
   <root level="INFO">
     <appender-ref ref="CONSOLE"/>
   </root>
-  <!-- Application logs (controllers, services, etc.) -->
   <logger name="com.mafauser.service" level="INFO"/>
-  <!-- Request logging from RequestLoggingFilter -->
   <logger name="com.mafauser.service.config.RequestLoggingFilter" level="INFO"/>
 </configuration>
