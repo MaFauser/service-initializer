@@ -11,7 +11,6 @@ import org.springframework.http.server.observation.ServerRequestObservationConte
  */
 @Configuration
 class TracingConfiguration {
-
     @Bean
     fun actuatorExclusionPredicate(): ObservationPredicate =
         ObservationPredicate { name, context ->
