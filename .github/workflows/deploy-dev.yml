@@ -71,55 +71,24 @@ jobs:
           kubectl cluster-info
           kubectl get nodes -o wide
 
-      - name: Clear stuck Helm release
+      - name: Create image pull secret for GHCR
         run: |
-          STATUS=$(helm list -n development -a -o json 2>/dev/null | jq -r '.[] | select(.name=="dev") | .status' 2>/dev/null || echo "")
-          if [ "$STATUS" = "pending-upgrade" ] || [ "$STATUS" = "pending-install" ] || [ "$STATUS" = "pending-rollback" ]; then
-            echo "Clearing stuck release (status=$STATUS)..."
-            REV=$(helm list -n development -a -o json | jq -r '.[] | select(.name=="dev") | .revision')
-            kubectl delete secret "sh.helm.release.v1.dev.v${REV}" -n development --ignore-not-found
-            echo "Cleared."
-          fi
+          kubectl create namespace development --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create secret docker-registry ghcr-registry \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.repository_owner }} \
+            --docker-password=${{ secrets.GHCR_PAT }} \
+            -n development \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy with Helm
         run: |
-          for i in 1 2 3; do
-            echo "Helm deploy attempt $i/3..."
-            if helm upgrade --install dev ./helm/stack \
-              -f ./helm/stack/values-dev.yaml \
-              --set application.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-              --set application.image.tag=dev-${{ github.sha }} \
-              --namespace development \
-              --create-namespace \
-              --timeout 5m \
-            && kubectl wait --for=condition=available deployment/dev-stack-app -n development --timeout=5m; then
-              echo "Deploy succeeded"
-              exit 0
-            fi
-            if [ $i -lt 3 ]; then
-              echo "Deploy failed, retrying in 60s (often due to API rate limiting)..."
-              sleep 60
-            fi
-          done
-          exit 1
-
-      - name: Deployment diagnostics
-        if: failure()
-        run: |
-          echo "=== Pods in development ==="
-          kubectl get pods -n development -o wide 2>/dev/null || true
-          echo ""
-          echo "=== App pod details (dev-stack-app) ==="
-          APP_POD=$(kubectl get pods -n development -l app.kubernetes.io/component=app -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
-          if [ -n "$APP_POD" ]; then
-            kubectl describe pod -n development "$APP_POD" 2>/dev/null || true
-            echo ""
-            echo "=== App container logs ==="
-            kubectl logs -n development "$APP_POD" -c app --tail=100 2>/dev/null || true
-          fi
-          echo ""
-          echo "=== Recent events ==="
-          kubectl get events -n development --sort-by='.lastTimestamp' 2>/dev/null | tail -40 || true
+          helm upgrade --install dev ./helm/stack \
+            -f ./helm/stack/values-dev.yaml \
+            --set application.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --set application.image.tag=dev-${{ github.sha }} \
+            --namespace development \
+            --create-namespace
 
       - name: Deployment Summary
         run: |

@@ -112,14 +112,18 @@ This script:
 4. Builds a kubeconfig with the token (no OCI exec)
 5. Outputs the base64-encoded kubeconfig
 
-### Step 2.2: Add secret to GitHub
+### Step 2.2: Add secrets to GitHub
 
 1. Copy the **entire base64 output** from the script
 2. GitHub → **Settings** → **Secrets and variables** → **Actions**
-3. **New repository secret** (or edit existing)
-   - Name: `KUBECONFIG_DEV`
-   - Value: paste the base64 string
-4. Save
+3. Add these repository secrets:
+
+   | Name | Value | Purpose |
+   |------|-------|---------|
+   | `KUBECONFIG_DEV` | base64-encoded kubeconfig | Cluster access for deploys |
+   | `GHCR_PAT` | GitHub Personal Access Token with `read:packages` | Pull app image from private GHCR |
+
+   Create a PAT: GitHub → **Settings** → **Developer settings** → **Personal access tokens** → **Fine-grained** or **Classic** → scope `read:packages`.
 
 ### Step 2.3: Deploy
 
@@ -174,26 +178,4 @@ If your cluster has **only** a private API endpoint (no public):
 
 ### GHCR image pull
 
-If the app image (`ghcr.io/...`) is **private**, the cluster needs credentials to pull it.
-
-**Option A – Make package public (simplest)**
-
-1. GitHub → Your profile → **Packages** → `service-initializer`
-2. **Package settings** → **Change visibility** → **Public**
-
-**Option B – Use imagePullSecrets (keep package private)**
-
-1. Create a GitHub Personal Access Token (PAT) with `read:packages`
-2. Create the secret in the target namespace:
-   ```bash
-   kubectl create secret docker-registry ghcr-registry \
-     --docker-server=ghcr.io \
-     --docker-username=YOUR_GITHUB_USERNAME \
-     --docker-password=YOUR_GITHUB_PAT \
-     -n development
-   ```
-3. In `helm/stack/values-dev.yaml`, set:
-   ```yaml
-   application:
-     imagePullSecrets: [{ name: ghcr-registry }]
-   ```
+The deploy workflow creates an `imagePullSecrets` from `GHCR_PAT` so the cluster can pull the private app image. Ensure `GHCR_PAT` is set in GitHub repo secrets (see [Step 2.2](#step-22-add-secrets-to-github)).
