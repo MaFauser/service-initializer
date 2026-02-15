@@ -168,4 +168,4 @@ If your cluster has **only** a private API endpoint (no public):
 | `server asked for credentials` | Check IAM: user needs `use cluster-family` in compartment |
 | `TLS handshake timeout` | Use public endpoint or ensure bastion tunnel is running |
 | `Invalid value for --token-version` | Use `2.0.0` not `2.0` |
-| CI: `couldn't get version/kind` | Use ServiceAccount kubeconfig (Part 2), not OCI exec kubeconfig |
+| CI: `couldn't get version/kind` | Use ServiceAccount kubeconfig (Part 2), not OCI exec kubeconfig. Ensure `KUBECONFIG_DEV` contains base64-encoded kubeconfig and workflow uses `kubeconfig-encoding: base64`. |

@@ -73,10 +73,11 @@ jobs:
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Deploy to Production Cluster
-        uses: azure/k8s-set-context@v3
+        uses: azure/k8s-set-context@v4
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBECONFIG_PROD }}
+          kubeconfig-encoding: base64
 
       - name: Install Helm
         uses: azure/setup-helm@v3

@@ -42,7 +42,16 @@ kubectl create clusterrolebinding $BINDING_NAME \
 echo -e "  ${GREEN}✓${NC}"
 
 echo -e "${YELLOW}[3/6] Creating token Secret...${NC}"
-kubectl apply -f "$SCRIPT_DIR/oke-ci-sa-token.yaml"
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: $SECRET_NAME
+  namespace: $SA_NAMESPACE
+  annotations:
+    kubernetes.io/service-account.name: $SA_NAME
+type: kubernetes.io/service-account-token
+EOF
 echo -e "  ${GREEN}✓${NC}"
 
 echo -e "${YELLOW}[4/6] Waiting for secret to be populated...${NC}"
