@@ -46,6 +46,12 @@ data:
         Parser logstash_json
         Reserve_Data On
 
+    [FILTER]
+        Name nest
+        Match kube.*
+        Operation lift
+        Nested_under log_processed
+
     [OUTPUT]
         Name opensearch
         Match *
