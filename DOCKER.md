@@ -4,6 +4,16 @@ This document describes the Docker Compose setup for local development.
 
 > **💡 Kubernetes Alternative**: For production deployments or if you prefer Kubernetes, see the [Helm Chart documentation](./helm/README.md) for deploying to any Kubernetes cluster (local or cloud).
 
+## Single Source of Truth
+
+Docker Compose and the Helm chart share config from **`helm/stack/config/shared.yaml`** (images, credentials, Kafka cluster ID). Before first use, run:
+
+```bash
+./scripts/load-config.sh
+```
+
+Requires [yq](https://github.com/mikefarah/yq). This generates `.env` and `docker/prometheus.generated.yml`.
+
 ## Services
 
 The `docker-compose.yml` file includes the following services:

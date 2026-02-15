@@ -166,6 +166,16 @@ class ExampleRestControllerIntegrationTest {
     }
 
     @Test
+    fun `POST examples with blank name returns 400`() {
+        mockMvc
+            .perform(
+                post("/examples")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"name":"","description":"Test"}"""),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
     fun `POST examples with duplicate name returns 409`() {
         val body = """{"name":"Duplicate REST Name"}"""
         mockMvc

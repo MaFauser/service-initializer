@@ -1,5 +1,6 @@
 package com.mafauser.service.example
 
+import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -40,7 +41,7 @@ class ExampleController(
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun create(
-        @RequestBody input: CreateExampleInput,
+        @RequestBody @Valid input: CreateExampleInput,
     ): Example {
         log.info("Example create requested: name={}", input.name)
         return exampleService.create(input)
@@ -49,7 +50,7 @@ class ExampleController(
     @PutMapping("/{id}")
     fun update(
         @PathVariable id: UUID,
-        @RequestBody input: UpdateExampleInput,
+        @RequestBody @Valid input: UpdateExampleInput,
     ): Example {
         log.info("Example update requested: id={}", id)
         return exampleService.update(id, input)

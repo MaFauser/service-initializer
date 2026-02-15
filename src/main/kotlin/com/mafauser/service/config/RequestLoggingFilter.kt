@@ -11,6 +11,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 
 /**
  * Logs HTTP requests: method, path, status, and duration.
+ * Excludes actuator (health probes, Prometheus scrape), favicon, and other noisy paths.
  * Logs appear in stdout and can be viewed via `kubectl logs` or any log aggregator (OpenSearch, CloudWatch, etc.).
  */
 @Component
@@ -27,9 +28,11 @@ class RequestLoggingFilter : OncePerRequestFilter() {
         try {
             filterChain.doFilter(request, response)
         } finally {
+            val path = request.requestURI
+            if (NoiseExclusions.paths.any { path.startsWith(it) }) return
+
             val duration = System.currentTimeMillis() - start
             val method = request.method
-            val path = request.requestURI
             val status = response.status
             val query = request.queryString?.let { "?$it" } ?: ""
             log.info("{} {}{} {} {}ms", method, path, query, status, duration)

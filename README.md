@@ -20,7 +20,8 @@ Code is organized **by domain** so each feature lives in one place and is easy t
 
 ## Run
 
-1. Start dependencies: `docker compose up -d`
+1. **First time:** Run `./scripts/load-config.sh` to generate `.env` and Prometheus config from `helm/stack/config/shared.yaml` (single source for Docker + Helm).
+2. Start dependencies: `docker compose up -d`
 2. Run the app: **Gradle** extension → **bootRun** task
 
 ## Links (when running locally)

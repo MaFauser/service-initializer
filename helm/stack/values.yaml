@@ -5,17 +5,11 @@
 global:
   storageClass: "" # Use default storage class
 
-# PostgreSQL Configuration
+# PostgreSQL Configuration (image, auth from config/shared.yaml)
 postgresql:
   enabled: true
   image:
-    repository: docker.io/library/postgres
-    tag: "16-alpine"
     pullPolicy: IfNotPresent
-  auth:
-    database: servicedb
-    username: service
-    password: service123
   service:
     type: ClusterIP
     port: 5432
@@ -30,12 +24,10 @@ postgresql:
       memory: "1Gi"
       cpu: "1000m"
 
-# Redis Configuration
+# Redis Configuration (image from config/shared.yaml)
 redis:
   enabled: true
   image:
-    repository: docker.io/library/redis
-    tag: "7-alpine"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -51,13 +43,14 @@ redis:
       memory: "512Mi"
       cpu: "500m"
 
-# Kafka Configuration
+# Kafka Configuration (image, config from config/shared.yaml)
 kafka:
   enabled: true
   image:
-    repository: docker.io/confluentinc/cp-kafka
-    tag: "7.6.0"
     pullPolicy: IfNotPresent
+  config:
+    nodeId: 1
+    # clusterId, replicationFactor from config/shared.yaml
   service:
     type: ClusterIP
     port: 9092
@@ -71,17 +64,11 @@ kafka:
     limits:
       memory: "2Gi"
       cpu: "2000m"
-  config:
-    nodeId: 1
-    clusterId: "MkU3OEVBNTcwNTJENDM2Qk"
-    replicationFactor: 1
 
-# Kafka UI Configuration
+# Kafka UI Configuration (image from config/shared.yaml)
 kafkaUi:
   enabled: true
   image:
-    repository: docker.io/provectuslabs/kafka-ui
-    tag: "v0.7.2"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -94,12 +81,10 @@ kafkaUi:
       memory: "512Mi"
       cpu: "500m"
 
-# Grafana Configuration
+# Grafana Configuration (image, auth from config/shared.yaml)
 grafana:
   enabled: true
   image:
-    repository: docker.io/grafana/grafana
-    tag: "12.3.3"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -107,9 +92,6 @@ grafana:
   persistence:
     enabled: true
     size: 5Gi
-  auth:
-    adminUser: admin
-    adminPassword: admin
   resources:
     requests:
       memory: "256Mi"
@@ -118,12 +100,10 @@ grafana:
       memory: "512Mi"
       cpu: "500m"
 
-# Tempo Configuration (2.3.0: minimal setup, classic ingester path)
+# Tempo Configuration (image from config/shared.yaml)
 tempo:
   enabled: true
   image:
-    repository: docker.io/grafana/tempo
-    tag: "2.3.0"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -201,12 +181,10 @@ fluentBit:
       memory: "256Mi"
       cpu: "200m"
 
-# Prometheus Configuration
+# Prometheus Configuration (image, intervals from config/shared.yaml)
 prometheus:
   enabled: true
   image:
-    repository: docker.io/prom/prometheus
-    tag: "v2.53.1"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -221,8 +199,6 @@ prometheus:
     limits:
       memory: "2Gi"
       cpu: "1000m"
-  scrapeInterval: 15s
-  evaluationInterval: 15s
 
 # Spring Boot Application Configuration
 application:

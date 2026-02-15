@@ -252,7 +252,7 @@ class ExampleControllerIntegrationTest {
                         msg.contains("UUID", ignoreCase = true) ||
                             msg.contains("invalid", ignoreCase = true) ||
                             msg.contains("INTERNAL_ERROR") ||
-                            ext.contains("IllegalArgumentException")
+                            ext.contains("InvalidIdException")
                     }
                 assertTrue(hasRelevantError) { "Expected error for invalid UUID, got: ${errors.map { it.message }}" }
             }

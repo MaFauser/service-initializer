@@ -80,6 +80,7 @@ case $ACTION in
             kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
         fi
         helm install $RELEASE_NAME $HELM_CHART \
+            -f $HELM_CHART/config/shared.yaml \
             -f $VALUES_FILE \
             --namespace $NAMESPACE
         echo -e "${GREEN}✓ Installation complete!${NC}"
@@ -92,6 +93,7 @@ case $ACTION in
     upgrade)
         echo -e "${YELLOW}Upgrading Helm chart...${NC}"
         helm upgrade $RELEASE_NAME $HELM_CHART \
+            -f $HELM_CHART/config/shared.yaml \
             -f $VALUES_FILE \
             --namespace $NAMESPACE
         echo -e "${GREEN}✓ Upgrade complete!${NC}"

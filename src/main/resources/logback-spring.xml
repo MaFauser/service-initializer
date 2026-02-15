@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
   <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-  <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="service"/>
+  <springProperty scope="context" name="appName" source="spring.application.name"/>
 
   <!-- K8s: JSON logs with traceId/spanId for OpenSearch and Grafana trace linking -->
   <springProfile name="k8s">

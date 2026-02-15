@@ -25,7 +25,9 @@ This Helm chart deploys a complete Spring Boot service stack with PostgreSQL, Re
 
 ```bash
 # Deploy everything including the app
+# config/shared.yaml = single source for images, credentials (shared with Docker Compose)
 helm install dev ./helm/stack \
+  -f ./helm/stack/config/shared.yaml \
   -f ./helm/stack/values-dev.yaml \
   --namespace development \
   --create-namespace
@@ -36,6 +38,7 @@ helm install dev ./helm/stack \
 ```bash
 # Deploy with production settings
 helm install prod ./helm/stack \
+  -f ./helm/stack/config/shared.yaml \
   -f ./helm/stack/values-prod.yaml \
   --set postgresql.auth.password=$DB_PASSWORD \
   --namespace production \

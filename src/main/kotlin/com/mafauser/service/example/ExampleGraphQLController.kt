@@ -69,5 +69,5 @@ class ExampleGraphQLController(
         field: String,
     ): UUID =
         parseUuidOrNull(id)
-            ?: throw IllegalArgumentException("$field id must be a valid UUID string, got: $id")
+            ?: throw InvalidIdException("$field id must be a valid UUID string, got: $id")
 }

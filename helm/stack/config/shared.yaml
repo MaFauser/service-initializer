@@ -1,0 +1,50 @@
+# Single source of truth for Docker Compose and Helm
+# Used by: helm install -f config/shared.yaml -f helm/stack/values.yaml
+#          scripts/load-config.sh (generates .env for docker-compose)
+
+postgresql:
+  image:
+    repository: docker.io/library/postgres
+    tag: "16-alpine"
+  auth:
+    database: servicedb
+    username: service
+    password: service123
+
+redis:
+  image:
+    repository: docker.io/library/redis
+    tag: "7-alpine"
+
+kafka:
+  image:
+    repository: docker.io/confluentinc/cp-kafka
+    tag: "7.6.0"
+  config:
+    clusterId: "MkU3OEVBNTcwNTJENDM2Qk"
+    replicationFactor: 1
+
+kafkaUi:
+  image:
+    repository: docker.io/provectuslabs/kafka-ui
+    tag: "v0.7.2"
+
+grafana:
+  image:
+    repository: docker.io/grafana/grafana
+    tag: "12.3.3"
+  auth:
+    adminUser: admin
+    adminPassword: admin
+
+tempo:
+  image:
+    repository: docker.io/grafana/tempo
+    tag: "2.3.0"
+
+prometheus:
+  image:
+    repository: docker.io/prom/prometheus
+    tag: "v2.53.1"
+  scrapeInterval: 15s
+  evaluationInterval: 15s

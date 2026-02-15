@@ -10,10 +10,9 @@ spring:
     name: service  # Keep in sync with rootProject.name in settings.gradle.kts
 
   datasource:
-    # Use the Kubernetes service name (update 'myservice' to match your Helm release name; chart name is 'stack')
-    url: jdbc:postgresql://myservice-stack-postgresql:5432/servicedb
-    username: service
-    password: service123
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://myservice-stack-postgresql:5432/servicedb}
+    username: ${SPRING_DATASOURCE_USERNAME:service}
+    password: ${SPRING_DATASOURCE_PASSWORD:service123}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -31,9 +30,8 @@ spring:
 
   data:
     redis:
-      # Use the Kubernetes service name
-      host: myservice-stack-redis
-      port: 6379
+      host: ${SPRING_DATA_REDIS_HOST:myservice-stack-redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
 
   cache:
     type: redis
@@ -41,8 +39,7 @@ spring:
       time-to-live: 600000
 
   kafka:
-    # Use the Kubernetes service name
-    bootstrap-servers: myservice-stack-kafka:9092
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:myservice-stack-kafka:9092}
     consumer:
       group-id: ${spring.application.name}
       auto-offset-reset: earliest

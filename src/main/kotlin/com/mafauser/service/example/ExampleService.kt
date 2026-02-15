@@ -1,5 +1,7 @@
 package com.mafauser.service.example
 
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -59,14 +61,14 @@ class ExampleService(
 
 /** Input for creating a new [Example]. */
 data class CreateExampleInput(
-    val name: String,
-    val description: String? = null,
+    @field:NotBlank @field:Size(max = 255) val name: String,
+    @field:Size(max = 1024) val description: String? = null,
 )
 
 /** Input for updating an existing [Example]. Only non-null fields are applied. */
 data class UpdateExampleInput(
-    val name: String? = null,
-    val description: String? = null,
+    @field:Size(max = 255) val name: String? = null,
+    @field:Size(max = 1024) val description: String? = null,
 )
 
 class ExampleNotFoundException(
@@ -76,3 +78,7 @@ class ExampleNotFoundException(
 class DuplicateExampleNameException(
     name: String,
 ) : RuntimeException("Example already exists with name: $name")
+
+class InvalidIdException(
+    message: String,
+) : RuntimeException(message)

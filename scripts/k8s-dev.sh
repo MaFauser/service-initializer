@@ -176,6 +176,7 @@ deploy() {
     local image_tag="${2:-dev-latest}"
     echo -e "${YELLOW}Helm upgrade (image: $image_repo:$image_tag)...${NC}"
     helm upgrade --install $RELEASE_NAME "$PROJECT_ROOT/helm/stack" \
+      -f "$PROJECT_ROOT/helm/stack/config/shared.yaml" \
       -f "$PROJECT_ROOT/helm/stack/values-dev.yaml" \
       --set application.image.repository="$image_repo" \
       --set application.image.tag="$image_tag" \

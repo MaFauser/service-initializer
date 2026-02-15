@@ -8,18 +8,13 @@ metadata:
     app.kubernetes.io/component: prometheus
 data:
   prometheus.yml: |
-    global:
-      scrape_interval: {{ .Values.prometheus.scrapeInterval }}
-      evaluation_interval: {{ .Values.prometheus.evaluationInterval }}
-
-    scrape_configs:
-      - job_name: 'prometheus'
-        static_configs:
-          - targets: ['localhost:9090']
-      {{- if .Values.application.enabled }}
-      - job_name: 'service-app'
-        metrics_path: '/actuator/prometheus'
-        static_configs:
-          - targets: ['{{ include "stack.fullname" . }}-app:{{ .Values.application.service.port }}']
-      {{- end }}
+{{- $promConfig := .Files.Get "config/prometheus.yml" }}
+{{- $appJob := "- job_name: 'service-app'" }}
+{{- if .Values.application.enabled }}
+{{- $appTarget := printf "%s-app:%s" (include "stack.fullname" .) (.Values.application.service.port | toString) }}
+{{ $promConfig | replace "__APP_TARGET__" $appTarget | nindent 4 }}
+{{- else }}
+{{- $parts := split $appJob $promConfig }}
+{{ (index $parts 0) | trimSuffix "\n" | nindent 4 }}
+{{- end }}
 {{- end }}

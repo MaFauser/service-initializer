@@ -44,6 +44,10 @@ coverage/
 *.lcov
 test-output/
 
+# Generated config (from scripts/load-config.sh)
+.env
+docker/prometheus.generated.yml
+
 # Misc
 *.orig
 *.bak

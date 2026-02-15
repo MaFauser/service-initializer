@@ -2,6 +2,7 @@ package com.mafauser.service.example
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -10,11 +11,12 @@ import java.util.UUID
 @DisplayName("Example")
 class ExampleTest {
     @Test
-    fun `equals uses reference equality`() {
+    fun `equals uses id`() {
         val id = UUID.randomUUID()
         val a = Example(id = id, name = "A")
         val b = Example(id = id, name = "B")
-        assertFalse(a == b)
+        assertTrue(a == b)
+        assertEquals(a.hashCode(), b.hashCode())
         assertFalse(a.equals(null))
         assertFalse(a.equals("not an Example"))
     }
