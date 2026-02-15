@@ -71,6 +71,16 @@ jobs:
           kubectl cluster-info
           kubectl get nodes -o wide
 
+      - name: Clear stuck Helm release
+        run: |
+          STATUS=$(helm list -n development -a -o json 2>/dev/null | jq -r '.[] | select(.name=="dev") | .status' 2>/dev/null || echo "")
+          if [ "$STATUS" = "pending-upgrade" ] || [ "$STATUS" = "pending-install" ] || [ "$STATUS" = "pending-rollback" ]; then
+            echo "Clearing stuck release (status=$STATUS)..."
+            REV=$(helm list -n development -a -o json | jq -r '.[] | select(.name=="dev") | .revision')
+            kubectl delete secret "sh.helm.release.v1.dev.v${REV}" -n development --ignore-not-found
+            echo "Cleared."
+          fi
+
       - name: Deploy with Helm
         run: |
           for i in 1 2 3; do

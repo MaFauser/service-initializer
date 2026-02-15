@@ -72,6 +72,7 @@ prometheus:
 # Application settings for dev environment
 application:
   enabled: true  # Deploy app to dev cluster
+  # imagePullSecrets: [{ name: ghcr-registry }]  # Required if ghcr.io package is private; create with: kubectl create secret docker-registry ghcr-registry --docker-server=ghcr.io --docker-username=USER --docker-password=TOKEN -n development
   replicas: 1
   resources:
     requests:

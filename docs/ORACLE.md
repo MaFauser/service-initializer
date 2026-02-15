@@ -169,4 +169,31 @@ If your cluster has **only** a private API endpoint (no public):
 | `TLS handshake timeout` | Use public endpoint or ensure bastion tunnel is running |
 | `Invalid value for --token-version` | Use `2.0.0` not `2.0` |
 | CI: `couldn't get version/kind` | Use ServiceAccount kubeconfig (Part 2), not OCI exec kubeconfig. Ensure `KUBECONFIG_DEV` contains base64-encoded kubeconfig and workflow uses `kubeconfig-encoding: base64`. |
-| CI: App pod stuck "0/1 ready" | Often **ErrImagePull**: ghcr.io package is private. Make package public: GitHub → Your profile → Packages → service-initializer → Package settings → Change visibility. |
+| CI: App pod stuck "0/1 ready" | Often **ErrImagePull** / **ImagePullBackOff**: ghcr.io package is private. **Option A**: Make package public: GitHub → Your profile → Packages → service-initializer → Package settings → Change visibility. **Option B**: Create `imagePullSecrets` (see [GHCR image pull](#ghcr-image-pull) below). |
+| `ImageInspectError` / "short name mode is enforcing" | OKE/CRI-O requires fully qualified image names. Use `docker.io/...` prefixes (already set in `helm/stack/values.yaml`). |
+
+### GHCR image pull
+
+If the app image (`ghcr.io/...`) is **private**, the cluster needs credentials to pull it.
+
+**Option A – Make package public (simplest)**
+
+1. GitHub → Your profile → **Packages** → `service-initializer`
+2. **Package settings** → **Change visibility** → **Public**
+
+**Option B – Use imagePullSecrets (keep package private)**
+
+1. Create a GitHub Personal Access Token (PAT) with `read:packages`
+2. Create the secret in the target namespace:
+   ```bash
+   kubectl create secret docker-registry ghcr-registry \
+     --docker-server=ghcr.io \
+     --docker-username=YOUR_GITHUB_USERNAME \
+     --docker-password=YOUR_GITHUB_PAT \
+     -n development
+   ```
+3. In `helm/stack/values-dev.yaml`, set:
+   ```yaml
+   application:
+     imagePullSecrets: [{ name: ghcr-registry }]
+   ```
