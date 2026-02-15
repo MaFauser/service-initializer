@@ -169,3 +169,4 @@ If your cluster has **only** a private API endpoint (no public):
 | `TLS handshake timeout` | Use public endpoint or ensure bastion tunnel is running |
 | `Invalid value for --token-version` | Use `2.0.0` not `2.0` |
 | CI: `couldn't get version/kind` | Use ServiceAccount kubeconfig (Part 2), not OCI exec kubeconfig. Ensure `KUBECONFIG_DEV` contains base64-encoded kubeconfig and workflow uses `kubeconfig-encoding: base64`. |
+| CI: App pod stuck "0/1 ready" | Often **ErrImagePull**: ghcr.io package is private. Make package public: GitHub → Your profile → Packages → service-initializer → Package settings → Change visibility. |

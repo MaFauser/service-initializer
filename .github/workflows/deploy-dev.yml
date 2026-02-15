@@ -81,9 +81,8 @@ jobs:
               --set application.image.tag=dev-${{ github.sha }} \
               --namespace development \
               --create-namespace \
-              --timeout 10m \
-              --debug \
-              --wait; then
+              --timeout 5m \
+            && kubectl wait --for=condition=available deployment/dev-stack-app -n development --timeout=5m; then
               echo "Deploy succeeded"
               exit 0
             fi
@@ -100,8 +99,17 @@ jobs:
           echo "=== Pods in development ==="
           kubectl get pods -n development -o wide 2>/dev/null || true
           echo ""
+          echo "=== App pod details (dev-stack-app) ==="
+          APP_POD=$(kubectl get pods -n development -l app.kubernetes.io/component=app -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+          if [ -n "$APP_POD" ]; then
+            kubectl describe pod -n development "$APP_POD" 2>/dev/null || true
+            echo ""
+            echo "=== App container logs ==="
+            kubectl logs -n development "$APP_POD" -c app --tail=100 2>/dev/null || true
+          fi
+          echo ""
           echo "=== Recent events ==="
-          kubectl get events -n development --sort-by='.lastTimestamp' 2>/dev/null | tail -30 || true
+          kubectl get events -n development --sort-by='.lastTimestamp' 2>/dev/null | tail -40 || true
 
       - name: Deployment Summary
         run: |

@@ -168,6 +168,7 @@ prometheus:
 # Spring Boot Application Configuration
 application:
   enabled: false # Deploy your app separately or set to true
+  # imagePullSecrets: []  # e.g. [ { name: ghcr-registry } ] when pulling from private ghcr.io
   image:
     repository: your-registry/service
     tag: "latest"
