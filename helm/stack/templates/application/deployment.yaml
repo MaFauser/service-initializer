@@ -22,6 +22,10 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      initContainers:
+      - name: wait-for-postgres
+        image: docker.io/library/busybox:1.36
+        command: ['sh', '-c', 'until nc -z {{ include "stack.fullname" . }}-postgresql 5432; do echo "waiting for postgres..."; sleep 2; done']
       containers:
       - name: app
         image: "{{ .Values.application.image.repository }}:{{ .Values.application.image.tag }}"
