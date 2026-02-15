@@ -86,14 +86,26 @@ jobs:
 
       - name: Deploy with Helm
         run: |
-          helm upgrade --install prod ./helm/stack \
-            -f ./helm/stack/values-prod.yaml \
-            --set application.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-            --set application.image.tag=${{ steps.version.outputs.version }} \
-            --set postgresql.auth.password=${{ secrets.DB_PASSWORD }} \
-            --namespace production \
-            --create-namespace \
-            --wait
+          for i in 1 2 3; do
+            echo "Helm deploy attempt $i/3..."
+            if helm upgrade --install prod ./helm/stack \
+              -f ./helm/stack/values-prod.yaml \
+              --set application.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
+              --set application.image.tag=${{ steps.version.outputs.version }} \
+              --set postgresql.auth.password=${{ secrets.DB_PASSWORD }} \
+              --namespace production \
+              --create-namespace \
+              --timeout 10m \
+              --wait; then
+              echo "Deploy succeeded"
+              exit 0
+            fi
+            if [ $i -lt 3 ]; then
+              echo "Deploy failed, retrying in 60s (often due to API rate limiting)..."
+              sleep 60
+            fi
+          done
+          exit 1
 
       - name: Deployment Summary
         run: |

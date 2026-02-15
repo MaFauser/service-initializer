@@ -66,15 +66,42 @@ jobs:
         with:
           version: ${{ env.HELM_VERSION }}
 
+      - name: Verify cluster connectivity
+        run: |
+          kubectl cluster-info
+          kubectl get nodes -o wide
+
       - name: Deploy with Helm
         run: |
-          helm upgrade --install dev ./helm/stack \
-            -f ./helm/stack/values-dev.yaml \
-            --set application.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-            --set application.image.tag=dev-${{ github.sha }} \
-            --namespace development \
-            --create-namespace \
-            --wait
+          for i in 1 2 3; do
+            echo "Helm deploy attempt $i/3..."
+            if helm upgrade --install dev ./helm/stack \
+              -f ./helm/stack/values-dev.yaml \
+              --set application.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
+              --set application.image.tag=dev-${{ github.sha }} \
+              --namespace development \
+              --create-namespace \
+              --timeout 10m \
+              --debug \
+              --wait; then
+              echo "Deploy succeeded"
+              exit 0
+            fi
+            if [ $i -lt 3 ]; then
+              echo "Deploy failed, retrying in 60s (often due to API rate limiting)..."
+              sleep 60
+            fi
+          done
+          exit 1
+
+      - name: Deployment diagnostics
+        if: failure()
+        run: |
+          echo "=== Pods in development ==="
+          kubectl get pods -n development -o wide 2>/dev/null || true
+          echo ""
+          echo "=== Recent events ==="
+          kubectl get events -n development --sort-by='.lastTimestamp' 2>/dev/null | tail -30 || true
 
       - name: Deployment Summary
         run: |
