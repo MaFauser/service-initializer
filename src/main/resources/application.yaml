@@ -1,7 +1,7 @@
 spring:
   output:
     ansi:
-      enabled: always  # Force Spring colors in terminal (banner + logs)
+      enabled: detect  # Colors in TTY (local), plain text in containers (clean logs for OpenSearch)
   application:
     name: service
 
