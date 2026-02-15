@@ -95,7 +95,7 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:12.3.3
     container_name: service-grafana
     ports:
       - "3000:3000"
@@ -106,7 +106,7 @@ services:
       GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./grafana/dashboards:/etc/grafana/dashboards:ro
     depends_on:
@@ -114,7 +114,7 @@ services:
       - prometheus
 
   tempo:
-    image: grafana/tempo:latest
+    image: grafana/tempo:2.3.0
     container_name: service-tempo
     user: "0:0"
     command: [ "-config.file=/etc/tempo.yaml" ]

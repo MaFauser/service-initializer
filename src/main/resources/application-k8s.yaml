@@ -4,7 +4,7 @@
 
 spring:
   application:
-    name: service
+    name: service  # Keep in sync with rootProject.name in settings.gradle.kts
 
   datasource:
     # Use the Kubernetes service name (update 'myservice' to match your Helm release name; chart name is 'stack')

@@ -8,15 +8,13 @@ distributor:
         http:
         grpc:
 
+ingester:
+  lifecycler:
+    ring:
+      replication_factor: 1
+
 storage:
   trace:
     backend: local
     local:
       path: /tmp/tempo/traces
-
-metrics_generator:
-  registry:
-    external_labels:
-      source: tempo
-  storage:
-    path: /tmp/tempo/generator/wal

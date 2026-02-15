@@ -118,12 +118,12 @@ grafana:
       memory: "512Mi"
       cpu: "500m"
 
-# Tempo Configuration
+# Tempo Configuration (2.3.0: minimal setup, classic ingester path)
 tempo:
   enabled: true
   image:
     repository: grafana/tempo
-    tag: "latest"
+    tag: "2.3.0"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP

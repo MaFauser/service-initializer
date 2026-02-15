@@ -38,5 +38,6 @@ Code is organized **by domain** so each feature lives in one place and is easy t
 
 ## Reference Documentation
 
+* [Observability: Logs, Metrics, Traces](docs/OBSERVABILITY.md) – where to view logs (`kubectl logs`), Prometheus (metrics), Tempo (traces)
 * [Spring Boot Gradle Plugin](https://docs.spring.io/spring-boot/4.1.0-SNAPSHOT/gradle-plugin)
 * [Spring Boot Actuator](https://docs.spring.io/spring-boot/4.1.0-SNAPSHOT/reference/actuator/index.html)
