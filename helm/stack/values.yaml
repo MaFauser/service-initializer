@@ -142,6 +142,65 @@ tempo:
       memory: "1Gi"
       cpu: "1000m"
 
+# OpenSearch Configuration (log aggregation)
+opensearch:
+  enabled: true
+  image:
+    repository: docker.io/opensearchproject/opensearch
+    tag: "2.18.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 9200
+  persistence:
+    enabled: true
+    size: 10Gi
+  # disableSecurity: true = HTTP, no auth (dev only). false = HTTPS + admin auth
+  disableSecurity: true
+  adminPassword: "Opensearch123!"  # Used when disableSecurity=false
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+
+# OpenSearch Dashboards (logs UI)
+opensearchDashboards:
+  enabled: true
+  # Index pattern for Fluent Bit logs (provisioned automatically)
+  indexPattern: "kubernetes-logs-*"
+  image:
+    repository: docker.io/opensearchproject/opensearch-dashboards
+    tag: "2.18.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 5601
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+# Fluent Bit (ships pod logs to OpenSearch)
+fluentBit:
+  enabled: true
+  image:
+    repository: docker.io/fluent/fluent-bit
+    tag: "3.2.2"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
 # Prometheus Configuration
 prometheus:
   enabled: true
@@ -168,6 +227,7 @@ prometheus:
 # Spring Boot Application Configuration
 application:
   enabled: false # Deploy your app separately or set to true
+  otelServiceName: service # Used for resource.service.name in traces (TraceQL)
   # imagePullSecrets: []  # e.g. [ { name: ghcr-registry } ] when pulling from private ghcr.io
   image:
     repository: your-registry/service

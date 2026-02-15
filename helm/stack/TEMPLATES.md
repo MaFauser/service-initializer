@@ -35,9 +35,22 @@ templates/
 │   ├── service.yaml
 │   ├── pvc.yaml
 │   └── configmap.yaml
-└── prometheus/
-    ├── deployment.yaml
-    ├── service.yaml
-    ├── pvc.yaml
-    └── configmap.yaml
+├── prometheus/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── pvc.yaml
+│   └── configmap.yaml
+├── opensearch/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── pvc.yaml
+│   └── secret.yaml
+├── opensearch-dashboards/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── provision-index-pattern-job.yaml  # Helm hook: creates kubernetes-logs-* index pattern
+└── fluent-bit/
+    ├── configmap.yaml
+    ├── daemonset.yaml
+    └── rbac.yaml
 ```

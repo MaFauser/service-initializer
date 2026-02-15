@@ -1670,7 +1670,7 @@
           "expr": "irate(jvm_gc_pause_seconds_count{instance=~\"$instance\", application=\"$application\"}[5m])",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "{{action}} [{{cause}}]",
+          "legendFormat": "\u007b\u007baction\u007d\u007d [\u007b\u007bcause\u007d\u007d]",
           "refId": "A"
         }
       ],
@@ -1769,7 +1769,7 @@
           "expr": "irate(jvm_gc_pause_seconds_sum{instance=~\"$instance\", application=\"$application\"}[5m])",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "{{action}} [{{cause}}]",
+          "legendFormat": "\u007b\u007baction\u007d\u007d [\u007b\u007bcause\u007d\u007d]",
           "refId": "A"
         }
       ],
@@ -2470,7 +2470,7 @@
           "expr": "irate(http_server_requests_seconds_count{instance=~\"$instance\", application=\"$application\", uri!~\".*actuator.*\"}[5m])",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "{{method}} [{{status}}] - {{uri}}",
+          "legendFormat": "\u007b\u007bmethod\u007d\u007d [\u007b\u007bstatus\u007d\u007d] - \u007b\u007buri\u007d\u007d",
           "refId": "A"
         }
       ],
@@ -2569,7 +2569,7 @@
           "expr": "irate(http_server_requests_seconds_sum{instance=~\"$instance\", application=\"$application\", exception=\"None\", uri!~\".*actuator.*\"}[5m]) / irate(http_server_requests_seconds_count{instance=~\"$instance\", application=\"$application\", exception=\"None\", uri!~\".*actuator.*\"}[5m])",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "{{method}} [{{status}}] - {{uri}}",
+          "legendFormat": "\u007b\u007bmethod\u007d\u007d [\u007b\u007bstatus\u007d\u007d] - \u007b\u007buri\u007d\u007d",
           "refId": "A"
         }
       ],

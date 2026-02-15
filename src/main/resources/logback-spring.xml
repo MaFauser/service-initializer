@@ -6,6 +6,8 @@
   <root level="INFO">
     <appender-ref ref="CONSOLE"/>
   </root>
+  <!-- Application logs (controllers, services, etc.) -->
+  <logger name="com.mafauser.service" level="INFO"/>
   <!-- Request logging from RequestLoggingFilter -->
   <logger name="com.mafauser.service.config.RequestLoggingFilter" level="INFO"/>
 </configuration>

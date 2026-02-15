@@ -1,5 +1,6 @@
 package com.mafauser.service.example
 
+import org.slf4j.LoggerFactory
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
@@ -15,28 +16,46 @@ import java.util.UUID
 class ExampleGraphQLController(
     private val exampleService: ExampleService,
 ) {
-    @QueryMapping fun examples(): List<Example> = exampleService.findAll()
+    private val log = LoggerFactory.getLogger(javaClass)
+
+    @QueryMapping
+    fun examples(): List<Example> {
+        log.info("GraphQL query: examples")
+        return exampleService.findAll()
+    }
 
     @QueryMapping
     fun example(
         @Argument id: String,
-    ): Example? = parseUuidOrNull(id)?.let { exampleService.findById(it) }
+    ): Example? {
+        log.info("GraphQL query: example id={}", id)
+        return parseUuidOrNull(id)?.let { exampleService.findById(it) }
+    }
 
     @MutationMapping
     fun createExample(
         @Argument input: CreateExampleInput,
-    ): Example = exampleService.create(input)
+    ): Example {
+        log.info("GraphQL mutation: createExample name={}", input.name)
+        return exampleService.create(input)
+    }
 
     @MutationMapping
     fun updateExample(
         @Argument id: String,
         @Argument input: UpdateExampleInput,
-    ): Example = exampleService.update(parseUuid(id, "updateExample"), input)
+    ): Example {
+        log.info("GraphQL mutation: updateExample id={}", id)
+        return exampleService.update(parseUuid(id, "updateExample"), input)
+    }
 
     @MutationMapping
     fun deleteExample(
         @Argument id: String,
-    ): Boolean = exampleService.delete(parseUuid(id, "deleteExample"))
+    ): Boolean {
+        log.info("GraphQL mutation: deleteExample id={}", id)
+        return exampleService.delete(parseUuid(id, "deleteExample"))
+    }
 
     private fun parseUuidOrNull(id: String): UUID? =
         try {

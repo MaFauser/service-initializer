@@ -43,8 +43,11 @@ spec:
           value: {{ include "stack.fullname" . }}-redis
         - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
           value: {{ include "stack.fullname" . }}-kafka:9092
-        - name: MANAGEMENT_OTLP_TRACING_ENDPOINT
+        # Spring Boot 4 uses management.opentelemetry.tracing.export.otlp.*
+        - name: MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT
           value: http://{{ include "stack.fullname" . }}-tempo:4318/v1/traces
+        - name: OTEL_SERVICE_NAME
+          value: {{ .Values.application.otelServiceName | default "service" | quote }}
         livenessProbe:
           httpGet:
             path: /actuator/health/liveness

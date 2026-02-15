@@ -1,6 +1,6 @@
 # Helm Chart for Service Application
 
-This Helm chart deploys a complete Spring Boot service stack with PostgreSQL, Redis, Kafka, and observability tools (Grafana, Tempo, Prometheus).
+This Helm chart deploys a complete Spring Boot service stack with PostgreSQL, Redis, Kafka, and observability tools (Grafana, Tempo, Prometheus, OpenSearch, Fluent Bit).
 
 ## Prerequisites
 
@@ -58,6 +58,10 @@ kubectl port-forward svc/myservice-stack-grafana 3000:3000
 # Prometheus
 kubectl port-forward svc/myservice-stack-prometheus 9090:9090
 # Open http://localhost:9090
+
+# OpenSearch Dashboards (logs)
+kubectl port-forward svc/myservice-stack-opensearch-dashboards 5601:5601
+# Open http://localhost:5601
 ```
 
 ### 4. Connect Your Spring Boot App
@@ -173,9 +177,9 @@ helm template myservice ./helm/stack
 │                                                  │
 │  ┌───────────────────────────────────────┐      │
 │  │  Observability Stack                  │      │
-│  │  - Grafana (3000)                     │      │
-│  │  - Tempo (4317/4318)                  │      │
-│  │  - Prometheus (9090)                  │      │
+│  │  - Grafana (3000), Tempo, Prometheus  │      │
+│  │  - OpenSearch (9200), Dashboards      │      │
+│  │    (5601), Fluent Bit (logs)         │      │
 │  └───────────────────────────────────────┘      │
 └─────────────────────────────────────────────────┘
 ```
@@ -189,6 +193,7 @@ All stateful services use PersistentVolumeClaims (PVCs):
 - Grafana: 5Gi
 - Tempo: 10Gi (prod: 50Gi)
 - Prometheus: 10Gi (prod: 50Gi)
+- OpenSearch: 10Gi (prod: 50Gi)
 
 To use a specific storage class:
 ```bash

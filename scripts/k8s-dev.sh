@@ -63,14 +63,15 @@ print_usage() {
     echo "Usage: $0 <action> [args...]"
     echo ""
     echo "Actions:"
-    echo "  forward        - Port-forward services (app, grafana, kafka-ui, prometheus)"
+    echo "  forward        - Port-forward services (app, grafana, kafka-ui, prometheus, opensearch, opensearch-dashboards)"
     echo "  stop           - Kill port-forwards"
     echo "  pods           - Show pods in development namespace"
     echo "  logs           - Tail app logs"
     echo "  status         - Helm status"
     echo "  describe <pod>  - Describe a pod (e.g. dev-stack-postgresql-xxx)"
     echo "  events         - Show recent namespace events"
-    echo "  clear-stuck    - Delete failed pods (ImageInspectError, ImagePullBackOff) to release volumes"
+    echo "  clear-stuck    - Delete failed pods to release volumes (ImageInspectError, CrashLoopBackOff, etc.)"
+    echo "  deploy         - Helm upgrade, then start port-forwards (use after CI push or for local deploy)"
     echo "  run            - Spawn shell with KUBECONFIG set (run arbitrary kubectl commands)"
     echo ""
     echo "Setup (once):"
@@ -101,15 +102,21 @@ forward() {
     PIDS+=($!)
     kubectl port-forward -n $NAMESPACE svc/${RELEASE_NAME}-stack-prometheus 9090:9090 &
     PIDS+=($!)
+    kubectl port-forward -n $NAMESPACE svc/${RELEASE_NAME}-stack-opensearch 9200:9200 &
+    PIDS+=($!)
+    kubectl port-forward -n $NAMESPACE svc/${RELEASE_NAME}-stack-opensearch-dashboards 5601:5601 &
+    PIDS+=($!)
 
     sleep 1
     echo ""
     echo -e "${GREEN}✓ Port-forwards active. Press Ctrl+C to stop.${NC}"
     echo ""
-    echo "  App:       http://localhost:8081"
-    echo "  Grafana:   http://localhost:3000 (admin/admin)"
-    echo "  Kafka UI:  http://localhost:8080"
-    echo "  Prometheus: http://localhost:9090"
+    echo "  App:                http://localhost:8081"
+    echo "  Grafana:            http://localhost:3000 (admin/admin)"
+    echo "  Kafka UI:           http://localhost:8080"
+    echo "  Prometheus:         http://localhost:9090"
+    echo "  OpenSearch:         http://localhost:9200"
+    echo "  OpenSearch Dashboards: http://localhost:5601 (no auth when disableSecurity=true)"
     echo ""
     wait
 }
@@ -161,6 +168,26 @@ events() {
     kubectl get events -n $NAMESPACE --sort-by='.lastTimestamp' | tail -40
 }
 
+deploy() {
+    ensure_kubeconfig
+    trap "rm -f $KUBECONFIG" EXIT
+    check_cluster
+    local image_repo="${DEPLOY_IMAGE_REPO:-ghcr.io/mafauser/service-initializer}"
+    local image_tag="${2:-dev-latest}"
+    echo -e "${YELLOW}Helm upgrade (image: $image_repo:$image_tag)...${NC}"
+    helm upgrade --install $RELEASE_NAME "$PROJECT_ROOT/helm/stack" \
+      -f "$PROJECT_ROOT/helm/stack/values-dev.yaml" \
+      --set application.image.repository="$image_repo" \
+      --set application.image.tag="$image_tag" \
+      --namespace $NAMESPACE \
+      --create-namespace
+    echo -e "${GREEN}Deploy done. Waiting for Grafana rollout...${NC}"
+    kubectl rollout status deployment/${RELEASE_NAME}-stack-grafana -n $NAMESPACE --timeout=120s 2>/dev/null || true
+    echo -e "${GREEN}Starting port-forwards...${NC}"
+    echo ""
+    forward
+}
+
 run_shell() {
     ensure_kubeconfig
     check_cluster
@@ -174,9 +201,9 @@ clear_stuck() {
     ensure_kubeconfig
     trap "rm -f $KUBECONFIG" EXIT
     check_cluster
-    echo -e "${YELLOW}Scaling down old ReplicaSets and deleting failed pods (ImageInspectError, ImagePullBackOff, ErrImagePull)...${NC}"
+    echo -e "${YELLOW}Scaling down ReplicaSets and deleting failed pods (ImageInspectError, ImagePullBackOff, ErrImagePull, CrashLoopBackOff, Error)...${NC}"
     local pods
-    pods=$(kubectl get pods -n $NAMESPACE --no-headers 2>/dev/null | awk '$3 ~ /ImageInspectError|ImagePullBackOff|ErrImagePull/ {print $1}')
+    pods=$(kubectl get pods -n $NAMESPACE --no-headers 2>/dev/null | awk '$3 ~ /ImageInspectError|ImagePullBackOff|ErrImagePull|CrashLoopBackOff|Error/ {print $1}')
     if [ -z "$pods" ]; then
         echo -e "${GREEN}No stuck pods found.${NC}"
         return 0
@@ -224,6 +251,9 @@ case $1 in
         ;;
     clear-stuck)
         clear_stuck
+        ;;
+    deploy)
+        deploy "$@"
         ;;
     run)
         run_shell

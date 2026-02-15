@@ -7,18 +7,18 @@ metadata:
     {{- include "stack.labels" . | nindent 4 }}
     app.kubernetes.io/component: grafana
 data:
-  datasources.yml: |
+  datasources.yaml: |
     apiVersion: 1
-
     datasources:
       - name: Prometheus
+        uid: prometheus
         type: prometheus
         access: proxy
         url: http://{{ include "stack.fullname" . }}-prometheus:9090
         isDefault: true
         editable: true
-
       - name: Tempo
+        uid: tempo
         type: tempo
         access: proxy
         url: http://{{ include "stack.fullname" . }}-tempo:3200

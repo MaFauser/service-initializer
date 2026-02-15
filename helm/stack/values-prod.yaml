@@ -67,6 +67,25 @@ tempo:
       memory: "4Gi"
       cpu: "2000m"
 
+opensearch:
+  enabled: true
+  disableSecurity: false  # Enable auth/TLS in production
+  persistence:
+    size: 50Gi
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "1000m"
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
+
+opensearchDashboards:
+  enabled: true
+
+fluentBit:
+  enabled: true
+
 prometheus:
   persistence:
     enabled: true

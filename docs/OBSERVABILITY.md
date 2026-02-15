@@ -3,10 +3,10 @@
 | Tool | What it stores | Where to view |
 |------|----------------|---------------|
 | **Prometheus** | **Metrics** (request counts, latencies, JVM, CPU) | Grafana dashboards, Prometheus UI |
-| **Tempo** | **Traces** (distributed spans) | Grafana → Service → Tempo Traces, or Explore → Tempo |
+| **Tempo** | **Traces** (distributed spans) | Grafana → Explore → Tempo, Tempo Traces dashboard |
+| **OpenSearch** | **Logs** (pod stdout: request logs, errors, debug) | OpenSearch Dashboards → Discover |
 
-**Dashboards** (Service folder): Spring Boot, Tempo Traces, Observability Overview
-| **Logs** | **Application logs** (stdout: request logs, errors, debug) | `kubectl logs`, or Loki if added |
+**Dashboards** (Service folder in Grafana): Spring Boot, Tempo Traces, Observability Overview
 
 **Prometheus does NOT store logs.** It stores numeric metrics (counters, gauges, histograms).
 
@@ -14,7 +14,18 @@
 
 ## Viewing logs
 
-### Kubernetes (dev/prod)
+### OpenSearch Dashboards (Discover)
+
+1. **Port-forward** (if using remote cluster): `./scripts/k8s-dev.sh forward`
+2. **Open OpenSearch Dashboards** → http://localhost:5601
+3. **Discover** → The `kubernetes-logs-*` index pattern is created automatically on deploy
+4. **Query examples:**
+   - Filter by `kubernetes.namespace_name: development` – all logs in dev namespace
+   - Filter by `kubernetes.pod_name: dev-stack-app*` – logs from your Spring Boot app
+   - Full-text search: `error` – app logs containing "error"
+   - Filter by `kubernetes.container_name: app` – logs from containers named "app"
+
+### kubectl (streaming)
 
 ```bash
 # Stream app logs
@@ -84,12 +95,10 @@ This is configured in `application.yaml`. Restart the app and generate some HTTP
 
 ---
 
-## Adding Loki (log aggregation)
+## OpenSearch (included in Helm stack)
 
-To query logs in Grafana (like Prometheus for metrics), add [Loki](https://grafana.com/oss/loki/):
+OpenSearch, OpenSearch Dashboards, and Fluent Bit are deployed by the Helm chart. Fluent Bit runs as a DaemonSet, collecting pod logs from each node and sending them to OpenSearch. After deploy:
 
-- Deploy Loki (Helm chart or Docker)
-- Add Loki as a datasource in Grafana
-- Configure log shipping (Promtail, Fluent Bit, or Grafana Agent) to send container logs to Loki
-
-Then you can query logs in Grafana → Explore → Loki.
+- **OpenSearch Dashboards** → http://localhost:5601 (after port-forward) → **Discover** to search logs
+- The index pattern is `kubernetes-logs-*` (Logstash-style date suffix)
+- With security disabled (default for dev): no login. With security enabled: admin / configurable password

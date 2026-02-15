@@ -11,7 +11,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 
 /**
  * Logs HTTP requests: method, path, status, and duration.
- * Logs appear in stdout and can be viewed via `kubectl logs` or any log aggregator (Loki, CloudWatch, etc.).
+ * Logs appear in stdout and can be viewed via `kubectl logs` or any log aggregator (OpenSearch, CloudWatch, etc.).
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)

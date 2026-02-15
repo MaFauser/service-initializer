@@ -18,6 +18,8 @@ spec:
         {{- include "stack.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: prometheus
     spec:
+      securityContext:
+        fsGroup: 65534  # Prometheus runs as nobody (uid=65534), needed for OKE block volume write access
       containers:
       - name: prometheus
         image: "{{ .Values.prometheus.image.repository }}:{{ .Values.prometheus.image.tag }}"

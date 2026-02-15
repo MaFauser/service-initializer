@@ -18,6 +18,8 @@ spec:
         {{- include "stack.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: kafka
     spec:
+      securityContext:
+        fsGroup: 1000  # Kafka runs as appuser (uid=1000), needed for OKE block volume write access
       containers:
       - name: kafka
         image: "{{ .Values.kafka.image.repository }}:{{ .Values.kafka.image.tag }}"

@@ -17,7 +17,12 @@ spec:
       labels:
         {{- include "stack.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: grafana
+      annotations:
+        # Forces rollout when datasources change (Grafana only reads provisioning at startup)
+        checksum/datasources: {{ printf "prometheus,tempo,%s" (include "stack.fullname" .) | sha256sum }}
     spec:
+      securityContext:
+        fsGroup: 472  # Grafana runs as grafana (uid=472), needed for OKE block volume write access
       containers:
       - name: grafana
         image: "{{ .Values.grafana.image.repository }}:{{ .Values.grafana.image.tag }}"

@@ -50,8 +50,14 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
+logging:
+  level:
+    '[com.mafauser.service]': INFO
+
 management:
   metrics:
+    tags:
+      application: ${spring.application.name}
     distribution:
       percentiles-histogram:
         '[http.server.requests]': true

@@ -315,7 +315,7 @@ Before going to production, ensure:
 - [ ] Enable **network policies** for security
 - [ ] Use **managed services** if possible (RDS, ElastiCache, MSK)
 - [ ] Configure **resource quotas** and **limits**
-- [ ] Set up **logging** aggregation (ELK, Loki, CloudWatch)
+- [ ] Set up **logging** aggregation (OpenSearch, ELK, CloudWatch)
 - [ ] Configure **horizontal pod autoscaling** (HPA)
 - [ ] Test **disaster recovery** procedures
 - [ ] Document **runbooks** for common issues

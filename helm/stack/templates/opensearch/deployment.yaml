@@ -1,0 +1,84 @@
+{{- if .Values.opensearch.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "stack.fullname" . }}-opensearch
+  labels:
+    {{- include "stack.labels" . | nindent 4 }}
+    app.kubernetes.io/component: opensearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "stack.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: opensearch
+  template:
+    metadata:
+      labels:
+        {{- include "stack.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: opensearch
+    spec:
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+      - name: increase-vm-max-map-count
+        image: docker.io/library/busybox:1.36
+        command: ["/bin/sh", "-c", "sysctl -w vm.max_map_count=262144 || true"]
+        securityContext:
+          privileged: true
+      containers:
+      - name: opensearch
+        image: "{{ .Values.opensearch.image.repository }}:{{ .Values.opensearch.image.tag }}"
+        imagePullPolicy: {{ .Values.opensearch.image.pullPolicy }}
+        env:
+        - name: discovery.type
+          value: "single-node"
+        {{- if not .Values.opensearch.disableSecurity }}
+        - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "stack.fullname" . }}-opensearch
+              key: admin-password
+        {{- else }}
+        - name: DISABLE_SECURITY_PLUGIN
+          value: "true"
+        {{- end }}
+        - name: "OPENSEARCH_JAVA_OPTS"
+          value: "-Xms512m -Xmx512m"
+        ports:
+        - name: http
+          containerPort: 9200
+          protocol: TCP
+        - name: performance
+          containerPort: 9600
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /_cluster/health
+            port: http
+          initialDelaySeconds: 90
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /_cluster/health
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 5
+        resources:
+          {{- toYaml .Values.opensearch.resources | nindent 10 }}
+        volumeMounts:
+        - name: data
+          mountPath: /usr/share/opensearch/data
+      volumes:
+      - name: data
+        {{- if .Values.opensearch.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ include "stack.fullname" . }}-opensearch
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
+{{- end }}

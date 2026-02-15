@@ -12,5 +12,6 @@ keywords:
   - grafana
   - prometheus
   - tempo
+  - opensearch
 maintainers:
   - name: Service Team

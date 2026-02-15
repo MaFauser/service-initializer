@@ -56,6 +56,12 @@ tempo:
   persistence:
     size: 5Gi
 
+# OpenSearch
+opensearch:
+  enabled: true
+  persistence:
+    size: 5Gi
+
 # Prometheus
 prometheus:
   enabled: true
