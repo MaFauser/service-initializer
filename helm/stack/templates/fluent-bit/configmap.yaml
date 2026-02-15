@@ -39,6 +39,13 @@ data:
         K8S-Logging.Parser On
         K8S-Logging.Exclude Off
 
+    [FILTER]
+        Name parser
+        Match kube.*
+        Key_Name log_processed
+        Parser logstash_json
+        Reserve_Data On
+
     [OUTPUT]
         Name opensearch
         Match *
@@ -77,4 +84,11 @@ data:
         Format json
         Time_Key time
         Time_Format %d/%b/%Y:%H:%M:%S %z
+
+    [PARSER]
+        Name logstash_json
+        Format json
+        Time_Key @timestamp
+        Time_Format %Y-%m-%dT%H:%M:%S.%L
+        Time_Keep On
 {{- end }}

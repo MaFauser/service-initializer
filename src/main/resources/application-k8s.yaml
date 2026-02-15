@@ -3,6 +3,9 @@
 # Activate with: spring.profiles.active=k8s
 
 spring:
+  output:
+    ansi:
+      enabled: never  # Plain text for Fluent Bit → OpenSearch (no escape codes)
   application:
     name: service  # Keep in sync with rootProject.name in settings.gradle.kts
 
