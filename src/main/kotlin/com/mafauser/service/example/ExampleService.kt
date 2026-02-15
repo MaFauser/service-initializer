@@ -1,5 +1,7 @@
 package com.mafauser.service.example
 
+import com.mafauser.service.config.ConflictException
+import com.mafauser.service.config.NotFoundException
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import org.springframework.stereotype.Service
@@ -23,7 +25,7 @@ class ExampleService(
     @Transactional
     fun create(input: CreateExampleInput): Example {
         if (exampleRepository.existsByName(input.name)) {
-            throw DuplicateExampleNameException(input.name)
+            throw ConflictException("Example", "name", input.name)
         }
         val example =
             Example(
@@ -38,10 +40,10 @@ class ExampleService(
         id: UUID,
         input: UpdateExampleInput,
     ): Example {
-        val example = exampleRepository.findById(id).orElseThrow { ExampleNotFoundException(id) }
+        val example = exampleRepository.findById(id).orElseThrow { NotFoundException("Example", id) }
         input.name?.let { name ->
             if (name != example.name && exampleRepository.existsByName(name)) {
-                throw DuplicateExampleNameException(name)
+                throw ConflictException("Example", "name", name)
             }
             example.name = name
         }
@@ -70,15 +72,3 @@ data class UpdateExampleInput(
     @field:Size(max = 255) val name: String? = null,
     @field:Size(max = 1024) val description: String? = null,
 )
-
-class ExampleNotFoundException(
-    id: UUID,
-) : RuntimeException("Example not found: $id")
-
-class DuplicateExampleNameException(
-    name: String,
-) : RuntimeException("Example already exists with name: $name")
-
-class InvalidIdException(
-    message: String,
-) : RuntimeException(message)

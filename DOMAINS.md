@@ -6,7 +6,7 @@ This project uses **package-by-feature** (domain-driven layout): each business d
 
 - **`com.mafauser.service.example.Example`** – JPA entity: UUID id, version (optimistic locking), name, description, createdAt, updatedAt.
 - **`ExampleRepository`** – `JpaRepository<Example, UUID>` with `findByName` and `existsByName`.
-- **`ExampleService`** – `@Transactional` CRUD; uses `CreateExampleInput` / `UpdateExampleInput`; throws `ExampleNotFoundException`, `DuplicateExampleNameException`.
+- **`ExampleService`** – `@Transactional` CRUD; uses `CreateExampleInput` / `UpdateExampleInput` (Bean Validation); throws shared `NotFoundException`, `ConflictException`, `InvalidIdException` from `config/`.
 - **`ExampleController`** – REST `@RestController`: CRUD at `/examples` (GET, POST, PUT, DELETE).
 - **`ExampleGraphQLController`** – GraphQL `@Controller`: queries `examples`, `example(id)`; mutations `createExample`, `updateExample`, `deleteExample`.
 - **`graphql/example/schema.graphqls`** – Type `Example`, inputs `CreateExampleInput`, `UpdateExampleInput`, and `extend type Query` / `extend type Mutation`.
@@ -37,7 +37,7 @@ This project uses **package-by-feature** (domain-driven layout): each business d
    - Use **version** (BIGINT) for optimistic locking.
    - Use **createdAt** / **updatedAt** (TIMESTAMP) for audit.
    - Keep input DTOs in the service package (e.g. `CreateExampleInput`, `UpdateExampleInput`).
-   - Let service exceptions (e.g. `ExampleNotFoundException`) propagate; Spring GraphQL maps them to errors.
+   - Throw shared exceptions (`NotFoundException`, `ConflictException`). `GlobalExceptionHandler` maps them to HTTP status codes; GraphQL maps them to errors.
 
 Copy from the `example` package and rename; then adjust fields and validation to match your domain.
 
@@ -47,7 +47,6 @@ This project uses **Spring GraphQL**, which is **schema-first**: you write `.gra
 
 ## Tests
 
-- **Unit**: `ExampleServiceTest` – mocks `ExampleRepository`, tests all service methods (findAll, findById, create, update, delete) and domain exceptions. Run with `./gradlew test --tests "com.mafauser.service.example.ExampleServiceTest"`.
-- **Integration (GraphQL)**: `ExampleControllerIntegrationTest` – full stack with Testcontainers (PostgreSQL, Redis, Kafka, etc.), uses `GraphQlTester` and `MockMvcWebTestClient` against the Example GraphQL API. Requires Docker. Run with `./gradlew test --tests "com.mafauser.service.example.ExampleControllerIntegrationTest"`.
-- **Integration (REST)**: `ExampleRestControllerIntegrationTest` – same stack, uses `MockMvc` against the Example REST API (`/examples`). Run with `./gradlew test --tests "com.mafauser.service.example.ExampleRestControllerIntegrationTest"`.
-- GraphQL documents for integration tests live in `src/test/resources/graphql-test/` (e.g. `examples-query.graphql`, `example-by-id-query.graphql`, `delete-example-mutation.graphql`).
+- **Unit**: `ExampleServiceTest` – mocks `ExampleRepository`, tests all service methods and domain exceptions.
+- **Integration**: `ExampleControllerIntegrationTest` (GraphQL), `ExampleRestControllerIntegrationTest` (REST) – both extend `BaseIntegrationTest` (Testcontainers: Postgres, Redis, Kafka). Requires Docker.
+- GraphQL documents: `src/test/resources/graphql-test/` (e.g. `examples-query.graphql`, `delete-example-mutation.graphql`).

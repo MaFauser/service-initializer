@@ -1,6 +1,6 @@
 package com.mafauser.service.example
 
-import com.mafauser.service.TestcontainersConfiguration
+import com.mafauser.service.BaseIntegrationTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -11,19 +11,15 @@ import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.Import
 import org.springframework.graphql.test.tester.GraphQlTester
 import org.springframework.graphql.test.tester.HttpGraphQlTester
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.servlet.client.MockMvcWebTestClient
 import org.springframework.web.context.WebApplicationContext
 
-@Import(TestcontainersConfiguration::class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 @DisplayName("Example GraphQL API (integration)")
-class ExampleControllerIntegrationTest {
+class ExampleControllerIntegrationTest : BaseIntegrationTest() {
     @Autowired
     private lateinit var applicationContext: WebApplicationContext
 
@@ -305,7 +301,7 @@ class ExampleControllerIntegrationTest {
                 val hasRelevantError =
                     errors.any {
                         val msg = it.message ?: ""
-                        msg.contains("DuplicateExampleNameException") ||
+                        msg.contains("ConflictException") ||
                             msg.contains("already exists") ||
                             msg.contains("duplicate", ignoreCase = true) ||
                             msg.contains("INTERNAL_ERROR")

@@ -34,12 +34,12 @@ Review focused on **simplicity**, **quality**, and **using built-in libraries** 
 
 ### Application and domain code
 - **Application.kt** – Top-level `main`, no companion/`@JvmStatic`; minimal and idiomatic.
-- **BaseEntity** – `@CreationTimestamp` / `@UpdateTimestamp`; no custom equals/hashCode; clear and minimal.
+- **BaseEntity** – `@CreationTimestamp` / `@UpdateTimestamp`; id-based equals/hashCode; clear and minimal.
 - **Example** – Extends `BaseEntity`, constructor `id` passed to super; no redundant override.
 - **ExampleRepository** – Plain Spring Data JPA; `findByName`, `existsByName` are enough.
 - **ExampleService** – Uses `Optional.orElse(null)`; acceptable. No need for extra Kotlin extensions.
 - **ExampleController** – REST CRUD; delegates to service; appropriate.
-- **ExampleExceptionHandler** – Maps domain exceptions to 404/409; minimal.
+- **GlobalExceptionHandler** – Maps domain exceptions (404, 409, 400) to HTTP status; minimal.
 - **ExampleGraphQLController** – `parseUuid` / `parseUuidOrNull` are small helpers; keeping them is fine (no heavy “reimplementing the wheel”).
 
 ### Configuration

@@ -1,5 +1,7 @@
 package com.mafauser.service.example
 
+import com.mafauser.service.config.ConflictException
+import com.mafauser.service.config.NotFoundException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -107,11 +109,11 @@ class ExampleServiceTest {
         }
 
         @Test
-        fun `throws DuplicateExampleNameException when name exists`() {
+        fun `throws ConflictException when name exists`() {
             whenever(exampleRepository.existsByName("Existing")).thenReturn(true)
 
             val input = CreateExampleInput(name = "Existing")
-            assertThrows<DuplicateExampleNameException> {
+            assertThrows<ConflictException> {
                 exampleService.create(input)
             }
 
@@ -142,11 +144,11 @@ class ExampleServiceTest {
         }
 
         @Test
-        fun `throws ExampleNotFoundException when not found`() {
+        fun `throws NotFoundException when not found`() {
             val id = UUID.randomUUID()
             whenever(exampleRepository.findById(id)).thenReturn(empty())
 
-            assertThrows<ExampleNotFoundException> {
+            assertThrows<NotFoundException> {
                 exampleService.update(id, UpdateExampleInput(name = "Any"))
             }
 
@@ -155,13 +157,13 @@ class ExampleServiceTest {
         }
 
         @Test
-        fun `throws DuplicateExampleNameException when new name already exists`() {
+        fun `throws ConflictException when new name already exists`() {
             val id = UUID.randomUUID()
             val existing = Example(id = id, name = "Current")
             whenever(exampleRepository.findById(id)).thenReturn(of(existing))
             whenever(exampleRepository.existsByName("Taken")).thenReturn(true)
 
-            assertThrows<DuplicateExampleNameException> {
+            assertThrows<ConflictException> {
                 exampleService.update(id, UpdateExampleInput(name = "Taken"))
             }
 

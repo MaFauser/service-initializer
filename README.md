@@ -2,6 +2,40 @@
 
 Default backend service: Spring Boot, PostgreSQL, Redis, Kafka, GraphQL. Use this repo as a template to add your own domains.
 
+## Project Structure
+
+```
+service-initializer/
+├── src/main/kotlin/.../service/
+│   ├── Application.kt                 # Entry point
+│   ├── BaseEntity.kt                  # Shared: id, createdAt, updatedAt for all entities
+│   ├── config/                        # App-wide: exceptions, tracing, logging
+│   │   ├── ConflictException.kt       # Duplicate constraint → 409
+│   │   ├── GlobalExceptionHandler.kt  # Maps shared exceptions → HTTP status
+│   │   ├── InvalidIdException.kt      # Invalid UUID (GraphQL) → 400
+│   │   ├── NotFoundException.kt       # Resource missing → 404
+│   │   ├── NoiseExclusions.kt
+│   │   ├── RequestLoggingFilter.kt
+│   │   └── TracingConfiguration.kt
+│   └── example/                      # Example domain (copy to add new domains)
+│       ├── Example.kt                # Entity
+│       ├── ExampleRepository.kt
+│       ├── ExampleService.kt         # + input DTOs, domain exceptions
+│       ├── ExampleController.kt       # REST
+│       └── ExampleGraphQLController.kt
+├── src/main/resources/
+│   ├── application.yaml              # Local config (env vars with defaults)
+│   ├── application-k8s.yaml          # K8s profile
+│   ├── graphql/example/schema.graphqls
+│   └── db/migration/
+├── helm/stack/                        # K8s stack (Postgres, Redis, Kafka, Grafana, etc.)
+│   ├── config/shared.yaml            # Single source: images, credentials (Docker + Helm)
+│   └── values*.yaml
+├── docker-compose.yml                # Local dev (requires ./scripts/load-config.sh first)
+├── grafana/provisioning/             # Grafana datasources + dashboards
+└── scripts/load-config.sh            # Generates .env from shared.yaml
+```
+
 ## Domain structure (package-by-feature)
 
 Code is organized **by domain** so each feature lives in one place and is easy to copy when adding new ones.
@@ -22,7 +56,9 @@ Code is organized **by domain** so each feature lives in one place and is easy t
 
 1. **First time:** Run `./scripts/load-config.sh` to generate `.env` and Prometheus config from `helm/stack/config/shared.yaml` (single source for Docker + Helm).
 2. Start dependencies: `docker compose up -d`
-2. Run the app: **Gradle** extension → **bootRun** task
+3. Run the app: **Gradle** → `bootRun` task
+
+**Tests:** `./gradlew test` (uses Testcontainers; requires Docker). For IDE run with Testcontainers, use `TestApplication` main.
 
 ## Links (when running locally)
 

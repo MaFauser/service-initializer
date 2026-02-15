@@ -1,5 +1,6 @@
 package com.mafauser.service.example
 
+import com.mafauser.service.config.NotFoundException
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -35,7 +36,7 @@ class ExampleController(
         @PathVariable id: UUID,
     ): Example {
         log.info("Example get requested: id={}", id)
-        return exampleService.findById(id) ?: throw ExampleNotFoundException(id)
+        return exampleService.findById(id) ?: throw NotFoundException("Example", id)
     }
 
     @PostMapping
@@ -63,7 +64,7 @@ class ExampleController(
     ) {
         log.info("Example delete requested: id={}", id)
         if (!exampleService.delete(id)) {
-            throw ExampleNotFoundException(id)
+            throw NotFoundException("Example", id)
         }
     }
 }

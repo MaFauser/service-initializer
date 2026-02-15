@@ -1,5 +1,6 @@
 package com.mafauser.service.example
 
+import com.mafauser.service.config.InvalidIdException
 import org.slf4j.LoggerFactory
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
