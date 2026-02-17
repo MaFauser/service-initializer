@@ -55,7 +55,7 @@ POST /examples 201 12ms
 GET /graphql 200 89ms
 ```
 
-This is done by `RequestLoggingFilter` and appears in the app logs.
+Request logs appear in the app logs (stdout) and in your log aggregator (OpenSearch, etc.).
 
 ---
 

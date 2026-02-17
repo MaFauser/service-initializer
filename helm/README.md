@@ -10,37 +10,65 @@ This Helm chart deploys a complete Spring Boot service stack with PostgreSQL, Re
 - Helm 3.x installed
 - kubectl configured to access your cluster
 
-## Two-Tier Environment Strategy
+## Values per environment (no defaults/fallbacks)
 
-| Environment | Use Case | Cluster Type | App Deployment |
-|-------------|----------|--------------|----------------|
-| **dev** | Shared dev/staging | Cloud K8s cluster | Deployed in cluster |
-| **prod** | Production | Cloud K8s cluster | Deployed in cluster |
+One values file per environment. Credentials are never defaulted in templates.
 
-**Local development** uses Docker Compose (`docker-compose up -d` + `./gradlew bootRun`), not Helm.
+| File | Credentials | Use |
+|------|-------------|-----|
+| **values-local.yaml** | Raw usernames/passwords in the file | Local K8s (e.g. Docker Desktop, kind) |
+| **values-dev.yaml** | Secrets only (`existingSecret`); no raw passwords | Dev/staging cluster |
+| **values-prod.yaml** | Secrets only (`existingSecret`); no raw passwords | Production cluster |
+
+**Local development** (laptop) often uses Docker Compose (`docker-compose up -d` + `./gradlew bootRun`); for local K8s use `values-local.yaml`.
 
 ## Quick Start
 
-### 1. Development Cluster (Shared Staging)
+Always use: `-f config/shared.yaml -f values.yaml -f values-<env>.yaml`. Images come from `config/shared.yaml`.
+
+### 1. Local (raw credentials in file)
 
 ```bash
-# Deploy everything including the app
-# config/shared.yaml = single source for images, credentials (shared with Docker Compose)
 helm install dev ./helm/stack \
   -f ./helm/stack/config/shared.yaml \
+  -f ./helm/stack/values.yaml \
+  -f ./helm/stack/values-local.yaml \
+  --namespace development \
+  --create-namespace
+```
+
+### 2. Dev (Secrets; create Secrets before install)
+
+Create the required Secrets first (see **[Creating Secrets](../docs/SECRETS.md)** for full steps and key names):
+
+```bash
+kubectl create secret generic dev-postgresql-credentials \
+  --from-literal=username=service --from-literal=password=<secret> -n development
+kubectl create secret generic dev-grafana-credentials \
+  --from-literal=adminUser=admin --from-literal=adminPassword=<secret> -n development
+
+helm install dev ./helm/stack \
+  -f ./helm/stack/config/shared.yaml \
+  -f ./helm/stack/values.yaml \
   -f ./helm/stack/values-dev.yaml \
   --namespace development \
   --create-namespace
 ```
 
-### 2. Production Cluster
+### 3. Prod (Secrets; create Secrets before install)
+
+Create the required Secrets first (see **[Creating Secrets](../docs/SECRETS.md)**):
 
 ```bash
-# Deploy with production settings
+kubectl create secret generic prod-postgresql-credentials \
+  --from-literal=username=service --from-literal=password=<secret> -n production
+kubectl create secret generic prod-grafana-credentials \
+  --from-literal=adminUser=admin --from-literal=adminPassword=<secret> -n production
+
 helm install prod ./helm/stack \
   -f ./helm/stack/config/shared.yaml \
+  -f ./helm/stack/values.yaml \
   -f ./helm/stack/values-prod.yaml \
-  --set postgresql.auth.password=$DB_PASSWORD \
   --namespace production \
   --create-namespace
 ```
@@ -91,9 +119,11 @@ management:
 
 ### Values Files
 
-- **`values.yaml`** - Base configuration (defaults)
-- **`values-dev.yaml`** - **Shared dev/staging** cluster (moderate resources, includes app deployment)
-- **`values-prod.yaml`** - **Production** cluster (high resources, HA settings, includes app deployment)
+- **`values.yaml`** - Base structure (no credential defaults; always override with an env file)
+- **`config/shared.yaml`** - Images and Kafka config (shared with Docker Compose)
+- **`values-local.yaml`** - Local K8s: raw usernames/passwords for Postgres, Grafana, app datasource
+- **`values-dev.yaml`** - Dev/staging: Secrets only (`postgresql.auth.existingSecret`, `application.datasource.existingSecret`, `grafana.auth.existingSecret`)
+- **`values-prod.yaml`** - Production: Secrets only; backup, HPA, networkPolicy enabled
 
 ### Customize Installation
 
@@ -124,16 +154,16 @@ helm install myservice ./helm/stack \
 ### Install
 ```bash
 # Development cluster
-helm install dev ./helm/stack -f ./helm/stack/values-dev.yaml --namespace development --create-namespace
+helm install dev ./helm/stack -f ./helm/stack/config/shared.yaml -f ./helm/stack/values.yaml -f ./helm/stack/values-dev.yaml --namespace development --create-namespace
 
-# Production cluster
-helm install prod ./helm/stack -f ./helm/stack/values-prod.yaml --namespace production --create-namespace
+# Production cluster (create Secrets first)
+helm install prod ./helm/stack -f ./helm/stack/config/shared.yaml -f ./helm/stack/values.yaml -f ./helm/stack/values-prod.yaml --namespace production --create-namespace
 ```
 
 ### Upgrade
 ```bash
 # After changing values
-helm upgrade myservice ./helm/stack -f ./helm/stack/values-dev.yaml
+helm upgrade myservice ./helm/stack -f ./helm/stack/config/shared.yaml -f ./helm/stack/values.yaml -f ./helm/stack/values-dev.yaml
 ```
 
 ### Uninstall
@@ -298,24 +328,15 @@ kafka-topics --list --bootstrap-server localhost:9092
 
 ## Production Considerations
 
-1. **Use Secrets**: Store passwords in Kubernetes Secrets, not in values files
-   ```bash
-   kubectl create secret generic db-secret --from-literal=password=yourpassword
-   ```
+The chart includes production-oriented options (see `values-prod.yaml` and [Production Readiness](../../docs/PRODUCTION-READINESS.md)):
 
-2. **Use Managed Services**: Consider using cloud-managed services:
-   - AWS RDS (PostgreSQL)
-   - AWS ElastiCache (Redis)
-   - AWS MSK (Kafka)
-   - AWS Managed Grafana/Prometheus
-
-3. **Resource Limits**: Adjust based on actual usage and monitoring
-
-4. **Backups**: Set up automated backups for databases
-
-5. **Monitoring**: Integrate with your existing monitoring stack
-
-6. **Security**: Enable authentication, network policies, and RBAC
+1. **Secrets**: Set `postgresql.auth.existingSecret` and `application.datasource.existingSecret` to use Kubernetes Secrets for DB credentials.
+2. **Ingress + TLS**: Set `ingress.enabled: true`, `ingress.hosts`, and `ingress.tls` (requires an Ingress controller).
+3. **HPA**: Set `application.autoscaling.enabled: true` to scale the app by CPU.
+4. **Network policies**: Set `networkPolicy.enabled: true` to restrict pod-to-pod traffic.
+5. **PostgreSQL backups**: Set `postgresql.backup.enabled: true` for a daily pg_dump CronJob to a PVC (sync to object storage separately).
+6. **Managed services**: For HA, consider RDS, ElastiCache, MSK, or OCI equivalents instead of in-cluster Postgres/Redis/Kafka.
+7. **Monitoring**: Configure alerts in Grafana and runbooks.
 
 ## License
 

@@ -123,11 +123,13 @@ jobs:
       - name: Lint Helm chart
         run: |
           helm lint ./helm/stack
-          helm lint ./helm/stack -f ./helm/stack/values-dev.yaml
-          helm lint ./helm/stack -f ./helm/stack/values-prod.yaml
+          helm lint ./helm/stack -f ./helm/stack/config/shared.yaml -f ./helm/stack/values.yaml -f ./helm/stack/values-local.yaml
+          helm lint ./helm/stack -f ./helm/stack/config/shared.yaml -f ./helm/stack/values.yaml -f ./helm/stack/values-dev.yaml
+          helm lint ./helm/stack -f ./helm/stack/config/shared.yaml -f ./helm/stack/values.yaml -f ./helm/stack/values-prod.yaml
 
       - name: Validate Kubernetes manifests
         run: |
-          helm template test ./helm/stack -f ./helm/stack/values-dev.yaml > /dev/null
-          helm template test ./helm/stack -f ./helm/stack/values-prod.yaml > /dev/null
+          helm template test ./helm/stack -f ./helm/stack/config/shared.yaml -f ./helm/stack/values.yaml -f ./helm/stack/values-local.yaml > /dev/null
+          helm template test ./helm/stack -f ./helm/stack/config/shared.yaml -f ./helm/stack/values.yaml -f ./helm/stack/values-dev.yaml > /dev/null
+          helm template test ./helm/stack -f ./helm/stack/config/shared.yaml -f ./helm/stack/values.yaml -f ./helm/stack/values-prod.yaml > /dev/null
           echo "✅ Kubernetes manifests are valid"

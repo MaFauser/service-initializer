@@ -79,11 +79,13 @@ brew install helm
 ./gradlew bootBuildImage --imageName=service:dev
 ```
 
-#### 4. Deploy with Helm
+#### 4. Deploy with Helm (local = raw credentials in values-local.yaml; no Secrets)
 
 ```bash
 helm install dev ./helm/stack \
-  -f ./helm/stack/values-dev.yaml \
+  -f ./helm/stack/config/shared.yaml \
+  -f ./helm/stack/values.yaml \
+  -f ./helm/stack/values-local.yaml \
   --set application.image.repository=service \
   --set application.image.tag=dev \
   --set application.image.pullPolicy=IfNotPresent \
@@ -135,12 +137,26 @@ kind load docker-image service:dev
 
 ## Development Cluster (Shared Staging)
 
-**Goal**: Full deployment in a shared Kubernetes cluster for team testing.
+**Goal**: Full deployment in a shared Kubernetes cluster for team testing. Dev uses **Secrets** only (no raw passwords in values).
+
+### Create Secrets (once)
+
+Create the two required Secrets before the first deploy. **Full guide (key names, verification, CI/CD):** [Creating Secrets (docs/SECRETS.md)](docs/SECRETS.md).
+
+```bash
+kubectl create namespace development --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl create secret generic dev-postgresql-credentials \
+  --from-literal=username=service --from-literal=password=<secret> -n development
+kubectl create secret generic dev-grafana-credentials \
+  --from-literal=adminUser=admin --from-literal=adminPassword=<secret> -n development
+```
 
 ### Initial Deployment
 ```bash
-# Deploy everything (infrastructure + app)
 helm install dev ./helm/stack \
+  -f ./helm/stack/config/shared.yaml \
+  -f ./helm/stack/values.yaml \
   -f ./helm/stack/values-dev.yaml \
   --namespace development \
   --create-namespace
@@ -168,6 +184,8 @@ docker push your-registry/service:v1.2.0
 
 # Update deployment
 helm upgrade dev ./helm/stack \
+  -f ./helm/stack/config/shared.yaml \
+  -f ./helm/stack/values.yaml \
   -f ./helm/stack/values-dev.yaml \
   --set application.image.tag=v1.2.0 \
   --namespace development
@@ -183,30 +201,28 @@ kubectl delete namespace development
 
 ## Production Cluster
 
-**Goal**: Secure, scalable production deployment.
+**Goal**: Secure, scalable production deployment. Prod uses **Secrets** only (no raw passwords in values).
 
 ### Prerequisites
+
+Create the two required Secrets before the first deploy. **Full guide:** [Creating Secrets (docs/SECRETS.md)](docs/SECRETS.md).
+
 ```bash
-# Create production namespace
 kubectl create namespace production
 
-# Create secrets (don't use plain text in values files!)
-kubectl create secret generic db-secret \
-  --from-literal=password=$DB_PASSWORD \
-  --namespace production
-
-kubectl create secret generic app-secret \
-  --from-literal=database-password=$DB_PASSWORD \
-  --from-literal=redis-password=$REDIS_PASSWORD \
-  --namespace production
+# Create Secrets (names must match values-prod.yaml: existingSecret)
+kubectl create secret generic prod-postgresql-credentials \
+  --from-literal=username=service --from-literal=password=$DB_PASSWORD -n production
+kubectl create secret generic prod-grafana-credentials \
+  --from-literal=adminUser=admin --from-literal=adminPassword=$GRAFANA_PASSWORD -n production
 ```
 
 ### Initial Deployment
 ```bash
-# Deploy with production settings
 helm install prod ./helm/stack \
+  -f ./helm/stack/config/shared.yaml \
+  -f ./helm/stack/values.yaml \
   -f ./helm/stack/values-prod.yaml \
-  --set postgresql.auth.password=$DB_PASSWORD \
   --set application.image.tag=v1.0.0 \
   --namespace production
 
@@ -220,6 +236,8 @@ helm status prod -n production
 ```bash
 # Update to new version
 helm upgrade prod ./helm/stack \
+  -f ./helm/stack/config/shared.yaml \
+  -f ./helm/stack/values.yaml \
   -f ./helm/stack/values-prod.yaml \
   --set application.image.tag=v1.1.0 \
   --namespace production
@@ -308,17 +326,25 @@ spec:
 
 Before going to production, ensure:
 
-- [ ] Use **Kubernetes Secrets** for passwords (not values files)
-- [ ] Configure **Ingress** with TLS for external access
-- [ ] Set up **backups** for PostgreSQL, Redis, Kafka
-- [ ] Configure **monitoring alerts** in Grafana
-- [ ] Enable **network policies** for security
-- [ ] Use **managed services** if possible (RDS, ElastiCache, MSK)
-- [ ] Configure **resource quotas** and **limits**
-- [ ] Set up **logging** aggregation (OpenSearch, ELK, CloudWatch)
-- [ ] Configure **horizontal pod autoscaling** (HPA)
-- [ ] Test **disaster recovery** procedures
-- [ ] Document **runbooks** for common issues
+- [ ] Use **Kubernetes Secrets** for passwords: create `prod-postgresql-credentials` and `prod-grafana-credentials` before install (see [Creating Secrets](docs/SECRETS.md)).
+- [ ] Configure **Ingress** with TLS: set `ingress.enabled: true`, `ingress.hosts`, and `ingress.tls` (requires an Ingress controller in the cluster).
+- [ ] Enable **PostgreSQL backups**: set `postgresql.backup.enabled: true` (CronJob writes to PVC; sync to object storage separately). See [Backups](#backups) below.
+- [ ] Configure **monitoring alerts** in Grafana (and runbooks).
+- [ ] Enable **network policies**: set `networkPolicy.enabled: true` in values-prod.
+- [ ] Use **managed services** if possible for HA (RDS, ElastiCache, MSK, OCI equivalents).
+- [ ] Configure **resource quotas** and **limits** (already in values-prod).
+- [ ] Set up **logging** aggregation (OpenSearch/Fluent Bit are optional in the chart).
+- [ ] Enable **HPA**: set `application.autoscaling.enabled: true` in values-prod.
+- [ ] Test **disaster recovery** procedures (restore from backup).
+- [ ] Document **runbooks** for common issues.
+
+For a full picture of what the chart provides, see **[Production Readiness](docs/PRODUCTION-READINESS.md)**.
+
+### Backups
+
+**PostgreSQL:** The chart includes an optional CronJob. Set `postgresql.backup.enabled: true` in values-prod; it runs `pg_dump` on a schedule (default daily at 2 AM) and writes to a PVC (retains 7 days). Sync that PVC to object storage with a separate job, or use [Velero](https://velero.io/) for volume backup.
+
+**Redis / Kafka:** No backup CronJob in the chart; use managed services with backup support or add your own strategy.
 
 ---
 

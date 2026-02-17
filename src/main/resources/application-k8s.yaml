@@ -14,6 +14,11 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:service}
     password: ${SPRING_DATASOURCE_PASSWORD:service123}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      # Retire connections before Postgres or K8s network closes them (avoids "connection has been closed" validation failures)
+      max-lifetime: 600000   # 10 minutes
+      connection-timeout: 20000
+      keepalive-time: 30000   # TCP keepalive every 30s so idle connections are not dropped
 
   jpa:
     hibernate:

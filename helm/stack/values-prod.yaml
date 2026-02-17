@@ -1,8 +1,17 @@
-# Production environment values
-# Override specific values for production deployment
+# Production environment: uses Secrets for credentials (no raw passwords).
+# Create Secret before install: kubectl create secret generic prod-postgresql-credentials --from-literal=username=service --from-literal=password=<secret> -n production
+# Use with: helm install prod ./helm/stack -f helm/stack/config/shared.yaml -f helm/stack/values.yaml -f helm/stack/values-prod.yaml -n production --create-namespace
 
-# Production-grade resource allocations
 postgresql:
+  enabled: true
+  auth:
+    database: servicedb
+    existingSecret: prod-postgresql-credentials
+    usernameKey: username
+    passwordKey: password
+  persistence:
+    enabled: true
+    size: 50Gi
   resources:
     requests:
       memory: "512Mi"
@@ -10,13 +19,16 @@ postgresql:
     limits:
       memory: "2Gi"
       cpu: "2000m"
-  persistence:
+  backup:
     enabled: true
-    size: 50Gi
-  # In production, consider using a managed database service instead
-  # enabled: false
+    schedule: "0 2 * * *"
+    pvc:
+      size: 10Gi
 
 redis:
+  enabled: true
+  persistence:
+    size: 20Gi
   resources:
     requests:
       memory: "256Mi"
@@ -24,11 +36,13 @@ redis:
     limits:
       memory: "1Gi"
       cpu: "1000m"
-  persistence:
-    enabled: true
-    size: 20Gi
 
 kafka:
+  enabled: true
+  persistence:
+    size: 100Gi
+  config:
+    replicationFactor: 3
   resources:
     requests:
       memory: "2Gi"
@@ -36,16 +50,17 @@ kafka:
     limits:
       memory: "4Gi"
       cpu: "4000m"
-  persistence:
-    enabled: true
-    size: 100Gi
-  config:
-    replicationFactor: 3
-  # In production, consider using a managed Kafka service (MSK, Confluent Cloud, etc.)
+
+kafkaUi:
+  enabled: false
 
 grafana:
+  enabled: true
+  auth:
+    existingSecret: prod-grafana-credentials
+    adminUserKey: adminUser
+    adminPasswordKey: adminPassword
   persistence:
-    enabled: true
     size: 20Gi
   resources:
     requests:
@@ -56,8 +71,8 @@ grafana:
       cpu: "1000m"
 
 tempo:
+  enabled: true
   persistence:
-    enabled: true
     size: 50Gi
   resources:
     requests:
@@ -69,7 +84,7 @@ tempo:
 
 opensearch:
   enabled: true
-  disableSecurity: false  # Auth/TLS in production
+  disableSecurity: false
   persistence:
     size: 50Gi
   resources:
@@ -82,14 +97,24 @@ opensearch:
 
 opensearchDashboards:
   enabled: true
+  indexPattern: "kubernetes-logs-*"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
 
 fluentBit:
   enabled: true
 
 prometheus:
+  enabled: true
   persistence:
-    enabled: true
     size: 50Gi
+  scrapeInterval: 30s
+  evaluationInterval: 30s
   resources:
     requests:
       memory: "1Gi"
@@ -97,17 +122,17 @@ prometheus:
     limits:
       memory: "4Gi"
       cpu: "2000m"
-  scrapeInterval: 30s
-  evaluationInterval: 30s
 
-# Disable Kafka UI in production (or use with authentication)
-kafkaUi:
-  enabled: false
-
-# Application settings for production
 application:
   enabled: true
+  otelServiceName: service
   replicas: 3
+  datasource:
+    existingSecret: prod-postgresql-credentials
+    usernameKey: username
+    passwordKey: password
+  service:
+    port: 8081
   resources:
     requests:
       memory: "1Gi"
@@ -115,3 +140,20 @@ application:
     limits:
       memory: "4Gi"
       cpu: "4000m"
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+ingress:
+  enabled: false
+  className: nginx
+  hosts:
+    - host: app.example.com
+      path: /
+      pathType: Prefix
+  tls: []
+
+networkPolicy:
+  enabled: true

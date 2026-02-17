@@ -71,20 +71,18 @@ jobs:
           kubectl cluster-info
           kubectl get nodes -o wide
 
-      - name: Create image pull secret for GHCR
+      - name: Ensure namespace exists
         run: |
           kubectl create namespace development --dry-run=client -o yaml | kubectl apply -f -
-          kubectl create secret docker-registry ghcr-registry \
-            --docker-server=ghcr.io \
-            --docker-username=${{ github.repository_owner }} \
-            --docker-password=${{ secrets.GHCR_PAT }} \
-            -n development \
-            --dry-run=client -o yaml | kubectl apply -f -
+
+      # Image pull secret (ghcr-registry) and app/Postgres/Grafana credentials must already exist
+      # in the cluster (e.g. from External Secrets / key manager). The workflow does not inject passwords.
 
       - name: Deploy with Helm
         run: |
           helm upgrade --install dev ./helm/stack \
             -f ./helm/stack/config/shared.yaml \
+            -f ./helm/stack/values.yaml \
             -f ./helm/stack/values-dev.yaml \
             --set application.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
             --set application.image.tag=dev-${{ github.sha }} \

@@ -84,16 +84,23 @@ jobs:
         with:
           version: ${{ env.HELM_VERSION }}
 
+      - name: Ensure namespace exists
+        run: |
+          kubectl create namespace production --dry-run=client -o yaml | kubectl apply -f -
+
+      # Image pull secret and prod Postgres/Grafana credentials must already exist
+      # in the cluster (e.g. from External Secrets / key manager). The workflow does not inject passwords.
+
       - name: Deploy with Helm
         run: |
           for i in 1 2 3; do
             echo "Helm deploy attempt $i/3..."
             if helm upgrade --install prod ./helm/stack \
               -f ./helm/stack/config/shared.yaml \
+              -f ./helm/stack/values.yaml \
               -f ./helm/stack/values-prod.yaml \
               --set application.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
               --set application.image.tag=${{ steps.version.outputs.version }} \
-              --set postgresql.auth.password=${{ secrets.DB_PASSWORD }} \
               --namespace production \
               --create-namespace \
               --timeout 10m \

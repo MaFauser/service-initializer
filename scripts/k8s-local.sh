@@ -49,7 +49,8 @@ deploy() {
     echo -e "${YELLOW}Deploying with Helm...${NC}"
     helm upgrade --install $RELEASE_NAME "$HELM_CHART" \
         -f "$HELM_CHART/config/shared.yaml" \
-        -f "$HELM_CHART/values-dev.yaml" \
+        -f "$HELM_CHART/values.yaml" \
+        -f "$HELM_CHART/values-local.yaml" \
         --set application.image.repository=service \
         --set application.image.tag=dev \
         --set application.image.pullPolicy=IfNotPresent \

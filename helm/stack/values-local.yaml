@@ -1,16 +1,28 @@
-# Development environment: uses Secrets for credentials (no raw passwords).
-# Create Secret before install: kubectl create secret generic dev-postgresql-credentials --from-literal=username=service --from-literal=password=<secret> -n development
-# Use with: helm install dev ./helm/stack -f helm/stack/config/shared.yaml -f helm/stack/values.yaml -f helm/stack/values-dev.yaml -n development --create-namespace
+# Local environment: raw usernames and passwords (no Secrets).
+# Use with: helm install dev ./helm/stack -f helm/stack/config/shared.yaml -f helm/stack/values.yaml -f helm/stack/values-local.yaml -n development --create-namespace
 
 postgresql:
   enabled: true
   auth:
     database: servicedb
-    existingSecret: dev-postgresql-credentials
-    usernameKey: username
-    passwordKey: password
+    username: service
+    password: service123
   persistence:
     enabled: true
+    size: 5Gi
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  backup:
+    enabled: false
+
+redis:
+  enabled: true
+  persistence:
     size: 5Gi
   resources:
     requests:
@@ -19,32 +31,18 @@ postgresql:
     limits:
       memory: "512Mi"
       cpu: "500m"
-  backup:
-    enabled: false
-
-redis:
-  enabled: true
-  persistence:
-    size: 2Gi
-  resources:
-    requests:
-      memory: "64Mi"
-      cpu: "50m"
-    limits:
-      memory: "256Mi"
-      cpu: "250m"
 
 kafka:
   enabled: true
   persistence:
-    size: 10Gi
+    size: 20Gi
   resources:
     requests:
-      memory: "512Mi"
-      cpu: "250m"
-    limits:
       memory: "1Gi"
-      cpu: "1000m"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
 
 kafkaUi:
   enabled: true
@@ -59,11 +57,10 @@ kafkaUi:
 grafana:
   enabled: true
   auth:
-    existingSecret: dev-grafana-credentials
-    adminUserKey: adminUser
-    adminPasswordKey: adminPassword
+    adminUser: admin
+    adminPassword: admin
   persistence:
-    size: 2Gi
+    size: 5Gi
   resources:
     requests:
       memory: "256Mi"
@@ -75,7 +72,7 @@ grafana:
 tempo:
   enabled: true
   persistence:
-    size: 5Gi
+    size: 10Gi
   resources:
     requests:
       memory: "256Mi"
@@ -88,7 +85,7 @@ opensearch:
   enabled: true
   disableSecurity: true
   persistence:
-    size: 5Gi
+    size: 10Gi
   resources:
     requests:
       memory: "1Gi"
@@ -114,36 +111,31 @@ fluentBit:
 prometheus:
   enabled: true
   persistence:
-    size: 5Gi
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "100m"
-    limits:
-      memory: "1Gi"
-      cpu: "500m"
-
-application:
-  enabled: true
-  otelServiceName: service
-  imagePullSecrets:
-    - name: ghcr-registry
-  replicas: 1
-  datasource:
-    existingSecret: dev-postgresql-credentials
-    usernameKey: username
-    passwordKey: password
-  service:
-    port: 8081
+    size: 10Gi
   resources:
     requests:
       memory: "512Mi"
       cpu: "250m"
     limits:
-      memory: "1Gi"
+      memory: "2Gi"
       cpu: "1000m"
+
+application:
+  enabled: true
+  otelServiceName: service
+  replicas: 1
+  service:
+    port: 8081
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
   autoscaling:
     enabled: false
+  # No datasource.existingSecret: app uses postgresql.auth.username/password from values
 
 ingress:
   enabled: false

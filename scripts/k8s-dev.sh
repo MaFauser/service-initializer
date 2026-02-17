@@ -16,59 +16,32 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 ensure_kubeconfig() {
-    echo -e "${YELLOW}[1/2] Loading kubeconfig...${NC}"
     if [ ! -f "$KUBECONFIG_B64" ]; then
         echo -e "${RED}Error: Base64 kubeconfig not found.${NC}"
-        echo ""
-        echo "Create the file once:"
-        echo "  1. Get your cluster kubeconfig (e.g. from Oracle Cloud OKE, or your cloud provider)"
-        echo "  2. Encode it:  kubectl config view --flatten --minify | base64"
-        echo "  3. Save to:    .kubeconfig-dev.b64"
-        echo ""
-        echo "Example:"
-        echo "  kubectl config view --flatten --minify | base64 > .kubeconfig-dev.b64"
-        echo ""
+        echo "Create: kubectl config view --flatten --minify | base64 > .kubeconfig-dev.b64"
         exit 1
     fi
     export KUBECONFIG="$(mktemp -t kubeconfig-dev-XXXXXX)"
-    echo "  Decoding .kubeconfig-dev.b64..."
     if ! base64 -d < "$KUBECONFIG_B64" > "$KUBECONFIG" 2>/dev/null; then
         echo -e "${RED}Error: Invalid base64 in .kubeconfig-dev.b64${NC}"
-        echo "Encode with: kubectl config view --flatten --minify | base64 > .kubeconfig-dev.b64"
         exit 1
     fi
-    echo -e "  ${GREEN}✓ Kubeconfig ready${NC}"
-}
-
-check_cluster() {
-    echo -e "${YELLOW}[2/2] Connecting to cluster...${NC}"
-    echo "  (If using OCI exec plugin, this may take a few seconds to fetch token)"
-    local err ret
-    set +e
-    err=$(kubectl cluster-info --request-timeout=30 2>&1)
-    ret=$?
-    set -e
-    if [ $ret -ne 0 ]; then
-        echo -e "${RED}Error: Cannot connect to cluster.${NC}"
-        echo ""
-        echo "$err" | head -10
-        echo ""
-        echo "Common causes: VPN not connected, cluster unreachable, expired credentials."
-        exit 1
-    fi
-    echo -e "  ${GREEN}✓ Cluster reachable${NC}"
 }
 
 print_usage() {
     echo "Usage: $0 <action> [args...]"
     echo ""
     echo "Actions:"
-    echo "  forward        - Port-forward services (app, grafana, kafka-ui, prometheus, opensearch, opensearch-dashboards)"
+    echo "  forward        - Port-forward services (app, grafana, kafka-ui, prometheus, postgres, opensearch, opensearch-dashboards)"
     echo "  stop           - Kill port-forwards"
     echo "  pods           - Show pods in development namespace"
     echo "  logs           - Tail app logs"
     echo "  status         - Helm status"
     echo "  describe <pod>  - Describe a pod (e.g. dev-stack-postgresql-xxx)"
+    echo "  delete-pod <pod> - Delete a pod (e.g. dev-stack-app-xxx); use scale-app 0 to stop app from recreating"
+    echo "  scale-app [0|1] - Scale app deployment to 0 (stop) or 1 (run)"
+    echo "  fix-postgres-password - Reset DB user password from Secret (fixes 'password authentication failed')"
+    echo "  recreate-db    - Delete Postgres PVC and pod; DB re-initializes from Secret (data loss)"
     echo "  events         - Show recent namespace events"
     echo "  clear-stuck    - Delete failed pods to release volumes (ImageInspectError, CrashLoopBackOff, etc.)"
     echo "  deploy         - Helm upgrade, then start port-forwards (use after CI push or for local deploy)"
@@ -83,7 +56,6 @@ print_usage() {
 
 forward() {
     ensure_kubeconfig
-    check_cluster
 
     PIDS=()
     kill_forwards() {
@@ -95,6 +67,8 @@ forward() {
 
     echo -e "${YELLOW}Port-forwarding to dev cluster...${NC}"
     kubectl port-forward -n $NAMESPACE svc/${RELEASE_NAME}-stack-app 8081:8081 &
+    PIDS+=($!)
+    kubectl port-forward -n $NAMESPACE svc/${RELEASE_NAME}-stack-postgresql 5432:5432 &
     PIDS+=($!)
     kubectl port-forward -n $NAMESPACE svc/${RELEASE_NAME}-stack-grafana 3000:3000 &
     PIDS+=($!)
@@ -112,6 +86,7 @@ forward() {
     echo -e "${GREEN}✓ Port-forwards active. Press Ctrl+C to stop.${NC}"
     echo ""
     echo "  App:                http://localhost:8081"
+    echo "  PostgreSQL:         localhost:5432 (use in DBeaver; user/password from your dev Secret)"
     echo "  Grafana:            http://localhost:3000 (admin/admin)"
     echo "  Kafka UI:           http://localhost:8080"
     echo "  Prometheus:         http://localhost:9090"
@@ -130,21 +105,18 @@ stop_forwards() {
 pods() {
     ensure_kubeconfig
     trap "rm -f $KUBECONFIG" EXIT
-    check_cluster
     kubectl get pods -n $NAMESPACE
 }
 
 logs() {
     ensure_kubeconfig
     trap "rm -f $KUBECONFIG" EXIT
-    check_cluster
     kubectl logs -f -n $NAMESPACE deployment/${RELEASE_NAME}-stack-app
 }
 
 status() {
     ensure_kubeconfig
     trap "rm -f $KUBECONFIG" EXIT
-    check_cluster
     helm status $RELEASE_NAME -n $NAMESPACE
     echo ""
     kubectl get pods -n $NAMESPACE
@@ -157,26 +129,24 @@ describe_pod() {
     fi
     ensure_kubeconfig
     trap "rm -f $KUBECONFIG" EXIT
-    check_cluster
     kubectl describe pod "$1" -n $NAMESPACE
 }
 
 events() {
     ensure_kubeconfig
     trap "rm -f $KUBECONFIG" EXIT
-    check_cluster
     kubectl get events -n $NAMESPACE --sort-by='.lastTimestamp' | tail -40
 }
 
 deploy() {
     ensure_kubeconfig
     trap "rm -f $KUBECONFIG" EXIT
-    check_cluster
     local image_repo="${DEPLOY_IMAGE_REPO:-ghcr.io/mafauser/service-initializer}"
     local image_tag="${2:-dev-latest}"
     echo -e "${YELLOW}Helm upgrade (image: $image_repo:$image_tag)...${NC}"
     helm upgrade --install $RELEASE_NAME "$PROJECT_ROOT/helm/stack" \
       -f "$PROJECT_ROOT/helm/stack/config/shared.yaml" \
+      -f "$PROJECT_ROOT/helm/stack/values.yaml" \
       -f "$PROJECT_ROOT/helm/stack/values-dev.yaml" \
       --set application.image.repository="$image_repo" \
       --set application.image.tag="$image_tag" \
@@ -191,17 +161,91 @@ deploy() {
 
 run_shell() {
     ensure_kubeconfig
-    check_cluster
     echo -e "${GREEN}KUBECONFIG set. Run kubectl commands (e.g. kubectl get pods -n $NAMESPACE). Exit to leave.${NC}"
     export KUBECONFIG
     trap "rm -f $KUBECONFIG" EXIT
     exec "${SHELL:-/bin/bash}"
 }
 
+delete_pod() {
+    if [ -z "${1:-}" ]; then
+        echo -e "${RED}Error: Pod name required. Example: $0 delete-pod dev-stack-app-744dd99b9c-k47vw${NC}"
+        exit 1
+    fi
+    ensure_kubeconfig
+    trap "rm -f $KUBECONFIG" EXIT
+    echo -e "${YELLOW}Deleting pod $1...${NC}"
+    kubectl delete pod "$1" -n $NAMESPACE --grace-period=0 --force 2>/dev/null || true
+    echo -e "${GREEN}Done. If the deployment has replicas >= 1, a new pod will be created. To stop the app: $0 scale-app 0${NC}"
+}
+
+scale_app() {
+    local replicas="${1:-1}"
+    ensure_kubeconfig
+    trap "rm -f $KUBECONFIG" EXIT
+    echo -e "${YELLOW}Scaling ${RELEASE_NAME}-stack-app to $replicas replicas...${NC}"
+    kubectl scale deployment ${RELEASE_NAME}-stack-app -n $NAMESPACE --replicas="$replicas"
+    echo -e "${GREEN}Done.${NC}"
+}
+
+fix_postgres_password() {
+    local secret_name="${RELEASE_NAME}-postgresql-credentials"
+    ensure_kubeconfig
+    trap "rm -f $KUBECONFIG" EXIT
+    echo -e "${YELLOW}Resetting Postgres user 'service' password from Secret $secret_name...${NC}"
+    local pass
+    pass=$(kubectl get secret "$secret_name" -n $NAMESPACE -o jsonpath='{.data.password}' 2>/dev/null | base64 -d 2>/dev/null) || true
+    if [ -z "$pass" ]; then
+        echo -e "${RED}Error: Could not read password from Secret $secret_name (namespace: $NAMESPACE).${NC}"
+        echo "Create the Secret first; see docs/SECRETS.md"
+        exit 1
+    fi
+    local escaped
+    escaped=$(echo "$pass" | sed "s/'/''/g")
+    kubectl exec -n $NAMESPACE deployment/${RELEASE_NAME}-stack-postgresql -- \
+        psql -U postgres -d servicedb -c "ALTER USER service PASSWORD '$escaped';" || {
+        echo -e "${RED}Error: ALTER USER failed. Is Postgres running? Try: $0 pods${NC}"
+        exit 1
+    }
+    echo -e "${GREEN}Password updated. Restarting app...${NC}"
+    kubectl rollout restart deployment/${RELEASE_NAME}-stack-app -n $NAMESPACE
+    echo -e "${GREEN}Done. App should start successfully; check: $0 logs${NC}"
+}
+
+recreate_db() {
+    local pvc_name="${RELEASE_NAME}-stack-postgresql"
+    ensure_kubeconfig
+    trap "rm -f $KUBECONFIG" EXIT
+    echo -e "${YELLOW}Recreating Postgres (data loss). Steps: scale app + Postgres to 0, delete PVC, helm upgrade (recreates PVC), scale app to 1.${NC}"
+    echo -e "${YELLOW}Scaling app to 0...${NC}"
+    kubectl scale deployment ${RELEASE_NAME}-stack-app -n $NAMESPACE --replicas=0
+    echo -e "${YELLOW}Scaling Postgres to 0...${NC}"
+    kubectl scale deployment ${RELEASE_NAME}-stack-postgresql -n $NAMESPACE --replicas=0
+    echo -e "${YELLOW}Waiting for Postgres pod to release PVC...${NC}"
+    sleep 5
+    echo -e "${YELLOW}Deleting Postgres PVC...${NC}"
+    kubectl delete pvc -n $NAMESPACE "$pvc_name" --ignore-not-found=true 2>/dev/null || true
+    echo -e "${YELLOW}Helm upgrade (recreates PVC and Postgres deployment)...${NC}"
+    local image_repo="${DEPLOY_IMAGE_REPO:-ghcr.io/mafauser/service-initializer}"
+    local image_tag="${2:-dev-latest}"
+    helm upgrade --install $RELEASE_NAME "$PROJECT_ROOT/helm/stack" \
+      -f "$PROJECT_ROOT/helm/stack/config/shared.yaml" \
+      -f "$PROJECT_ROOT/helm/stack/values.yaml" \
+      -f "$PROJECT_ROOT/helm/stack/values-dev.yaml" \
+      --set application.image.repository="$image_repo" \
+      --set application.image.tag="$image_tag" \
+      --namespace $NAMESPACE \
+      --create-namespace
+    echo -e "${YELLOW}Waiting for Postgres to be ready...${NC}"
+    kubectl rollout status deployment/${RELEASE_NAME}-stack-postgresql -n $NAMESPACE --timeout=120s
+    echo -e "${YELLOW}Scaling app to 1...${NC}"
+    kubectl scale deployment ${RELEASE_NAME}-stack-app -n $NAMESPACE --replicas=1
+    echo -e "${GREEN}Done. DB re-initialized from Secret. Check: $0 logs${NC}"
+}
+
 clear_stuck() {
     ensure_kubeconfig
     trap "rm -f $KUBECONFIG" EXIT
-    check_cluster
     echo -e "${YELLOW}Scaling down ReplicaSets and deleting failed pods (ImageInspectError, ImagePullBackOff, ErrImagePull, CrashLoopBackOff, Error)...${NC}"
     local pods
     pods=$(kubectl get pods -n $NAMESPACE --no-headers 2>/dev/null | awk '$3 ~ /ImageInspectError|ImagePullBackOff|ErrImagePull|CrashLoopBackOff|Error/ {print $1}')
@@ -246,6 +290,18 @@ case $1 in
         ;;
     describe)
         describe_pod "${2:-}"
+        ;;
+    delete-pod)
+        delete_pod "${2:-}"
+        ;;
+    scale-app)
+        scale_app "${2:-1}"
+        ;;
+    fix-postgres-password)
+        fix_postgres_password
+        ;;
+    recreate-db)
+        recreate_db
         ;;
     events)
         events

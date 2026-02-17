@@ -40,7 +40,7 @@ data:
         type: elasticsearch
         access: proxy
         url: http://{{ include "stack.fullname" . }}-opensearch:9200
-        database: "{{ .Values.opensearchDashboards.indexPattern | default "kubernetes-logs-*" }}"
+        database: "{{ .Values.opensearchDashboards.indexPattern }}"
         editable: true
         jsonData:
           timeField: "@timestamp"

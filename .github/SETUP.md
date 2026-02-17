@@ -42,7 +42,7 @@ Developer Workflow:
 
 ## Step 1: Configure GitHub Secrets
 
-Add these secrets to your GitHub repository:
+Add these secrets to your GitHub repository. For a full guide to **creating Kubernetes Secrets by hand** (and what each key is for), see **[docs/SECRETS.md](docs/SECRETS.md)**.
 
 ### Go to: Settings → Secrets and variables → Actions → New repository secret
 
@@ -52,7 +52,11 @@ Add these secrets to your GitHub repository:
 |------------|-------------|------------|
 | `KUBECONFIG_DEV` | Dev cluster kubeconfig (base64) | See [Oracle OKE](../docs/ORACLE.md) or `cat ~/.kube/config \| base64` |
 | `KUBECONFIG_PROD` | Prod cluster kubeconfig (base64) | Same as dev, for prod cluster |
-| `DB_PASSWORD` | Production database password | Your secure password |
+| `GHCR_PAT` | GitHub PAT with `read:packages` | For image pull from private GHCR (dev deploy) |
+| `DEV_POSTGRESQL_PASSWORD` | Dev PostgreSQL password | Used to create `dev-postgresql-credentials` Secret (values-dev uses Secrets only) |
+| `DEV_GRAFANA_PASSWORD` | Dev Grafana admin password | Used to create `dev-grafana-credentials` Secret |
+| `DB_PASSWORD` | Production PostgreSQL password | Used to create `prod-postgresql-credentials` Secret |
+| `GRAFANA_PASSWORD` | Production Grafana admin password | Used to create `prod-grafana-credentials` Secret |
 
 #### Getting kubeconfig:
 

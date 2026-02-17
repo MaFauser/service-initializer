@@ -38,7 +38,24 @@ spec:
         - name: SPRING_PROFILES_ACTIVE
           value: k8s
         - name: SPRING_DATASOURCE_URL
-          value: jdbc:postgresql://{{ include "stack.fullname" . }}-postgresql:5432/servicedb
+          value: jdbc:postgresql://{{ include "stack.fullname" . }}-postgresql:5432/{{ .Values.postgresql.auth.database }}
+        {{- if and .Values.application.datasource .Values.application.datasource.existingSecret }}
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.datasource.existingSecret }}
+              key: {{ .Values.application.datasource.usernameKey }}
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.datasource.existingSecret }}
+              key: {{ .Values.application.datasource.passwordKey }}
+        {{- else }}
+        - name: SPRING_DATASOURCE_USERNAME
+          value: {{ .Values.postgresql.auth.username }}
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: {{ .Values.postgresql.auth.password }}
+        {{- end }}
         - name: SPRING_DATA_REDIS_HOST
           value: {{ include "stack.fullname" . }}-redis
         - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
@@ -47,7 +64,7 @@ spec:
         - name: MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT
           value: http://{{ include "stack.fullname" . }}-tempo:4318/v1/traces
         - name: OTEL_SERVICE_NAME
-          value: {{ .Values.application.otelServiceName | default "service" | quote }}
+          value: {{ .Values.application.otelServiceName | quote }}
         livenessProbe:
           httpGet:
             path: /actuator/health/liveness

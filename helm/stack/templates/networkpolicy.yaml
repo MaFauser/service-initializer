@@ -1,0 +1,96 @@
+{{- if and .Values.networkPolicy .Values.networkPolicy.enabled }}
+---
+# Allow ingress to app (from Ingress controller / external) and egress to backends
+{{- if .Values.application.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "stack.fullname" . }}-app
+  labels:
+    {{- include "stack.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "stack.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: app
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.application.service.port }}
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "stack.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: postgresql
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "stack.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "stack.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: kafka
+      ports:
+        - protocol: TCP
+          port: 9092
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "stack.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: tempo
+      ports:
+        - protocol: TCP
+          port: 4318
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+---
+{{- end }}
+# Allow only app (and backup job) to connect to PostgreSQL
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "stack.fullname" . }}-postgresql
+  labels:
+    {{- include "stack.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "stack.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: postgresql
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "stack.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: app
+      ports:
+        - protocol: TCP
+          port: 5432
+    {{- if and .Values.postgresql.enabled .Values.postgresql.backup .Values.postgresql.backup.enabled }}
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "stack.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: postgresql-backup
+      ports:
+        - protocol: TCP
+          port: 5432
+    {{- end }}
+{{- end }}

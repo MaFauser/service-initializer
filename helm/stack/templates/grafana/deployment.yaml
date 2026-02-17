@@ -28,10 +28,23 @@ spec:
         image: "{{ .Values.grafana.image.repository }}:{{ .Values.grafana.image.tag }}"
         imagePullPolicy: {{ .Values.grafana.image.pullPolicy }}
         env:
+        {{- if .Values.grafana.auth.existingSecret }}
+        - name: GF_SECURITY_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.grafana.auth.existingSecret }}
+              key: {{ .Values.grafana.auth.adminUserKey }}
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.grafana.auth.existingSecret }}
+              key: {{ .Values.grafana.auth.adminPasswordKey }}
+        {{- else }}
         - name: GF_SECURITY_ADMIN_USER
           value: {{ .Values.grafana.auth.adminUser }}
         - name: GF_SECURITY_ADMIN_PASSWORD
           value: {{ .Values.grafana.auth.adminPassword }}
+        {{- end }}
         - name: GF_AUTH_ANONYMOUS_ENABLED
           value: "true"
         - name: GF_AUTH_ANONYMOUS_ORG_ROLE

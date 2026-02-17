@@ -15,7 +15,6 @@ service-initializer/
 │   │   ├── InvalidIdException.kt      # Invalid UUID (GraphQL) → 400
 │   │   ├── NotFoundException.kt       # Resource missing → 404
 │   │   ├── NoiseExclusions.kt
-│   │   ├── RequestLoggingFilter.kt
 │   │   └── TracingConfiguration.kt
 │   └── example/                      # Example domain (copy to add new domains)
 │       ├── Example.kt                # Entity
@@ -73,8 +72,15 @@ Code is organized **by domain** so each feature lives in one place and is easy t
 | Grafana | http://localhost:3000 (pre-provisioned: Prometheus, Tempo, Spring Boot dashboard in "Service" folder) |
 | Prometheus | http://localhost:9090 |
 
+## Deploying to Kubernetes
+
+- **Local K8s (Docker Desktop, kind):** Use `values-local.yaml` – no Secrets needed; credentials are in the file. See [DEPLOYMENT.md](DEPLOYMENT.md).
+- **Dev or prod:** Use Secrets only (no passwords in values). Create the required Kubernetes Secrets **before** `helm install`. See **[Creating Secrets (dev/prod)](docs/SECRETS.md)** for exact Secret names, keys, and step-by-step commands. For CI/CD, configure the GitHub repository secrets listed in that doc.
+
 ## Reference Documentation
 
+* [Creating Secrets for dev/prod](docs/SECRETS.md) – Kubernetes and GitHub Actions secrets to run the app with values-dev or values-prod
+* [Deployment guide](DEPLOYMENT.md) – Local, dev, and prod Helm install
 * [Observability: Logs, Metrics, Traces](docs/OBSERVABILITY.md) – where to view logs (`kubectl logs`), Prometheus (metrics), Tempo (traces)
 * [Spring Boot Gradle Plugin](https://docs.spring.io/spring-boot/4.1.0-SNAPSHOT/gradle-plugin)
 * [Spring Boot Actuator](https://docs.spring.io/spring-boot/4.1.0-SNAPSHOT/reference/actuator/index.html)

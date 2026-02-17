@@ -1,15 +1,38 @@
-# Default values for stack
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# Base values for stack (structure only).
+# Always use with an env file: -f values-local.yaml | -f values-dev.yaml | -f values-prod.yaml
+# - local: raw usernames/passwords in values-local.yaml
+# - dev/prod: Secrets only (existingSecret); create Secrets before install. No credential defaults in templates.
 
 global:
   storageClass: "" # Use default storage class
+
+# Ingress: expose app via HTTPS (production). Requires an Ingress controller (e.g. NGINX, Traefik).
+ingress:
+  enabled: false
+  className: ""  # e.g. nginx, traefik
+  annotations: {}
+  # cert-manager for TLS: add annotation and use tls.secretName with a ClusterIssuer
+  # annotations:
+  #   cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: app.example.com
+      path: /
+      pathType: Prefix
+  tls: []
+  # - secretName: app-tls
+  #   hosts:
+  #     - app.example.com
+
+# Network policies: restrict pod-to-pod traffic (app → postgres/redis/kafka/tempo only)
+networkPolicy:
+  enabled: false
 
 # PostgreSQL Configuration (image, auth from config/shared.yaml)
 postgresql:
   enabled: true
   image:
     pullPolicy: IfNotPresent
+  # Production: set auth.existingSecret in values-prod to use a K8s Secret (see DEPLOYMENT.md)
   service:
     type: ClusterIP
     port: 5432
@@ -23,6 +46,14 @@ postgresql:
     limits:
       memory: "1Gi"
       cpu: "1000m"
+  # Optional: scheduled pg_dump backups to a PVC (sync to object storage separately)
+  backup:
+    enabled: false
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    pvc:
+      size: 10Gi
+    # When using existingSecret for postgresql.auth, backup uses same credentials
+    # Or set backup.existingSecret for a dedicated backup Secret (usernameKey, passwordKey)
 
 # Redis Configuration (image from config/shared.yaml)
 redis:
@@ -204,6 +235,11 @@ prometheus:
 application:
   enabled: false # Deploy your app separately or set to true
   otelServiceName: service # Used for resource.service.name in traces (TraceQL)
+  # For production: create a Secret with DB credentials and set datasource.existingSecret
+  datasource:
+    # existingSecret: ""  # e.g. prod-app-datasource (keys: username, password)
+    # usernameKey: username
+    # passwordKey: password
   # imagePullSecrets: []  # e.g. [ { name: ghcr-registry } ] when pulling from private ghcr.io
   image:
     repository: your-registry/service
@@ -220,3 +256,9 @@ application:
       memory: "2Gi"
       cpu: "2000m"
   replicas: 1
+  # Horizontal Pod Autoscaler (production)
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70

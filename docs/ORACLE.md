@@ -86,9 +86,42 @@ You should see pods (or "No resources found" if nothing is deployed yet).
 | Command | Description |
 |---------|-------------|
 | `./scripts/k8s-dev.sh pods` | List pods |
-| `./scripts/k8s-dev.sh forward` | Port-forward app, Grafana, Kafka UI |
+| `./scripts/k8s-dev.sh forward` | Port-forward app and UIs (see below) |
 | `./scripts/k8s-dev.sh logs` | Tail app logs |
 | `./scripts/k8s-dev.sh status` | Helm status |
+
+### Accessing UIs and services (no RDS-style console)
+
+On OKE you have **pods**, not managed services with a cloud console (like AWS RDS or a DB “console” in OCI). All services (PostgreSQL, Redis, Kafka, Grafana, etc.) run **inside the cluster** as ClusterIP; they are not exposed publicly.
+
+**The way to get “good UIs” is port-forward:**
+
+```bash
+./scripts/k8s-dev.sh forward
+```
+
+Leave that running. Then use **localhost**:
+
+| Service | URL | Notes |
+|--------|-----|--------|
+| App | http://localhost:8081 | Your Spring Boot app |
+| Grafana | http://localhost:3000 | Metrics/dashboards (admin/admin) |
+| Kafka UI | http://localhost:8080 | Topics, consumers, messages |
+| Prometheus | http://localhost:9090 | Metrics and targets |
+| OpenSearch Dashboards | http://localhost:5601 | Logs (if enabled) |
+
+So **yes**: you access everything locally via port-forward; there are no public URLs for these UIs unless you add an Ingress or LoadBalancer yourself.
+
+**PostgreSQL:** There is no pgAdmin (or similar UI) in the Helm stack. To use the DB:
+
+- **Option A:** Port-forward Postgres and use a local client:
+  ```bash
+  kubectl port-forward -n development svc/dev-stack-postgresql 5432:5432
+  ```
+  Then connect with DBeaver, psql, or any client to `localhost:5432` (user/password from `helm/stack/config/shared.yaml`).
+- **Option B:** Add pgAdmin (or another DB UI) to the Helm stack and port-forward it; then you get a web UI like locally with Docker Compose.
+
+**If you wanted “RDS-style”:** You’d use OCI managed database services (e.g. Oracle MySQL Database Service or Oracle Autonomous Database) and use the OCI Console for the DB. This repo’s stack keeps **everything in Kubernetes** (Postgres, Redis, Kafka as pods), so you get UIs by port-forwarding, not from a cloud console.
 
 ---
 
