@@ -126,6 +126,10 @@ prometheus:
 application:
   enabled: true
   otelServiceName: service
+  imagePullSecrets:
+    - name: ghcr-registry
+  image:
+    pullPolicy: IfNotPresent  # prod uses versioned tags (e.g. v1.2.0)
   replicas: 3
   datasource:
     existingSecret: prod-postgresql-credentials

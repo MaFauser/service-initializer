@@ -128,6 +128,8 @@ application:
   otelServiceName: service
   imagePullSecrets:
     - name: ghcr-registry
+  image:
+    pullPolicy: Always  # so dev-latest is always re-pulled after you push a new build
   replicas: 1
   datasource:
     existingSecret: dev-postgresql-credentials
