@@ -8,7 +8,6 @@
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <includeMdcKeyName>traceId</includeMdcKeyName>
         <includeMdcKeyName>spanId</includeMdcKeyName>
-        <customFields>{"application":"${appName}"}</customFields>
       </encoder>
     </appender>
     <root level="INFO">
