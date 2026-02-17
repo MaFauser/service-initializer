@@ -44,7 +44,9 @@ templates/
 │   ├── deployment.yaml
 │   ├── service.yaml
 │   ├── pvc.yaml
-│   └── secret.yaml                  # When disableSecurity=false
+│   ├── secret.yaml                  # When disableSecurity=false
+│   ├── index-template-configmap.yaml    # Mappings for log_processed.* (message, traceId, etc.)
+│   └── provision-index-template-job.yaml  # post-install hook: applies index template so fields are indexed
 ├── opensearch-dashboards/
 │   ├── deployment.yaml
 │   ├── service.yaml

@@ -106,3 +106,12 @@ OpenSearch, OpenSearch Dashboards, and Fluent Bit are deployed by the Helm chart
 - **OpenSearch Dashboards** → http://localhost:5601 (after port-forward) → **Discover** to search logs
 - The index pattern is `kubernetes-logs-*` (Logstash-style date suffix)
 - With security disabled (default for dev): no login. With security enabled: admin / configurable password
+
+### Index pattern and Discover columns
+
+- **Where it’s configured:** The index pattern is created by the Helm post-install job `helm/stack/templates/opensearch-dashboards/provision-index-pattern-job.yaml`. The pattern title and time field come from `opensearchDashboards.indexPattern` and `timeFieldName: @timestamp` in that job (see `helm/stack/values.yaml` and env-specific overrides).
+- **Fields like message, traceId:** They come from the **index mapping** (Fluent Bit parses JSON and lifts fields; see `helm/stack/templates/fluent-bit/configmap.yaml`). OpenSearch Dashboards discovers them from the data; no extra config is needed for them to exist.
+- **Making fields indexable (so you can add them as columns):** If some `log_processed.*` fields show a “not indexed” warning in Discover and you can’t add them as columns, OpenSearch is using dynamic mapping and didn’t index those sub-fields. The stack applies an **index template** so they are explicitly indexed:
+  - **Config:** `helm/stack/templates/opensearch/index-template-configmap.yaml` (mapping for `log_processed.message`, `log_processed.traceId`, `log_processed.spanId`, `log_processed.level`, `log_processed.logger_name`, etc.) and the Job `helm/stack/templates/opensearch/provision-index-template-job.yaml` (post-install hook that applies the template to OpenSearch).
+  - **Effect:** New indices matching `kubernetes-logs-*` get these mappings, so the fields are indexed and usable as Discover columns. **Existing indices** keep their old mapping; to get the new mapping for current data you can delete the existing log indices (data loss) or wait for the next day/rollover so new indices use the template.
+- **Default columns in Discover:** The provision job only sets the index pattern title and time field. After the index template is in place, add **message**, **traceId**, **spanId**, **level**, **logger_name**, **kubernetes.pod_name**, etc. in Discover via the “Add field” / column picker.

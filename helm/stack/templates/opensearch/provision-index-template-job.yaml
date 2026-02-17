@@ -1,0 +1,83 @@
+{{- if and .Values.opensearch.enabled .Values.fluentBit.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "stack.fullname" . }}-opensearch-index-template
+  labels:
+    {{- include "stack.labels" . | nindent 4 }}
+    app.kubernetes.io/component: opensearch
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "4"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 60
+  backoffLimit: 0
+  activeDeadlineSeconds: 300
+  template:
+    metadata:
+      labels:
+        {{- include "stack.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: opensearch-provision
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: provision
+        image: docker.io/curlimages/curl:8.10.1
+        env:
+        - name: OPENSEARCH_HOST
+          value: "{{ include "stack.fullname" . }}-opensearch:9200"
+        {{- if not .Values.opensearch.disableSecurity }}
+        - name: OPENSEARCH_USER
+          value: "admin"
+        - name: OPENSEARCH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "stack.fullname" . }}-opensearch
+              key: admin-password
+        {{- end }}
+        command:
+        - /bin/sh
+        - -c
+        - |
+          {{- if .Values.opensearch.disableSecurity }}
+          BASE="http://${OPENSEARCH_HOST}"
+          AUTH=""
+          {{- else }}
+          BASE="https://${OPENSEARCH_HOST}"
+          AUTH="-u ${OPENSEARCH_USER}:${OPENSEARCH_PASSWORD} -k"
+          {{- end }}
+          echo "Waiting for OpenSearch..."
+          for i in $(seq 1 30); do
+            if curl -sf $AUTH "${BASE}/_cluster/health" > /dev/null 2>&1; then
+              echo "OpenSearch is ready"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Timeout waiting for OpenSearch"
+              exit 1
+            fi
+            echo "Attempt $i/30: not ready, retrying in 10s..."
+            sleep 10
+          done
+          echo "Applying index template kubernetes-logs..."
+          HTTP=$(curl -sf -w "%{http_code}" -o /tmp/response -X PUT \
+            $AUTH "${BASE}/_index_template/kubernetes-logs" \
+            -H "Content-Type: application/json" \
+            -d @/template/template.json)
+          if [ "$HTTP" = "200" ]; then
+            echo "Index template applied successfully"
+          else
+            echo "Failed to apply index template (HTTP $HTTP)"
+            cat /tmp/response
+            exit 1
+          fi
+        volumeMounts:
+        - name: template
+          mountPath: /template
+          readOnly: true
+      volumes:
+      - name: template
+        configMap:
+          name: {{ include "stack.fullname" . }}-opensearch-index-template
+{{- end }}
