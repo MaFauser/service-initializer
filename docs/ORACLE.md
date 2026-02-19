@@ -118,7 +118,7 @@ So **yes**: you access everything locally via port-forward; there are no public 
   ```bash
   kubectl port-forward -n development svc/dev-stack-postgresql 5432:5432
   ```
-  Then connect with DBeaver, psql, or any client to `localhost:5432` (user/password from `helm/stack/config/shared.yaml`).
+  Then connect with DBeaver, psql, or any client to `localhost:5432` (user/password from `helm/stack/config/images.yaml`).
 - **Option B:** Add pgAdmin (or another DB UI) to the Helm stack and port-forward it; then you get a web UI like locally with Docker Compose.
 
 **If you wanted “RDS-style”:** You’d use OCI managed database services (e.g. Oracle MySQL Database Service or Oracle Autonomous Database) and use the OCI Console for the DB. This repo’s stack keeps **everything in Kubernetes** (Postgres, Redis, Kafka as pods), so you get UIs by port-forwarding, not from a cloud console.

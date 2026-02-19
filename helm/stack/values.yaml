@@ -1,38 +1,26 @@
-# Base values for stack (structure only).
-# Always use with an env file: -f values-local.yaml | -f values-dev.yaml | -f values-prod.yaml
-# - local: raw usernames/passwords in values-local.yaml
-# - dev/prod: Secrets only (existingSecret); create Secrets before install. No credential defaults in templates.
+# Chart defaults: structure, ports, services, persistence, resources.
+# Always combine with: -f config/images.yaml -f <env>.yaml (local.yaml | dev.yaml | prod.yaml)
 
 global:
-  storageClass: "" # Use default storage class
+  storageClass: ""
 
-# Ingress: expose app via HTTPS (production). Requires an Ingress controller (e.g. NGINX, Traefik).
 ingress:
   enabled: false
-  className: ""  # e.g. nginx, traefik
+  className: ""
   annotations: {}
-  # cert-manager for TLS: add annotation and use tls.secretName with a ClusterIssuer
-  # annotations:
-  #   cert-manager.io/cluster-issuer: letsencrypt-prod
   hosts:
     - host: app.example.com
       path: /
       pathType: Prefix
   tls: []
-  # - secretName: app-tls
-  #   hosts:
-  #     - app.example.com
 
-# Network policies: restrict pod-to-pod traffic (app → postgres/redis/kafka/tempo only)
 networkPolicy:
   enabled: false
 
-# PostgreSQL Configuration (image, auth from config/shared.yaml)
 postgresql:
   enabled: true
   image:
     pullPolicy: IfNotPresent
-  # Production: set auth.existingSecret in values-prod to use a K8s Secret (see DEPLOYMENT.md)
   service:
     type: ClusterIP
     port: 5432
@@ -46,16 +34,12 @@ postgresql:
     limits:
       memory: "1Gi"
       cpu: "1000m"
-  # Optional: scheduled pg_dump backups to a PVC (sync to object storage separately)
   backup:
     enabled: false
-    schedule: "0 2 * * *"  # Daily at 2 AM
+    schedule: "0 2 * * *"
     pvc:
       size: 10Gi
-    # When using existingSecret for postgresql.auth, backup uses same credentials
-    # Or set backup.existingSecret for a dedicated backup Secret (usernameKey, passwordKey)
 
-# Redis Configuration (image from config/shared.yaml)
 redis:
   enabled: true
   image:
@@ -74,14 +58,14 @@ redis:
       memory: "512Mi"
       cpu: "500m"
 
-# Kafka Configuration (image, config from config/shared.yaml)
 kafka:
   enabled: true
   image:
     pullPolicy: IfNotPresent
   config:
     nodeId: 1
-    # clusterId, replicationFactor from config/shared.yaml
+    clusterId: "MkU3OEVBNTcwNTJENDM2Qk"
+    replicationFactor: 1
   service:
     type: ClusterIP
     port: 9092
@@ -96,7 +80,6 @@ kafka:
       memory: "2Gi"
       cpu: "2000m"
 
-# Kafka UI Configuration (image from config/shared.yaml)
 kafkaUi:
   enabled: true
   image:
@@ -112,7 +95,6 @@ kafkaUi:
       memory: "512Mi"
       cpu: "500m"
 
-# Grafana Configuration (image, auth from config/shared.yaml)
 grafana:
   enabled: true
   image:
@@ -131,7 +113,6 @@ grafana:
       memory: "512Mi"
       cpu: "500m"
 
-# Tempo Configuration (image from config/shared.yaml)
 tempo:
   enabled: true
   image:
@@ -153,12 +134,9 @@ tempo:
       memory: "1Gi"
       cpu: "1000m"
 
-# OpenSearch Configuration (log aggregation)
 opensearch:
   enabled: true
   image:
-    repository: docker.io/opensearchproject/opensearch
-    tag: "2.18.0"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -166,9 +144,8 @@ opensearch:
   persistence:
     enabled: true
     size: 10Gi
-  # disableSecurity: true = HTTP, no auth (dev only). false = HTTPS + admin auth
   disableSecurity: true
-  adminPassword: "Opensearch123!"  # Used when disableSecurity=false
+  adminPassword: "Opensearch123!"
   resources:
     requests:
       memory: "1Gi"
@@ -177,14 +154,10 @@ opensearch:
       memory: "2Gi"
       cpu: "2000m"
 
-# OpenSearch Dashboards (logs UI)
 opensearchDashboards:
   enabled: true
-  # Index pattern for Fluent Bit logs (provisioned automatically)
   indexPattern: "kubernetes-logs-*"
   image:
-    repository: docker.io/opensearchproject/opensearch-dashboards
-    tag: "2.18.0"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -197,12 +170,9 @@ opensearchDashboards:
       memory: "512Mi"
       cpu: "500m"
 
-# Fluent Bit (ships pod logs to OpenSearch)
 fluentBit:
   enabled: true
   image:
-    repository: docker.io/fluent/fluent-bit
-    tag: "3.2.2"
     pullPolicy: IfNotPresent
   resources:
     requests:
@@ -212,11 +182,12 @@ fluentBit:
       memory: "256Mi"
       cpu: "200m"
 
-# Prometheus Configuration (image, intervals from config/shared.yaml)
 prometheus:
   enabled: true
   image:
     pullPolicy: IfNotPresent
+  scrapeInterval: 15s
+  evaluationInterval: 15s
   service:
     type: ClusterIP
     port: 9090
@@ -231,16 +202,9 @@ prometheus:
       memory: "2Gi"
       cpu: "1000m"
 
-# Spring Boot Application Configuration
 application:
-  enabled: false # Deploy your app separately or set to true
-  otelServiceName: service # Used for resource.service.name in traces (TraceQL)
-  # For production: create a Secret with DB credentials and set datasource.existingSecret
-  datasource:
-    # existingSecret: ""  # e.g. prod-app-datasource (keys: username, password)
-    # usernameKey: username
-    # passwordKey: password
-  # imagePullSecrets: []  # e.g. [ { name: ghcr-registry } ] when pulling from private ghcr.io
+  enabled: false
+  otelServiceName: service
   image:
     repository: your-registry/service
     tag: "latest"
@@ -256,7 +220,6 @@ application:
       memory: "2Gi"
       cpu: "2000m"
   replicas: 1
-  # Horizontal Pod Autoscaler (production)
   autoscaling:
     enabled: false
     minReplicas: 2

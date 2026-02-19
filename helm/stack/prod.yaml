@@ -1,6 +1,5 @@
-# Production environment: uses Secrets for credentials (no raw passwords).
-# Create Secret before install: kubectl create secret generic prod-postgresql-credentials --from-literal=username=service --from-literal=password=<secret> -n production
-# Use with: helm install prod ./helm/stack -f helm/stack/config/shared.yaml -f helm/stack/values.yaml -f helm/stack/values-prod.yaml -n production --create-namespace
+# Prod environment: credentials from Secrets, HPA, backups.
+# helm install prod ./helm/stack -f helm/stack/config/images.yaml -f helm/stack/prod.yaml -n production --create-namespace
 
 postgresql:
   enabled: true

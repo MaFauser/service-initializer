@@ -6,7 +6,7 @@ This document describes the Docker Compose setup for local development.
 
 ## Single Source of Truth
 
-Docker Compose and the Helm chart share config from **`helm/stack/config/shared.yaml`** (images, credentials, Kafka cluster ID). Before first use, run:
+Docker Compose and the Helm chart share config from **`helm/stack/config/images.yaml`** (images, credentials, Kafka cluster ID). Before first use, run:
 
 ```bash
 ./scripts/load-config.sh

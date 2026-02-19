@@ -45,7 +45,7 @@ RELEASE_NAME=${3:-"service"}
 # Validate environment
 case $ENVIRONMENT in
     local|dev|prod)
-        VALUES_FILE="$HELM_CHART/values-$ENVIRONMENT.yaml"
+        VALUES_FILE="$HELM_CHART/$ENVIRONMENT.yaml"
         ;;
     *)
         echo -e "${RED}Error: Invalid environment '$ENVIRONMENT'${NC}"
@@ -80,8 +80,8 @@ case $ACTION in
             kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
         fi
         helm install $RELEASE_NAME $HELM_CHART \
-            -f $HELM_CHART/config/shared.yaml \
-            -f $VALUES_FILE \
+            -f $HELM_CHART/config/images.yaml \
+            -f "$VALUES_FILE" \
             --namespace $NAMESPACE
         echo -e "${GREEN}✓ Installation complete!${NC}"
         echo ""
@@ -93,8 +93,8 @@ case $ACTION in
     upgrade)
         echo -e "${YELLOW}Upgrading Helm chart...${NC}"
         helm upgrade $RELEASE_NAME $HELM_CHART \
-            -f $HELM_CHART/config/shared.yaml \
-            -f $VALUES_FILE \
+            -f $HELM_CHART/config/images.yaml \
+            -f "$VALUES_FILE" \
             --namespace $NAMESPACE
         echo -e "${GREEN}✓ Upgrade complete!${NC}"
         ;;

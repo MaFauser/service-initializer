@@ -1,60 +1,59 @@
 #!/bin/bash
-# Generate .env from helm/stack/config/shared.yaml for docker-compose.
-# Run before: docker compose up
+# Generate .env for docker-compose from helm values (images.yaml + local.yaml).
 # Requires: yq (https://github.com/mikefarah/yq)
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-CONFIG="$PROJECT_ROOT/helm/stack/config/shared.yaml"
+IMAGES="$PROJECT_ROOT/helm/stack/config/images.yaml"
+LOCAL="$PROJECT_ROOT/helm/stack/local.yaml"
+VALUES="$PROJECT_ROOT/helm/stack/values.yaml"
 OUT="$PROJECT_ROOT/.env"
 
 if ! command -v yq &>/dev/null; then
-  echo "Error: yq is required. Install: brew install yq (macOS) or see https://github.com/mikefarah/yq"
+  echo "Error: yq is required. Install: brew install yq"
   exit 1
 fi
 
-if [ ! -f "$CONFIG" ]; then
-  echo "Error: Config not found at $CONFIG"
-  exit 1
-fi
+for f in "$IMAGES" "$LOCAL" "$VALUES"; do
+  if [ ! -f "$f" ]; then
+    echo "Error: $f not found"
+    exit 1
+  fi
+done
+
+img() { yq "$1.image.repository + \":\" + $1.image.tag" "$IMAGES"; }
 
 cat > "$OUT" << EOF
-# Auto-generated from helm/stack/config/shared.yaml - do not edit manually
+# Auto-generated from config/images.yaml + local.yaml — do not edit
 
 # PostgreSQL
-POSTGRES_IMAGE=$(yq '.postgresql.image.repository + ":" + .postgresql.image.tag' "$CONFIG")
-POSTGRES_DB=$(yq '.postgresql.auth.database' "$CONFIG")
-POSTGRES_USER=$(yq '.postgresql.auth.username' "$CONFIG")
-POSTGRES_PASSWORD=$(yq '.postgresql.auth.password' "$CONFIG")
+POSTGRES_IMAGE=$(img '.postgresql')
+POSTGRES_DB=$(yq '.postgresql.auth.database' "$LOCAL")
+POSTGRES_USER=$(yq '.postgresql.auth.username' "$LOCAL")
+POSTGRES_PASSWORD=$(yq '.postgresql.auth.password' "$LOCAL")
 
 # Redis
-REDIS_IMAGE=$(yq '.redis.image.repository + ":" + .redis.image.tag' "$CONFIG")
+REDIS_IMAGE=$(img '.redis')
 
 # Kafka
-KAFKA_IMAGE=$(yq '.kafka.image.repository + ":" + .kafka.image.tag' "$CONFIG")
-KAFKA_CLUSTER_ID=$(yq '.kafka.config.clusterId' "$CONFIG")
+KAFKA_IMAGE=$(img '.kafka')
+KAFKA_CLUSTER_ID=$(yq '.kafka.config.clusterId' "$VALUES")
 
 # Kafka UI
-KAFKA_UI_IMAGE=$(yq '.kafkaUi.image.repository + ":" + .kafkaUi.image.tag' "$CONFIG")
+KAFKA_UI_IMAGE=$(img '.kafkaUi')
 
 # Grafana
-GRAFANA_IMAGE=$(yq '.grafana.image.repository + ":" + .grafana.image.tag' "$CONFIG")
-GF_ADMIN_USER=$(yq '.grafana.auth.adminUser' "$CONFIG")
-GF_ADMIN_PASSWORD=$(yq '.grafana.auth.adminPassword' "$CONFIG")
+GRAFANA_IMAGE=$(img '.grafana')
+GF_ADMIN_USER=$(yq '.grafana.auth.adminUser' "$LOCAL")
+GF_ADMIN_PASSWORD=$(yq '.grafana.auth.adminPassword' "$LOCAL")
 
 # Tempo
-TEMPO_IMAGE=$(yq '.tempo.image.repository + ":" + .tempo.image.tag' "$CONFIG")
+TEMPO_IMAGE=$(img '.tempo')
 
 # Prometheus
-PROMETHEUS_IMAGE=$(yq '.prometheus.image.repository + ":" + .prometheus.image.tag' "$CONFIG")
-APP_TARGET=host.docker.internal:8081
+PROMETHEUS_IMAGE=$(img '.prometheus')
 EOF
 
-# Generate prometheus config for Docker (substitute __APP_TARGET__)
-PROM_SRC="$PROJECT_ROOT/helm/stack/config/prometheus.yml"
-PROM_OUT="$PROJECT_ROOT/docker/prometheus.generated.yml"
-mkdir -p "$(dirname "$PROM_OUT")"
-sed 's/__APP_TARGET__/host.docker.internal:8081/g' "$PROM_SRC" > "$PROM_OUT"
-echo "Generated $PROM_OUT"
+echo "Generated $OUT"

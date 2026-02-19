@@ -66,7 +66,7 @@ Review focused on **simplicity**, **quality**, and **using built-in libraries** 
 - **DOMAINS.md** – Domain layout and “new domain” steps (updated with REST).
 - **DOCKER.md** – Docker Compose usage; useful.
 - **HELP.md** – Spring Boot reference links; keep as-is.
-- **Scripts** – `k8s-local.sh`, `docker-local.sh`, `deploy.sh`, `release.sh` – Used by docs/CI; no change.
+- **Scripts** – `k8s-local.sh`, `k8s-dev.sh`, `deploy.sh`, `release.sh` – Used by docs/CI; no change.
 
 ### CI/CD
 - **pr-validation.yml** – Build, ktlint, tests, JaCoCo artifact, Docker image, Helm lint; coherent.

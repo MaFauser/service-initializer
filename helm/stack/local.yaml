@@ -1,5 +1,5 @@
-# Local environment: raw usernames and passwords (no Secrets).
-# Use with: helm install dev ./helm/stack -f helm/stack/config/shared.yaml -f helm/stack/values.yaml -f helm/stack/values-local.yaml -n development --create-namespace
+# Local environment: credentials inline (no Secrets).
+# helm install dev ./helm/stack -f helm/stack/config/images.yaml -f helm/stack/local.yaml -n development --create-namespace
 
 postgresql:
   enabled: true

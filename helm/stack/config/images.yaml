@@ -1,15 +1,10 @@
-# Single source of truth for Docker Compose and Helm
-# Used by: helm install -f config/shared.yaml -f helm/stack/values.yaml
-#          scripts/load-config.sh (generates .env for docker-compose)
+# Image versions — single source of truth.
+# Bump versions here. Used by: helm install -f config/images.yaml ...
 
 postgresql:
   image:
     repository: docker.io/library/postgres
     tag: "16-alpine"
-  auth:
-    database: servicedb
-    username: service
-    password: service123
 
 redis:
   image:
@@ -20,9 +15,6 @@ kafka:
   image:
     repository: docker.io/confluentinc/cp-kafka
     tag: "7.6.0"
-  config:
-    clusterId: "MkU3OEVBNTcwNTJENDM2Qk"
-    replicationFactor: 1
 
 kafkaUi:
   image:
@@ -33,9 +25,6 @@ grafana:
   image:
     repository: docker.io/grafana/grafana
     tag: "12.3.3"
-  auth:
-    adminUser: admin
-    adminPassword: admin
 
 tempo:
   image:
@@ -46,5 +35,18 @@ prometheus:
   image:
     repository: docker.io/prom/prometheus
     tag: "v2.53.1"
-  scrapeInterval: 15s
-  evaluationInterval: 15s
+
+opensearch:
+  image:
+    repository: docker.io/opensearchproject/opensearch
+    tag: "2.18.0"
+
+opensearchDashboards:
+  image:
+    repository: docker.io/opensearchproject/opensearch-dashboards
+    tag: "2.18.0"
+
+fluentBit:
+  image:
+    repository: docker.io/fluent/fluent-bit
+    tag: "3.2.2"

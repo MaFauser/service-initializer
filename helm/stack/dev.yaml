@@ -1,6 +1,5 @@
-# Development environment: uses Secrets for credentials (no raw passwords).
-# Create Secret before install: kubectl create secret generic dev-postgresql-credentials --from-literal=username=service --from-literal=password=<secret> -n development
-# Use with: helm install dev ./helm/stack -f helm/stack/config/shared.yaml -f helm/stack/values.yaml -f helm/stack/values-dev.yaml -n development --create-namespace
+# Dev environment: credentials from Secrets.
+# helm install dev ./helm/stack -f helm/stack/config/images.yaml -f helm/stack/dev.yaml -n development --create-namespace
 
 postgresql:
   enabled: true

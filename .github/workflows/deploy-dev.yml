@@ -81,9 +81,8 @@ jobs:
       - name: Deploy with Helm
         run: |
           helm upgrade --install dev ./helm/stack \
-            -f ./helm/stack/config/shared.yaml \
-            -f ./helm/stack/values.yaml \
-            -f ./helm/stack/values-dev.yaml \
+            -f ./helm/stack/config/images.yaml \
+            -f ./helm/stack/dev.yaml \
             --set application.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
             --set application.image.tag=dev-${{ github.sha }} \
             --namespace development \

@@ -1,6 +1,6 @@
 # Creating Secrets for Dev and Production
 
-This guide explains how to create the Kubernetes Secrets (and optional GitHub Actions secrets) required to run the application when using **values-dev.yaml** or **values-prod.yaml**. Local (values-local.yaml) uses raw credentials in the file and does **not** require Secrets.
+This guide explains how to create the Kubernetes Secrets (and optional GitHub Actions secrets) required to run the application when using **dev.yaml** or **prod.yaml**. Local (local.yaml) uses raw credentials in the file and does **not** require Secrets.
 
 ---
 
@@ -8,9 +8,9 @@ This guide explains how to create the Kubernetes Secrets (and optional GitHub Ac
 
 | Environment | Values file           | Secrets required? |
 |-------------|-----------------------|-------------------|
-| **Local**   | values-local.yaml     | **No** – credentials are in the file |
-| **Dev**     | values-dev.yaml       | **Yes** – create before `helm install` |
-| **Prod**    | values-prod.yaml      | **Yes** – create before `helm install` |
+| **Local**   | local.yaml     | **No** – credentials are in the file |
+| **Dev**     | dev.yaml       | **Yes** – create before `helm install` |
+| **Prod**    | prod.yaml      | **Yes** – create before `helm install` |
 
 Dev and prod **never** store passwords in values files; the chart reads them from Kubernetes Secrets via `existingSecret`.
 
@@ -115,9 +115,9 @@ Alternatively, use the script that already loads the kubeconfig and runs in a sh
 
    ```bash
    helm install dev ./helm/stack \
-     -f ./helm/stack/config/shared.yaml \
-     -f ./helm/stack/values.yaml \
-     -f ./helm/stack/values-dev.yaml \
+     -f ./helm/stack/config/images.yaml \
+   
+     -f ./helm/stack/dev.yaml \
      --namespace development \
      --create-namespace
    ```
@@ -152,9 +152,9 @@ Alternatively, use the script that already loads the kubeconfig and runs in a sh
 
    ```bash
    helm install prod ./helm/stack \
-     -f ./helm/stack/config/shared.yaml \
-     -f ./helm/stack/values.yaml \
-     -f ./helm/stack/values-prod.yaml \
+     -f ./helm/stack/config/images.yaml \
+   
+     -f ./helm/stack/prod.yaml \
      --namespace production \
      --create-namespace
    ```
@@ -352,9 +352,9 @@ After either fix, the app should start successfully.
 
 | Goal                         | Action |
 |-----------------------------|--------|
-| Run **locally** (no Secrets) | Use `values-local.yaml`; credentials are in the file. |
-| Run **dev** with Secrets    | Create `dev-postgresql-credentials` and `dev-grafana-credentials` in `development`, then `helm install` with `values-dev.yaml`. |
-| Run **prod** with Secrets   | Create `prod-postgresql-credentials` and `prod-grafana-credentials` in `production`, then `helm install` with `values-prod.yaml`. |
+| Run **locally** (no Secrets) | Use `local.yaml`; credentials are in the file. |
+| Run **dev** with Secrets    | Create `dev-postgresql-credentials` and `dev-grafana-credentials` in `development`, then `helm install` with `dev.yaml`. |
+| Run **prod** with Secrets   | Create `prod-postgresql-credentials` and `prod-grafana-credentials` in `production`, then `helm install` with `prod.yaml`. |
 | Deploy via **GitHub Actions** | Set repository secrets `DEV_POSTGRESQL_PASSWORD`, `DEV_GRAFANA_PASSWORD`, `DB_PASSWORD`, `GRAFANA_PASSWORD` (and kubeconfig/PAT); workflows create the K8s Secrets. |
 
 For full deployment steps, see [DEPLOYMENT.md](../DEPLOYMENT.md) and [helm/README.md](../helm/README.md).

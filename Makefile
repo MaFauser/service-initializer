@@ -1,26 +1,4 @@
-# Service Initializer – common commands
-# Usage: make [target]
-
-.PHONY: help config build run run-debug test check clean lint format coverage coverage-check deps bootjar
-
-# Default: show help
-help:
-	@echo "Service Initializer – make targets"
-	@echo ""
-	@echo "  config          Generate .env from helm/stack/config/shared.yaml"
-	@echo "  build           Compile, ktlint, produce JAR (no tests)"
-	@echo "  run             Start the app (./gradlew bootRun)"
-	@echo "  run-debug       Start the app with remote debug (port 5005, suspend=y)"
-	@echo "  test            Run tests (Testcontainers; Docker required)"
-	@echo "  check           Run ktlint + tests (same as CI check)"
-	@echo "  clean           Clean build outputs"
-	@echo "  lint            Run ktlint check"
-	@echo "  lint-fix        Run ktlint format"
-	@echo "  coverage        Run tests and open JaCoCo HTML report"
-	@echo "  coverage-check  Run tests and verify 90% line coverage"
-	@echo "  deps            Refresh dependencies (--refresh-dependencies)"
-	@echo "  bootjar         Build executable JAR (no tests)"
-	@echo ""
+.PHONY: config build run run-debug test check clean lint format coverage deps bootjar
 
 config:
 	./scripts/load-config.sh

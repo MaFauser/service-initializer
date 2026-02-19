@@ -79,13 +79,13 @@ brew install helm
 ./gradlew bootBuildImage --imageName=service:dev
 ```
 
-#### 4. Deploy with Helm (local = raw credentials in values-local.yaml; no Secrets)
+#### 4. Deploy with Helm (local = raw credentials in local.yaml; no Secrets)
 
 ```bash
 helm install dev ./helm/stack \
-  -f ./helm/stack/config/shared.yaml \
-  -f ./helm/stack/values.yaml \
-  -f ./helm/stack/values-local.yaml \
+  -f ./helm/stack/config/images.yaml \
+
+  -f ./helm/stack/local.yaml \
   --set application.image.repository=service \
   --set application.image.tag=dev \
   --set application.image.pullPolicy=IfNotPresent \
@@ -155,9 +155,9 @@ kubectl create secret generic dev-grafana-credentials \
 ### Initial Deployment
 ```bash
 helm install dev ./helm/stack \
-  -f ./helm/stack/config/shared.yaml \
-  -f ./helm/stack/values.yaml \
-  -f ./helm/stack/values-dev.yaml \
+  -f ./helm/stack/config/images.yaml \
+
+  -f ./helm/stack/dev.yaml \
   --namespace development \
   --create-namespace
 
@@ -184,9 +184,9 @@ docker push your-registry/service:v1.2.0
 
 # Update deployment
 helm upgrade dev ./helm/stack \
-  -f ./helm/stack/config/shared.yaml \
-  -f ./helm/stack/values.yaml \
-  -f ./helm/stack/values-dev.yaml \
+  -f ./helm/stack/config/images.yaml \
+
+  -f ./helm/stack/dev.yaml \
   --set application.image.tag=v1.2.0 \
   --namespace development
 ```
@@ -210,7 +210,7 @@ Create the two required Secrets before the first deploy. **Full guide:** [Creati
 ```bash
 kubectl create namespace production
 
-# Create Secrets (names must match values-prod.yaml: existingSecret)
+# Create Secrets (names must match prod.yaml: existingSecret)
 kubectl create secret generic prod-postgresql-credentials \
   --from-literal=username=service --from-literal=password=$DB_PASSWORD -n production
 kubectl create secret generic prod-grafana-credentials \
@@ -220,9 +220,9 @@ kubectl create secret generic prod-grafana-credentials \
 ### Initial Deployment
 ```bash
 helm install prod ./helm/stack \
-  -f ./helm/stack/config/shared.yaml \
-  -f ./helm/stack/values.yaml \
-  -f ./helm/stack/values-prod.yaml \
+  -f ./helm/stack/config/images.yaml \
+
+  -f ./helm/stack/prod.yaml \
   --set application.image.tag=v1.0.0 \
   --namespace production
 
@@ -236,9 +236,9 @@ helm status prod -n production
 ```bash
 # Update to new version
 helm upgrade prod ./helm/stack \
-  -f ./helm/stack/config/shared.yaml \
-  -f ./helm/stack/values.yaml \
-  -f ./helm/stack/values-prod.yaml \
+  -f ./helm/stack/config/images.yaml \
+
+  -f ./helm/stack/prod.yaml \
   --set application.image.tag=v1.1.0 \
   --namespace production
 
@@ -287,7 +287,7 @@ jobs:
       - name: Deploy to Dev
         run: |
           helm upgrade --install dev ./helm/stack \
-            -f ./helm/stack/values-dev.yaml \
+            -f ./helm/stack/dev.yaml \
             --set application.image.tag=${{ github.sha }} \
             --namespace development
 ```
@@ -307,7 +307,7 @@ spec:
     path: helm/stack
     helm:
       valueFiles:
-        - values-prod.yaml
+        - prod.yaml
       parameters:
         - name: application.image.tag
           value: "1.0.0"
@@ -330,11 +330,11 @@ Before going to production, ensure:
 - [ ] Configure **Ingress** with TLS: set `ingress.enabled: true`, `ingress.hosts`, and `ingress.tls` (requires an Ingress controller in the cluster).
 - [ ] Enable **PostgreSQL backups**: set `postgresql.backup.enabled: true` (CronJob writes to PVC; sync to object storage separately). See [Backups](#backups) below.
 - [ ] Configure **monitoring alerts** in Grafana (and runbooks).
-- [ ] Enable **network policies**: set `networkPolicy.enabled: true` in values-prod.
+- [ ] Enable **network policies**: set `networkPolicy.enabled: true` in prod.yaml.
 - [ ] Use **managed services** if possible for HA (RDS, ElastiCache, MSK, OCI equivalents).
-- [ ] Configure **resource quotas** and **limits** (already in values-prod).
+- [ ] Configure **resource quotas** and **limits** (already in prod.yaml).
 - [ ] Set up **logging** aggregation (OpenSearch/Fluent Bit are optional in the chart).
-- [ ] Enable **HPA**: set `application.autoscaling.enabled: true` in values-prod.
+- [ ] Enable **HPA**: set `application.autoscaling.enabled: true` in prod.yaml.
 - [ ] Test **disaster recovery** procedures (restore from backup).
 - [ ] Document **runbooks** for common issues.
 
@@ -342,7 +342,7 @@ For a full picture of what the chart provides, see **[Production Readiness](docs
 
 ### Backups
 
-**PostgreSQL:** The chart includes an optional CronJob. Set `postgresql.backup.enabled: true` in values-prod; it runs `pg_dump` on a schedule (default daily at 2 AM) and writes to a PVC (retains 7 days). Sync that PVC to object storage with a separate job, or use [Velero](https://velero.io/) for volume backup.
+**PostgreSQL:** The chart includes an optional CronJob. Set `postgresql.backup.enabled: true` in prod.yaml; it runs `pg_dump` on a schedule (default daily at 2 AM) and writes to a PVC (retains 7 days). Sync that PVC to object storage with a separate job, or use [Velero](https://velero.io/) for volume backup.
 
 **Redis / Kafka:** No backup CronJob in the chart; use managed services with backup support or add your own strategy.
 

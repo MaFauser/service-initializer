@@ -6,7 +6,7 @@ This document summarizes what this project provides for production and what you 
 
 ## Short Answer
 
-- **Is it production-wise?** The chart now includes **production-oriented options**: Secrets (`existingSecret` for Postgres and app datasource), Ingress + TLS, HPA, NetworkPolicy, and a **PostgreSQL backup CronJob**. Enable and configure them in `values-prod.yaml` (or via `--set`). For large scale, consider managed DB/Kafka.
+- **Is it production-wise?** The chart now includes **production-oriented options**: Secrets (`existingSecret` for Postgres and app datasource), Ingress + TLS, HPA, NetworkPolicy, and a **PostgreSQL backup CronJob**. Enable and configure them in `prod.yaml` (or via `--set`). For large scale, consider managed DB/Kafka.
 - **Do we have backups?** **PostgreSQL:** Yes – optional CronJob (`postgresql.backup.enabled`) runs `pg_dump` to a PVC daily; sync that PVC to object storage separately or use Velero. Redis/Kafka: no automated backup in the chart; use managed services or add your own.
 - **Strong enough for large-scale production?** With secrets, ingress, HPA, network policies, and Postgres backups enabled, you have a solid production setup. For very large scale, use managed databases and message brokers (RDS, MSK, OCI equivalents).
 
@@ -26,7 +26,7 @@ This document summarizes what this project provides for production and what you 
 | **HPA** | Optional: `application.autoscaling.enabled` – scale app by CPU |
 | **Network policies** | Optional: `networkPolicy.enabled` – restrict app ↔ postgres/redis/kafka/tempo |
 
-Prod defaults: `values-prod.yaml` enables backup, autoscaling, and networkPolicy; set `existingSecret` and `ingress` when ready.
+Prod defaults: `prod.yaml` enables backup, autoscaling, and networkPolicy; set `existingSecret` and `ingress` when ready.
 
 ---
 
@@ -46,7 +46,7 @@ Create the Secret before install:
 
 ### 3. HPA
 
-- Set `application.autoscaling.enabled: true`. Adjust `minReplicas`, `maxReplicas`, and `targetCPUUtilizationPercentage` in values-prod.
+- Set `application.autoscaling.enabled: true`. Adjust `minReplicas`, `maxReplicas`, and `targetCPUUtilizationPercentage` in prod.yaml.
 
 ### 4. Network policies
 
@@ -92,4 +92,4 @@ Create the Secret before install:
 
 ## Conclusion
 
-The chart is **production-oriented**: enable Secrets, Ingress, HPA, NetworkPolicy, and Postgres backup in `values-prod.yaml` (and set `existingSecret` and ingress hosts/tls). For very large scale or HA, use managed databases and message brokers. The [Production Checklist](../DEPLOYMENT.md#production-checklist) in DEPLOYMENT.md is the canonical list.
+The chart is **production-oriented**: enable Secrets, Ingress, HPA, NetworkPolicy, and Postgres backup in `prod.yaml` (and set `existingSecret` and ingress hosts/tls). For very large scale or HA, use managed databases and message brokers. The [Production Checklist](../DEPLOYMENT.md#production-checklist) in DEPLOYMENT.md is the canonical list.
