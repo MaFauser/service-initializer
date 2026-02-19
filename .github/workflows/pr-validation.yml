@@ -21,7 +21,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-      pull-requests: write
 
     steps:
       - name: Checkout code
@@ -64,12 +63,27 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push image
+      - name: Check for existing image
+        id: image-cache
         run: |
+          IMAGE="${REGISTRY}/${IMAGE_NAME}"
+          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts') }}"
+          echo "src_tag=${SRC_TAG}" >> $GITHUB_OUTPUT
+          if docker manifest inspect "${IMAGE}:${SRC_TAG}" > /dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Image ${IMAGE}:${SRC_TAG} already exists — skipping build"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push image
+        if: steps.image-cache.outputs.exists != 'true'
+        run: |
+          IMAGE="${REGISTRY}/${IMAGE_NAME}"
           ./gradlew bootBuildImage \
-            --imageName=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.event.pull_request.head.sha }} \
+            --imageName="${IMAGE}:${{ steps.image-cache.outputs.src_tag }}" \
             -x test --build-cache
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.event.pull_request.head.sha }}
+          docker push "${IMAGE}:${{ steps.image-cache.outputs.src_tag }}"
 
   lint:
     name: Lint (ktlint + Helm)

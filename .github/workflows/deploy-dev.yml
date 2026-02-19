@@ -23,8 +23,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
 
       - name: Set image name
         run: echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
@@ -36,39 +34,30 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Find pre-built image from PR
+      - name: Find pre-built image
         id: find-image
         run: |
           IMAGE="${REGISTRY}/${IMAGE_NAME}"
-          # Try merge commit parents (PR head SHA)
-          for SHA in $(git rev-parse HEAD^2 2>/dev/null || true) $(git rev-parse HEAD); do
-            TAG="sha-${SHA}"
-            echo "Checking ${IMAGE}:${TAG}..."
-            if docker manifest inspect "${IMAGE}:${TAG}" > /dev/null 2>&1; then
-              echo "found=true" >> $GITHUB_OUTPUT
-              echo "tag=${TAG}" >> $GITHUB_OUTPUT
-              echo "Found pre-built image: ${IMAGE}:${TAG}"
-              exit 0
-            fi
-          done
-          echo "found=false" >> $GITHUB_OUTPUT
-          echo "No pre-built image found — will build from source"
+          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts') }}"
+          echo "src_tag=${SRC_TAG}" >> $GITHUB_OUTPUT
+          if docker manifest inspect "${IMAGE}:${SRC_TAG}" > /dev/null 2>&1; then
+            echo "found=true" >> $GITHUB_OUTPUT
+            echo "Found pre-built image: ${IMAGE}:${SRC_TAG}"
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
+            echo "No pre-built image found — will build from source"
+          fi
 
       - name: Retag and push
         if: steps.find-image.outputs.found == 'true'
         run: |
           IMAGE="${REGISTRY}/${IMAGE_NAME}"
-          SOURCE="${IMAGE}:${{ steps.find-image.outputs.tag }}"
-          docker pull "$SOURCE"
-          docker tag "$SOURCE" "${IMAGE}:dev-${{ github.sha }}"
-          docker tag "$SOURCE" "${IMAGE}:dev-latest"
+          docker pull "${IMAGE}:${{ steps.find-image.outputs.src_tag }}"
+          docker tag "${IMAGE}:${{ steps.find-image.outputs.src_tag }}" "${IMAGE}:dev-${{ github.sha }}"
+          docker tag "${IMAGE}:${{ steps.find-image.outputs.src_tag }}" "${IMAGE}:dev-latest"
           docker push "${IMAGE}:dev-${{ github.sha }}"
           docker push "${IMAGE}:dev-latest"
 
-      - name: Build from source (fallback)
-        if: steps.find-image.outputs.found != 'true'
-        run: |
-          echo "::warning::No cached image — building from source (direct push to dev?)"
       - name: Set up JDK 21
         if: steps.find-image.outputs.found != 'true'
         uses: actions/setup-java@v4
@@ -76,6 +65,7 @@ jobs:
           java-version: "21"
           distribution: "temurin"
           cache: "gradle"
+
       - name: Build and push image
         if: steps.find-image.outputs.found != 'true'
         run: |
@@ -111,7 +101,7 @@ jobs:
           CACHED="${{ steps.find-image.outputs.found }}"
           echo "## Deployed to Dev" >> $GITHUB_STEP_SUMMARY
           if [ "$CACHED" = "true" ]; then
-            echo "**Image:** reused from PR (\`${{ steps.find-image.outputs.tag }}\`)" >> $GITHUB_STEP_SUMMARY
+            echo "**Image:** reused from PR (\`${{ steps.find-image.outputs.src_tag }}\`)" >> $GITHUB_STEP_SUMMARY
           else
             echo "**Image:** built from source" >> $GITHUB_STEP_SUMMARY
           fi
