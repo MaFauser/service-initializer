@@ -1,28 +1,26 @@
 package com.mafauser.service.config
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.ConsumptionProbe
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import java.time.Duration
-import java.util.concurrent.ConcurrentHashMap
-
-@ConfigurationProperties(prefix = "rate-limit")
-data class RateLimitProperties(
-    val enabled: Boolean = true,
-    val requestsPerMinute: Int = 60,
-)
 
 @Component
 class RateLimitFilter(
     private val properties: RateLimitProperties,
 ) : OncePerRequestFilter() {
-    private val buckets = ConcurrentHashMap<String, Bucket>()
+    private val buckets =
+        Caffeine
+            .newBuilder()
+            .maximumSize(10_000)
+            .expireAfterAccess(Duration.ofMinutes(5))
+            .build<String, Bucket>()
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean =
         !properties.enabled || NoiseExclusions.paths.any { request.requestURI.startsWith(it) }
@@ -32,7 +30,7 @@ class RateLimitFilter(
         response: HttpServletResponse,
         chain: FilterChain,
     ) {
-        val bucket = buckets.computeIfAbsent(request.remoteAddr ?: "unknown") { newBucket() }
+        val bucket = buckets.get(request.remoteAddr ?: "unknown") { newBucket() }
         val probe: ConsumptionProbe = bucket.tryConsumeAndReturnRemaining(1)
 
         response.setIntHeader("X-RateLimit-Limit", properties.requestsPerMinute)
@@ -41,8 +39,9 @@ class RateLimitFilter(
         if (probe.isConsumed) {
             chain.doFilter(request, response)
         } else {
+            val retryAfterSeconds = (probe.nanosToWaitForRefill / 1_000_000_000).coerceAtLeast(1)
             response.status = 429
-            response.setHeader("Retry-After", "60")
+            response.setHeader("Retry-After", retryAfterSeconds.toString())
             response.contentType = "application/json"
             response.writer.write(
                 """{"status":429,"error":"Too Many Requests","message":"Rate limit exceeded. Try again later."}""",

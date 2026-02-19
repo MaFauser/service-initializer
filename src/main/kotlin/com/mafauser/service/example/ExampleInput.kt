@@ -9,7 +9,7 @@ data class CreateExampleInput(
 )
 
 data class UpdateExampleInput(
-    @field:Size(max = 255) val name: String? = null,
+    @field:NotBlank @field:Size(max = 255) val name: String? = null,
     @field:Size(max = 1024) val description: String? = null,
     val clearDescription: Boolean = false,
 )

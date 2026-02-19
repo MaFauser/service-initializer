@@ -3,6 +3,7 @@ package com.mafauser.service
 import jakarta.persistence.Column
 import jakarta.persistence.Id
 import jakarta.persistence.MappedSuperclass
+import org.hibernate.Hibernate
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import java.time.Instant
@@ -11,7 +12,7 @@ import java.util.UUID
 /**
  * Base for JPA entities: default [id], [createdAt], [updatedAt].
  * Hibernate sets timestamps automatically via [CreationTimestamp] / [UpdateTimestamp].
- * Equality is based on [id] for consistent entity identity.
+ * Equality uses [Hibernate.getClass] so it works correctly with lazy-loading proxies.
  */
 @MappedSuperclass
 abstract class BaseEntity(
@@ -26,7 +27,8 @@ abstract class BaseEntity(
     open var updatedAt: Instant = Instant.EPOCH,
 ) {
     override fun equals(other: Any?): Boolean =
-        this === other || (other != null && this::class == other::class && id == (other as BaseEntity).id)
+        this === other ||
+            (other != null && Hibernate.getClass(this) == Hibernate.getClass(other) && id == (other as BaseEntity).id)
 
     override fun hashCode(): Int = id.hashCode()
 }

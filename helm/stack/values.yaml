@@ -225,6 +225,7 @@ application:
     repository: your-registry/service
     tag: "latest"
     pullPolicy: IfNotPresent
+  managementPort: 8082
   service:
     type: ClusterIP
     port: 8081

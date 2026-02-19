@@ -1,15 +1,18 @@
 package com.mafauser.service.example
 
 import com.mafauser.service.config.InvalidIdException
+import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
 import org.springframework.stereotype.Controller
+import org.springframework.validation.annotation.Validated
 import java.util.UUID
 
 @Controller
+@Validated
 class ExampleGraphQLController(
     private val exampleService: ExampleService,
 ) {
@@ -35,7 +38,7 @@ class ExampleGraphQLController(
 
     @MutationMapping
     fun createExample(
-        @Argument input: CreateExampleInput,
+        @Argument @Valid input: CreateExampleInput,
     ): ExampleResponse {
         log.debug("GraphQL mutation: createExample name={}", input.name)
         return exampleService.create(input).toResponse()
@@ -44,7 +47,7 @@ class ExampleGraphQLController(
     @MutationMapping
     fun updateExample(
         @Argument id: String,
-        @Argument input: UpdateExampleInput,
+        @Argument @Valid input: UpdateExampleInput,
     ): ExampleResponse {
         log.debug("GraphQL mutation: updateExample id={}", id)
         return exampleService.update(parseUuid(id, "updateExample"), input).toResponse()

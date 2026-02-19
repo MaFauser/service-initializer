@@ -7,7 +7,9 @@ metadata:
     {{- include "stack.labels" . | nindent 4 }}
     app.kubernetes.io/component: app
 spec:
+  {{- if not (and .Values.application.autoscaling .Values.application.autoscaling.enabled) }}
   replicas: {{ .Values.application.replicas }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "stack.selectorLabels" . | nindent 6 }}
@@ -49,7 +51,7 @@ spec:
           containerPort: {{ .Values.application.service.port }}
           protocol: TCP
         - name: management
-          containerPort: 8082
+          containerPort: {{ .Values.application.managementPort }}
           protocol: TCP
         env:
         - name: SPRING_PROFILES_ACTIVE

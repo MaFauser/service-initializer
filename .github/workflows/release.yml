@@ -11,7 +11,7 @@ jobs:
   promote-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       packages: write
 
     steps:
@@ -31,7 +31,7 @@ jobs:
       - name: Compute source content hash
         id: srchash
         run: |
-          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts') }}"
+          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts', 'settings.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}"
           echo "src_tag=${SRC_TAG}" >> $GITHUB_OUTPUT
           echo "Source tag: ${SRC_TAG}"
 

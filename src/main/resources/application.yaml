@@ -28,6 +28,9 @@ spring:
     redis:
       host: ${SPRING_DATA_REDIS_HOST}
       port: ${SPRING_DATA_REDIS_PORT}
+    web:
+      pageable:
+        max-page-size: 100
 
   cache:
     type: redis

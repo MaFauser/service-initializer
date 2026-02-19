@@ -1,5 +1,6 @@
 package com.mafauser.service.config
 
+import com.mafauser.service.config.RateLimitProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.config.annotation.CorsRegistry

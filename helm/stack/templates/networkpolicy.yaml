@@ -20,6 +20,8 @@ spec:
     - ports:
         - protocol: TCP
           port: {{ .Values.application.service.port }}
+        - protocol: TCP
+          port: 8082
   egress:
     - to:
         - podSelector:
@@ -53,11 +55,23 @@ spec:
       ports:
         - protocol: TCP
           port: 4318
+    # DNS resolution
     - to:
         - namespaceSelector: {}
       ports:
         - protocol: UDP
           port: 53
+    # Outbound HTTPS (external APIs, OAuth providers, etc.)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
 ---
 {{- end }}
 # Allow only app (and backup job) to connect to PostgreSQL

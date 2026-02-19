@@ -1,21 +1,17 @@
 package com.mafauser.service.config
 
+import jakarta.validation.ConstraintViolationException
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
-import java.time.Instant
-
-data class ErrorResponse(
-    val status: Int,
-    val error: String,
-    val message: String,
-    val timestamp: Instant = Instant.now(),
-)
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     @ExceptionHandler(NotFoundException::class)
     fun handleNotFound(ex: NotFoundException): ResponseEntity<ErrorResponse> =
         ResponseEntity.status(HttpStatus.NOT_FOUND).body(
@@ -57,6 +53,33 @@ class GlobalExceptionHandler {
                 status = 400,
                 error = "Validation Failed",
                 message = message,
+            ),
+        )
+    }
+
+    @ExceptionHandler(ConstraintViolationException::class)
+    fun handleConstraintViolation(ex: ConstraintViolationException): ResponseEntity<ErrorResponse> {
+        val message =
+            ex.constraintViolations.joinToString("; ") {
+                "${it.propertyPath}: ${it.message}"
+            }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+            ErrorResponse(
+                status = 400,
+                error = "Validation Failed",
+                message = message,
+            ),
+        )
+    }
+
+    @ExceptionHandler(Exception::class)
+    fun handleGeneric(ex: Exception): ResponseEntity<ErrorResponse> {
+        log.error("Unhandled exception", ex)
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+            ErrorResponse(
+                status = 500,
+                error = "Internal Server Error",
+                message = "An unexpected error occurred",
             ),
         )
     }

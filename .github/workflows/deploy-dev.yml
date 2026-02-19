@@ -7,7 +7,7 @@ on:
 
 concurrency:
   group: deploy-dev
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   REGISTRY: ghcr.io
@@ -40,7 +40,7 @@ jobs:
         id: resolve
         run: |
           IMAGE="${REGISTRY}/${IMAGE_NAME}"
-          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts') }}"
+          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts', 'settings.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}"
           echo "src_tag=${SRC_TAG}" >> $GITHUB_OUTPUT
           if docker manifest inspect "${IMAGE}:${SRC_TAG}" > /dev/null 2>&1; then
             echo "found=true" >> $GITHUB_OUTPUT

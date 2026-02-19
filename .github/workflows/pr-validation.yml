@@ -43,7 +43,7 @@ jobs:
         id: cache
         run: |
           IMAGE="${REGISTRY}/${IMAGE_NAME}"
-          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts') }}"
+          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts', 'settings.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}"
           echo "src_tag=${SRC_TAG}" >> $GITHUB_OUTPUT
           if docker manifest inspect "${IMAGE}:${SRC_TAG}" > /dev/null 2>&1; then
             echo "hit=true" >> $GITHUB_OUTPUT
