@@ -16,7 +16,7 @@ env:
 
 jobs:
   build:
-    name: Build
+    name: Build & Test
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -58,65 +58,25 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
-          cache: "gradle"
 
-      - name: Cache Gradle build
+      - name: Set up Gradle
         if: steps.cache.outputs.hit != 'true'
-        uses: actions/cache@v4
-        with:
-          path: |
-            build
-            .gradle/configuration-cache
-          key: gradle-build-${{ hashFiles('src/**', 'build.gradle.kts') }}
-          restore-keys: gradle-build-
+        uses: gradle/actions/setup-gradle@v4
 
-      - name: Compile
+      - name: Build, test, and verify coverage
         if: steps.cache.outputs.hit != 'true'
-        run: ./gradlew assemble -x ktlintCheck --warning-mode=none --build-cache
-
-  test:
-    name: Test
-    needs: build
-    if: needs.build.outputs.hit != 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: "21"
-          distribution: "temurin"
-          cache: "gradle"
-
-      - name: Cache Gradle build
-        uses: actions/cache@v4
-        with:
-          path: |
-            build
-            .gradle/configuration-cache
-          key: gradle-build-${{ hashFiles('src/**', 'build.gradle.kts') }}
-          restore-keys: gradle-build-
-
-      - name: Test and verify coverage
-        run: ./gradlew test jacocoTestCoverageVerification --warning-mode=none --build-cache
+        run: ./gradlew build jacocoTestCoverageVerification --warning-mode=none --build-cache
 
       - name: Upload JaCoCo report
-        if: always()
+        if: steps.cache.outputs.hit != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
           path: build/reports/jacoco/test/html/
           retention-days: 7
 
-  format:
-    name: Format (ktlint)
-    needs: build
-    if: needs.build.outputs.hit != 'true'
+  helm:
+    name: Helm
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -125,19 +85,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: "21"
-          distribution: "temurin"
-          cache: "gradle"
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
-      - name: Run ktlint
-        run: ./gradlew ktlintCheck --warning-mode=none
+      - name: Lint and validate
+        run: |
+          helm lint ./helm/stack
+          helm lint ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/local.yaml
+          helm lint ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/dev.yaml
+          helm lint ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/prod.yaml
+          helm template test ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/local.yaml > /dev/null
+          helm template test ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/dev.yaml > /dev/null
+          helm template test ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/prod.yaml > /dev/null
 
   push:
     name: Push Image
-    needs: [build, test, format, helm]
+    needs: [build, helm]
     if: needs.build.outputs.hit != 'true'
     runs-on: ubuntu-latest
     permissions:
@@ -156,16 +119,9 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
-          cache: "gradle"
 
-      - name: Cache Gradle build
-        uses: actions/cache@v4
-        with:
-          path: |
-            build
-            .gradle/configuration-cache
-          key: gradle-build-${{ hashFiles('src/**', 'build.gradle.kts') }}
-          restore-keys: gradle-build-
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -181,26 +137,3 @@ jobs:
             --imageName="${IMAGE}:${{ needs.build.outputs.src_tag }}" \
             -x test --build-cache
           docker push "${IMAGE}:${{ needs.build.outputs.src_tag }}"
-
-  helm:
-    name: Helm
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Helm
-        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-
-      - name: Lint and validate Helm chart
-        run: |
-          helm lint ./helm/stack
-          helm lint ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/local.yaml
-          helm lint ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/dev.yaml
-          helm lint ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/prod.yaml
-          helm template test ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/local.yaml > /dev/null
-          helm template test ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/dev.yaml > /dev/null
-          helm template test ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/prod.yaml > /dev/null
