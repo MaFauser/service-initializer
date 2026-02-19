@@ -13,12 +13,14 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  deploy:
-    name: Deploy
+  image:
+    name: Resolve Image
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    outputs:
+      src_tag: ${{ steps.image.outputs.src_tag }}
 
     steps:
       - name: Checkout code
@@ -34,32 +36,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Find pre-built image
-        id: find-image
+      - name: Resolve image tag
+        id: image
         run: |
           IMAGE="${REGISTRY}/${IMAGE_NAME}"
           SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts') }}"
           echo "src_tag=${SRC_TAG}" >> $GITHUB_OUTPUT
           if docker manifest inspect "${IMAGE}:${SRC_TAG}" > /dev/null 2>&1; then
             echo "found=true" >> $GITHUB_OUTPUT
-            echo "Found pre-built image: ${IMAGE}:${SRC_TAG}"
           else
             echo "found=false" >> $GITHUB_OUTPUT
-            echo "No pre-built image found — will build from source"
           fi
 
-      - name: Retag and push
-        if: steps.find-image.outputs.found == 'true'
-        run: |
-          IMAGE="${REGISTRY}/${IMAGE_NAME}"
-          docker pull "${IMAGE}:${{ steps.find-image.outputs.src_tag }}"
-          docker tag "${IMAGE}:${{ steps.find-image.outputs.src_tag }}" "${IMAGE}:dev-${{ github.sha }}"
-          docker tag "${IMAGE}:${{ steps.find-image.outputs.src_tag }}" "${IMAGE}:dev-latest"
-          docker push "${IMAGE}:dev-${{ github.sha }}"
-          docker push "${IMAGE}:dev-latest"
-
       - name: Set up JDK 21
-        if: steps.find-image.outputs.found != 'true'
+        if: steps.image.outputs.found != 'true'
         uses: actions/setup-java@v4
         with:
           java-version: "21"
@@ -67,13 +57,30 @@ jobs:
           cache: "gradle"
 
       - name: Build and push image
-        if: steps.find-image.outputs.found != 'true'
+        if: steps.image.outputs.found != 'true'
         run: |
           IMAGE="${REGISTRY}/${IMAGE_NAME}"
-          ./gradlew bootBuildImage --imageName="${IMAGE}:dev-${{ github.sha }}" -x test
-          docker tag "${IMAGE}:dev-${{ github.sha }}" "${IMAGE}:dev-latest"
-          docker push "${IMAGE}:dev-${{ github.sha }}"
-          docker push "${IMAGE}:dev-latest"
+          ./gradlew bootBuildImage --imageName="${IMAGE}:${{ steps.image.outputs.src_tag }}" -x test
+          docker push "${IMAGE}:${{ steps.image.outputs.src_tag }}"
+
+      - name: Tag as dev-latest
+        run: |
+          IMAGE="${REGISTRY}/${IMAGE_NAME}"
+          docker buildx imagetools create -t "${IMAGE}:dev-latest" "${IMAGE}:${{ steps.image.outputs.src_tag }}"
+
+  deploy:
+    name: Deploy
+    needs: image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set image name
+        run: echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Set up kubectl
         uses: azure/k8s-set-context@v4
@@ -92,17 +99,6 @@ jobs:
             -f ./helm/stack/config/images.yaml \
             -f ./helm/stack/dev.yaml \
             --set application.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-            --set application.image.tag=dev-${{ github.sha }} \
+            --set application.image.tag=${{ needs.image.outputs.src_tag }} \
             --namespace development \
             --create-namespace
-
-      - name: Summary
-        run: |
-          CACHED="${{ steps.find-image.outputs.found }}"
-          echo "## Deployed to Dev" >> $GITHUB_STEP_SUMMARY
-          if [ "$CACHED" = "true" ]; then
-            echo "**Image:** reused from PR (\`${{ steps.find-image.outputs.src_tag }}\`)" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "**Image:** built from source" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "**Tag:** \`dev-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
