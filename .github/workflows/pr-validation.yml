@@ -29,7 +29,28 @@ jobs:
       - name: Set image name
         run: echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for existing image
+        id: cache
+        run: |
+          IMAGE="${REGISTRY}/${IMAGE_NAME}"
+          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts') }}"
+          echo "src_tag=${SRC_TAG}" >> $GITHUB_OUTPUT
+          if docker manifest inspect "${IMAGE}:${SRC_TAG}" > /dev/null 2>&1; then
+            echo "hit=true" >> $GITHUB_OUTPUT
+            echo "Image ${IMAGE}:${SRC_TAG} exists — skipping build"
+          else
+            echo "hit=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Set up JDK 21
+        if: steps.cache.outputs.hit != 'true'
         uses: actions/setup-java@v4
         with:
           java-version: "21"
@@ -37,6 +58,7 @@ jobs:
           cache: "gradle"
 
       - name: Cache Gradle build
+        if: steps.cache.outputs.hit != 'true'
         uses: actions/cache@v4
         with:
           path: |
@@ -46,44 +68,25 @@ jobs:
           restore-keys: gradle-build-
 
       - name: Build, test, and verify coverage
+        if: steps.cache.outputs.hit != 'true'
         run: ./gradlew build jacocoTestCoverageVerification -x ktlintCheck --warning-mode=none --build-cache
 
       - name: Upload JaCoCo report
-        if: always()
+        if: steps.cache.outputs.hit != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
           path: build/reports/jacoco/test/html/
           retention-days: 7
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Check for existing image
-        id: image-cache
-        run: |
-          IMAGE="${REGISTRY}/${IMAGE_NAME}"
-          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts') }}"
-          echo "src_tag=${SRC_TAG}" >> $GITHUB_OUTPUT
-          if docker manifest inspect "${IMAGE}:${SRC_TAG}" > /dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Image ${IMAGE}:${SRC_TAG} already exists — skipping build"
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Build and push image
-        if: steps.image-cache.outputs.exists != 'true'
+        if: steps.cache.outputs.hit != 'true'
         run: |
           IMAGE="${REGISTRY}/${IMAGE_NAME}"
           ./gradlew bootBuildImage \
-            --imageName="${IMAGE}:${{ steps.image-cache.outputs.src_tag }}" \
+            --imageName="${IMAGE}:${{ steps.cache.outputs.src_tag }}" \
             -x test --build-cache
-          docker push "${IMAGE}:${{ steps.image-cache.outputs.src_tag }}"
+          docker push "${IMAGE}:${{ steps.cache.outputs.src_tag }}"
 
   lint:
     name: Lint (ktlint + Helm)
