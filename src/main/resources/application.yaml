@@ -83,21 +83,6 @@ management:
 server:
   port: 8081
 
-bucket4j:
+rate-limit:
   enabled: true
-  cache-to-use: redis-lettuce
-  default-http-content-type: application/json
-  default-http-response-body: '{"status":429,"error":"Too Many Requests","message":"Rate limit exceeded. Try again later."}'
-  filters:
-    - cache-name: rate-limit-buckets
-      url: .*
-      http-response-headers:
-        Retry-After: "60"
-      rate-limits:
-        - cache-key: getRemoteAddr()
-          skip-predicates:
-            - "PATH=/actuator/**,/favicon.ico,/error"
-          bandwidths:
-            - capacity: 60
-              time: 1
-              unit: minutes
+  requests-per-minute: 60

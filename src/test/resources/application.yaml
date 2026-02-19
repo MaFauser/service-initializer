@@ -26,5 +26,5 @@ management:
       export:
         enabled: false
 
-bucket4j:
+rate-limit:
   enabled: false

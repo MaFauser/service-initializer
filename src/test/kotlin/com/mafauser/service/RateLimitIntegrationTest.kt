@@ -12,8 +12,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @TestPropertySource(
     properties = [
-        "bucket4j.enabled=true",
-        "bucket4j.filters[0].rate-limits[0].bandwidths[0].capacity=3",
+        "rate-limit.enabled=true",
+        "rate-limit.requests-per-minute=3",
     ],
 )
 @DisplayName("Rate Limiting (integration)")
@@ -27,6 +27,8 @@ class RateLimitIntegrationTest : BaseIntegrationTest() {
             mockMvc
                 .perform(get("/examples").with { it.apply { remoteAddr = "10.0.0.1" } })
                 .andExpect(status().isOk)
+                .andExpect(header().exists("X-RateLimit-Limit"))
+                .andExpect(header().exists("X-RateLimit-Remaining"))
         }
 
         mockMvc
@@ -36,8 +38,8 @@ class RateLimitIntegrationTest : BaseIntegrationTest() {
                 content().json(
                     """{"status":429,"error":"Too Many Requests","message":"Rate limit exceeded. Try again later."}""",
                 ),
-            )
-            .andExpect(header().string("Retry-After", "60"))
+            ).andExpect(header().string("Retry-After", "60"))
+            .andExpect(header().string("X-RateLimit-Remaining", "0"))
     }
 
     @Test
@@ -47,5 +49,21 @@ class RateLimitIntegrationTest : BaseIntegrationTest() {
                 .perform(get("/actuator/health").with { it.apply { remoteAddr = "10.0.0.2" } })
                 .andExpect(status().isOk)
         }
+    }
+
+    @Test
+    fun `rate limits independently per IP address`() {
+        repeat(3) {
+            mockMvc
+                .perform(get("/examples").with { it.apply { remoteAddr = "10.0.0.3" } })
+                .andExpect(status().isOk)
+        }
+        mockMvc
+            .perform(get("/examples").with { it.apply { remoteAddr = "10.0.0.3" } })
+            .andExpect(status().isTooManyRequests)
+
+        mockMvc
+            .perform(get("/examples").with { it.apply { remoteAddr = "10.0.0.4" } })
+            .andExpect(status().isOk)
     }
 }
