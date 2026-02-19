@@ -21,6 +21,13 @@ postgresql:
   enabled: true
   image:
     pullPolicy: IfNotPresent
+  auth:
+    database: ""
+    username: ""
+    password: ""
+    existingSecret: ""
+    usernameKey: ""
+    passwordKey: ""
   service:
     type: ClusterIP
     port: 5432
@@ -99,6 +106,12 @@ grafana:
   enabled: true
   image:
     pullPolicy: IfNotPresent
+  auth:
+    adminUser: ""
+    adminPassword: ""
+    existingSecret: ""
+    adminUserKey: ""
+    adminPasswordKey: ""
   service:
     type: ClusterIP
     port: 3000

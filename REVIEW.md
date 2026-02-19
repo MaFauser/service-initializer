@@ -75,13 +75,11 @@ Review focused on **simplicity**, **quality**, and **using built-in libraries** 
 ### Other
 - **Helm chart** – Structure and templates; no unnecessary files.
 - **.cursor/rules** – Coverage, naming, versions; kept.
-- **qodana.yaml** – Uses `projectJDK: "25"` while app is on 21; left as-is (CI/tooling choice).
 
 ---
 
 ## Optional follow-ups (not done)
 
-- **Qodana JDK:** Align `qodana.yaml` `projectJDK` with the project (e.g. 21) if you want analysis on the same JDK.
 - **HELP.md:** Remove or shorten if you prefer not to maintain Spring Boot reference links; current content is harmless.
 
 ---
