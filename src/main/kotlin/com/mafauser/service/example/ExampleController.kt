@@ -3,6 +3,9 @@ package com.mafauser.service.example
 import com.mafauser.service.config.NotFoundException
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -15,9 +18,6 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
-/**
- * REST controller for the Example domain. Exposes CRUD over HTTP.
- */
 @RestController
 @RequestMapping("/examples")
 class ExampleController(
@@ -26,35 +26,37 @@ class ExampleController(
     private val log = LoggerFactory.getLogger(javaClass)
 
     @GetMapping
-    fun list(): List<Example> {
-        log.info("Examples list requested")
-        return exampleService.findAll()
+    fun list(
+        @PageableDefault(size = 20) pageable: Pageable,
+    ): Page<ExampleResponse> {
+        log.debug("Examples list requested, page={}", pageable)
+        return exampleService.findAll(pageable).map { it.toResponse() }
     }
 
     @GetMapping("/{id}")
     fun get(
         @PathVariable id: UUID,
-    ): Example {
-        log.info("Example get requested: id={}", id)
-        return exampleService.findById(id) ?: throw NotFoundException("Example", id)
+    ): ExampleResponse {
+        log.debug("Example get requested: id={}", id)
+        return (exampleService.findById(id) ?: throw NotFoundException("Example", id)).toResponse()
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun create(
         @RequestBody @Valid input: CreateExampleInput,
-    ): Example {
-        log.info("Example create requested: name={}", input.name)
-        return exampleService.create(input)
+    ): ExampleResponse {
+        log.debug("Example create requested: name={}", input.name)
+        return exampleService.create(input).toResponse()
     }
 
     @PutMapping("/{id}")
     fun update(
         @PathVariable id: UUID,
         @RequestBody @Valid input: UpdateExampleInput,
-    ): Example {
-        log.info("Example update requested: id={}", id)
-        return exampleService.update(id, input)
+    ): ExampleResponse {
+        log.debug("Example update requested: id={}", id)
+        return exampleService.update(id, input).toResponse()
     }
 
     @DeleteMapping("/{id}")
@@ -62,7 +64,7 @@ class ExampleController(
     fun delete(
         @PathVariable id: UUID,
     ) {
-        log.info("Example delete requested: id={}", id)
+        log.debug("Example delete requested: id={}", id)
         if (!exampleService.delete(id)) {
             throw NotFoundException("Example", id)
         }

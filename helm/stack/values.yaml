@@ -158,7 +158,10 @@ opensearch:
     enabled: true
     size: 10Gi
   disableSecurity: true
-  adminPassword: "Opensearch123!"
+  auth:
+    existingSecret: ""
+    adminPasswordKey: ""
+    adminPassword: ""
   resources:
     requests:
       memory: "1Gi"

@@ -1,8 +1,30 @@
-# Test configuration: disable tracing to avoid LGTM stack (heavy, flaky in CI)
+# Test overrides: placeholders for properties that Testcontainers overrides via @ServiceConnection
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/testdb
+    username: test
+    password: test
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  kafka:
+    bootstrap-servers: localhost:9092
+
 management:
+  server:
+    port: # same as server port in tests
   tracing:
     enabled: false
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/traces
   otlp:
     tracing:
       export:
         enabled: false
+
+bucket4j:
+  enabled: false

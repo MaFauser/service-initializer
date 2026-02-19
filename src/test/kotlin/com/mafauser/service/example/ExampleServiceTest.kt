@@ -19,6 +19,9 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
 import java.util.Optional.empty
 import java.util.Optional.of
 import java.util.UUID
@@ -36,13 +39,13 @@ class ExampleServiceTest {
     @DisplayName("findAll")
     inner class FindAll {
         @Test
-        fun `returns empty list when repository is empty`() {
-            whenever(exampleRepository.findAll()).thenReturn(emptyList())
+        fun `returns empty page when repository is empty`() {
+            whenever(exampleRepository.findAll(any<Pageable>())).thenReturn(Page.empty())
 
-            val result = exampleService.findAll()
+            val result = exampleService.findAll(Pageable.unpaged())
 
-            assertTrue(result.isEmpty())
-            verify(exampleRepository).findAll()
+            assertTrue(result.isEmpty)
+            verify(exampleRepository).findAll(any<Pageable>())
         }
 
         @Test
@@ -52,14 +55,14 @@ class ExampleServiceTest {
                     Example(name = "One"),
                     Example(name = "Two"),
                 )
-            whenever(exampleRepository.findAll()).thenReturn(examples)
+            whenever(exampleRepository.findAll(any<Pageable>())).thenReturn(PageImpl(examples))
 
-            val result = exampleService.findAll()
+            val result = exampleService.findAll(Pageable.unpaged())
 
-            assertEquals(2, result.size)
-            assertEquals("One", result[0].name)
-            assertEquals("Two", result[1].name)
-            verify(exampleRepository).findAll()
+            assertEquals(2, result.totalElements)
+            assertEquals("One", result.content[0].name)
+            assertEquals("Two", result.content[1].name)
+            verify(exampleRepository).findAll(any<Pageable>())
         }
     }
 
@@ -218,6 +221,20 @@ class ExampleServiceTest {
             assertEquals("Keep desc", result.description)
             verify(exampleRepository).findById(id)
             verify(exampleRepository).existsByName("NewOnly")
+            verify(exampleRepository).save(existing)
+        }
+
+        @Test
+        fun `clears description when clearDescription is true`() {
+            val id = UUID.randomUUID()
+            val existing = Example(id = id, name = "Test", description = "Old desc")
+            whenever(exampleRepository.findById(id)).thenReturn(of(existing))
+            whenever(exampleRepository.save(any<Example>())).thenReturn(existing)
+
+            val result = exampleService.update(id, UpdateExampleInput(clearDescription = true))
+
+            assertEquals("Test", result.name)
+            assertNull(result.description)
             verify(exampleRepository).save(existing)
         }
     }

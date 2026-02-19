@@ -13,6 +13,10 @@ spec:
     targetPort: http
     protocol: TCP
     name: http
+  - port: 8082
+    targetPort: management
+    protocol: TCP
+    name: management
   selector:
     {{- include "stack.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: app

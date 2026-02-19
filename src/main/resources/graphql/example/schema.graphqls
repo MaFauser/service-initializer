@@ -2,8 +2,8 @@
 # Spring GraphQL merges this with other schema files under graphql/.
 
 type Query {
-  """List all examples."""
-  examples: [Example!]!
+  """List all examples (paginated)."""
+  examples(page: Int, size: Int): [Example!]!
   """Get one example by id."""
   example(id: ID!): Example
 }
@@ -40,4 +40,5 @@ input CreateExampleInput {
 input UpdateExampleInput {
   name: String
   description: String
+  clearDescription: Boolean
 }

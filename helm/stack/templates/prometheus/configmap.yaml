@@ -11,7 +11,7 @@ data:
 {{- $promConfig := .Files.Get "config/prometheus.yml" }}
 {{- $appJob := "- job_name: 'service-app'" }}
 {{- if .Values.application.enabled }}
-{{- $appTarget := printf "%s-app:%s" (include "stack.fullname" .) (.Values.application.service.port | toString) }}
+{{- $appTarget := printf "%s-app:8082" (include "stack.fullname" .) }}
 {{ $promConfig | replace "__APP_TARGET__" $appTarget | nindent 4 }}
 {{- else }}
 {{- $parts := split $appJob $promConfig }}

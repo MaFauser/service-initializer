@@ -1,14 +1,14 @@
 spring:
   output:
     ansi:
-      enabled: detect  # Colors in TTY (local), plain text in containers (clean logs for OpenSearch)
+      enabled: detect
   application:
     name: service
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/servicedb}
-    username: ${SPRING_DATASOURCE_USERNAME:service}
-    password: ${SPRING_DATASOURCE_PASSWORD:service123}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -26,8 +26,8 @@ spring:
 
   data:
     redis:
-      host: ${SPRING_DATA_REDIS_HOST:localhost}
-      port: ${SPRING_DATA_REDIS_PORT:6379}
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT}
 
   cache:
     type: redis
@@ -40,7 +40,7 @@ spring:
       path: /graphiql
 
   kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       group-id: ${spring.application.name}
       auto-offset-reset: earliest
@@ -55,6 +55,8 @@ logging:
     '[com.mafauser.service]': INFO
 
 management:
+  server:
+    port: 8082
   metrics:
     tags:
       application: ${spring.application.name}
@@ -72,7 +74,7 @@ management:
     tracing:
       export:
         otlp:
-          endpoint: http://localhost:4318/v1/traces
+          endpoint: ${MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT}
   otlp:
     metrics:
       export:
@@ -80,3 +82,22 @@ management:
 
 server:
   port: 8081
+
+bucket4j:
+  enabled: true
+  cache-to-use: redis-lettuce
+  default-http-content-type: application/json
+  default-http-response-body: '{"status":429,"error":"Too Many Requests","message":"Rate limit exceeded. Try again later."}'
+  filters:
+    - cache-name: rate-limit-buckets
+      url: .*
+      http-response-headers:
+        Retry-After: "60"
+      rate-limits:
+        - cache-key: getRemoteAddr()
+          skip-predicates:
+            - "PATH=/actuator/**,/favicon.ico,/error"
+          bandwidths:
+            - capacity: 60
+              time: 1
+              unit: minutes
