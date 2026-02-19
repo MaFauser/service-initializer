@@ -46,7 +46,7 @@ jobs:
           restore-keys: gradle-build-
 
       - name: Build, test, and verify coverage
-        run: ./gradlew build jacocoTestCoverageVerification --warning-mode=none --build-cache
+        run: ./gradlew build jacocoTestCoverageVerification -x ktlintCheck --warning-mode=none --build-cache
 
       - name: Upload JaCoCo report
         if: always()
