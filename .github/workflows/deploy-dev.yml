@@ -11,6 +11,7 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   image:
@@ -20,14 +21,11 @@ jobs:
       contents: read
       packages: write
     outputs:
-      src_tag: ${{ steps.image.outputs.src_tag }}
+      src_tag: ${{ steps.resolve.outputs.src_tag }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set image name
-        run: echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -37,9 +35,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Resolve image tag
-        id: image
+        id: resolve
         run: |
-          IMAGE="${REGISTRY}/${IMAGE_NAME}"
+          IMAGE="${REGISTRY}/${IMAGE_NAME,,}"
           SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts') }}"
           echo "src_tag=${SRC_TAG}" >> $GITHUB_OUTPUT
           if docker manifest inspect "${IMAGE}:${SRC_TAG}" > /dev/null 2>&1; then
@@ -49,7 +47,7 @@ jobs:
           fi
 
       - name: Set up JDK 21
-        if: steps.image.outputs.found != 'true'
+        if: steps.resolve.outputs.found != 'true'
         uses: actions/setup-java@v4
         with:
           java-version: "21"
@@ -57,16 +55,16 @@ jobs:
           cache: "gradle"
 
       - name: Build and push image
-        if: steps.image.outputs.found != 'true'
+        if: steps.resolve.outputs.found != 'true'
         run: |
-          IMAGE="${REGISTRY}/${IMAGE_NAME}"
-          ./gradlew bootBuildImage --imageName="${IMAGE}:${{ steps.image.outputs.src_tag }}" -x test
-          docker push "${IMAGE}:${{ steps.image.outputs.src_tag }}"
+          IMAGE="${REGISTRY}/${IMAGE_NAME,,}"
+          ./gradlew bootBuildImage --imageName="${IMAGE}:${{ steps.resolve.outputs.src_tag }}" -x test
+          docker push "${IMAGE}:${{ steps.resolve.outputs.src_tag }}"
 
       - name: Tag as dev-latest
         run: |
-          IMAGE="${REGISTRY}/${IMAGE_NAME}"
-          docker buildx imagetools create -t "${IMAGE}:dev-latest" "${IMAGE}:${{ steps.image.outputs.src_tag }}"
+          IMAGE="${REGISTRY}/${IMAGE_NAME,,}"
+          docker buildx imagetools create -t "${IMAGE}:dev-latest" "${IMAGE}:${{ steps.resolve.outputs.src_tag }}"
 
   deploy:
     name: Deploy
@@ -78,9 +76,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set image name
-        run: echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Set up kubectl
         uses: azure/k8s-set-context@v4
@@ -95,10 +90,11 @@ jobs:
 
       - name: Deploy
         run: |
+          IMAGE_REPO="${REGISTRY}/${IMAGE_NAME,,}"
           helm upgrade --install dev ./helm/stack \
             -f ./helm/stack/config/images.yaml \
             -f ./helm/stack/dev.yaml \
-            --set application.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --set application.image.repository="${IMAGE_REPO}" \
             --set application.image.tag=${{ needs.image.outputs.src_tag }} \
             --namespace development \
             --create-namespace
