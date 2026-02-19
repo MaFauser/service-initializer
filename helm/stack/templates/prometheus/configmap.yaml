@@ -15,6 +15,6 @@ data:
 {{ $promConfig | replace "__APP_TARGET__" $appTarget | nindent 4 }}
 {{- else }}
 {{- $parts := split $appJob $promConfig }}
-{{ (index $parts 0) | trimSuffix "\n" | nindent 4 }}
+{{ (index $parts "_0") | trimSuffix "\n" | nindent 4 }}
 {{- end }}
 {{- end }}
