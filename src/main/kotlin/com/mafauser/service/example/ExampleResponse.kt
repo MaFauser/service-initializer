@@ -12,11 +12,12 @@ data class ExampleResponse(
     val updatedAt: Instant,
 )
 
-fun Example.toResponse() = ExampleResponse(
-    id = id,
-    name = name,
-    description = description,
-    version = version,
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-)
+fun Example.toResponse() =
+    ExampleResponse(
+        id = id,
+        name = name,
+        description = description,
+        version = version,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+    )
