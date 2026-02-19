@@ -10,7 +10,7 @@ postgresql:
     passwordKey: password
   persistence:
     enabled: true
-    size: 2Gi
+    size: 50Gi
   resources:
     requests:
       memory: "128Mi"
@@ -24,7 +24,7 @@ postgresql:
 redis:
   enabled: true
   persistence:
-    size: 1Gi
+    size: 50Gi
   resources:
     requests:
       memory: "32Mi"
@@ -36,7 +36,7 @@ redis:
 kafka:
   enabled: true
   persistence:
-    size: 5Gi
+    size: 50Gi
   resources:
     requests:
       memory: "256Mi"
@@ -62,7 +62,7 @@ grafana:
     adminUserKey: adminUser
     adminPasswordKey: adminPassword
   persistence:
-    size: 1Gi
+    size: 50Gi
   resources:
     requests:
       memory: "128Mi"
@@ -74,7 +74,7 @@ grafana:
 tempo:
   enabled: true
   persistence:
-    size: 2Gi
+    size: 50Gi
   resources:
     requests:
       memory: "128Mi"
@@ -87,7 +87,7 @@ opensearch:
   enabled: true
   disableSecurity: true
   persistence:
-    size: 5Gi
+    size: 50Gi
   resources:
     requests:
       memory: "512Mi"
@@ -113,7 +113,7 @@ fluentBit:
 prometheus:
   enabled: true
   persistence:
-    size: 2Gi
+    size: 50Gi
   resources:
     requests:
       memory: "128Mi"
