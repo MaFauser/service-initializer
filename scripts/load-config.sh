@@ -54,6 +54,15 @@ TEMPO_IMAGE=$(img '.tempo')
 
 # Prometheus
 PROMETHEUS_IMAGE=$(img '.prometheus')
+
+# Spring Boot application (used by bootRun)
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:$(yq '.postgresql.service.port' "$VALUES")/$(yq '.postgresql.auth.database' "$LOCAL")
+SPRING_DATASOURCE_USERNAME=$(yq '.postgresql.auth.username' "$LOCAL")
+SPRING_DATASOURCE_PASSWORD=$(yq '.postgresql.auth.password' "$LOCAL")
+SPRING_DATA_REDIS_HOST=localhost
+SPRING_DATA_REDIS_PORT=$(yq '.redis.service.port' "$VALUES")
+SPRING_KAFKA_BOOTSTRAP_SERVERS=localhost:$(yq '.kafka.service.port' "$VALUES")
+MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT=http://localhost:$(yq '.tempo.service.ports.otlpHttp' "$VALUES")/v1/traces
 EOF
 
 echo "Generated $OUT"

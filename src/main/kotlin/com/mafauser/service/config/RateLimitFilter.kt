@@ -7,6 +7,7 @@ import io.github.bucket4j.ConsumptionProbe
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import java.time.Duration
@@ -15,6 +16,17 @@ import java.time.Duration
 class RateLimitFilter(
     private val properties: RateLimitProperties,
 ) : OncePerRequestFilter() {
+    private val log = LoggerFactory.getLogger(javaClass)
+
+    private val RESPONSE_BODY = """{"status":429,"error":"Too Many Requests","message":"Rate limit exceeded. Try again later."}"""
+    private val RESPONSE_STATUS = 429
+    private val RESPONSE_MESSAGE = "Rate limit exceeded. Try again later."
+    private val RESPONSE_LIMIT_HEADER = "X-RateLimit-Limit"
+    private val RESPONSE_REMAINING_HEADER = "X-RateLimit-Remaining"
+    private val RESPONSE_RETRY_AFTER_HEADER = "Retry-After"
+    private val RESPONSE_CONTENT_TYPE = "application/json"
+    private val RESPONSE_CHARACTER_ENCODING = "UTF-8"
+
     private val buckets =
         Caffeine
             .newBuilder()
@@ -33,19 +45,22 @@ class RateLimitFilter(
         val bucket = buckets.get(request.remoteAddr ?: "unknown") { newBucket() }
         val probe: ConsumptionProbe = bucket.tryConsumeAndReturnRemaining(1)
 
-        response.setIntHeader("X-RateLimit-Limit", properties.requestsPerMinute)
-        response.setIntHeader("X-RateLimit-Remaining", probe.remainingTokens.toInt())
+        response.setIntHeader(RESPONSE_LIMIT_HEADER, properties.requestsPerMinute)
+        response.setIntHeader(RESPONSE_REMAINING_HEADER, probe.remainingTokens.toInt())
 
         if (probe.isConsumed) {
             chain.doFilter(request, response)
         } else {
+            log.debug("Rate limit exceeded for {}", request.remoteAddr)
             val retryAfterSeconds = (probe.nanosToWaitForRefill / 1_000_000_000).coerceAtLeast(1)
-            response.status = 429
-            response.setHeader("Retry-After", retryAfterSeconds.toString())
-            response.contentType = "application/json"
-            response.writer.write(
-                """{"status":429,"error":"Too Many Requests","message":"Rate limit exceeded. Try again later."}""",
-            )
+            val bytes = RESPONSE_BODY.toByteArray(Charsets.UTF_8)
+            response.status = RESPONSE_STATUS
+            response.setHeader(RESPONSE_RETRY_AFTER_HEADER, retryAfterSeconds.toString())
+            response.contentType = RESPONSE_CONTENT_TYPE
+            response.characterEncoding = RESPONSE_CHARACTER_ENCODING
+            response.setContentLength(bytes.size)
+            response.outputStream.write(bytes)
+            response.flushBuffer()
         }
     }
 

@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.servlet.resource.NoResourceFoundException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -71,6 +72,28 @@ class GlobalExceptionHandler {
             ),
         )
     }
+
+    @ExceptionHandler(UpstreamRateLimitException::class)
+    fun handleUpstreamRateLimit(ex: UpstreamRateLimitException): ResponseEntity<ErrorResponse> {
+        log.warn("Upstream rate limit: {}", ex.message)
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(
+            ErrorResponse(
+                status = 429,
+                error = "Too Many Requests",
+                message = ex.message ?: "Rate limit exceeded",
+            ),
+        )
+    }
+
+    @ExceptionHandler(NoResourceFoundException::class)
+    fun handleNoResourceFound(ex: NoResourceFoundException): ResponseEntity<ErrorResponse> =
+        ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+            ErrorResponse(
+                status = 404,
+                error = "Not Found",
+                message = ex.message ?: "Resource not found",
+            ),
+        )
 
     @ExceptionHandler(Exception::class)
     fun handleGeneric(ex: Exception): ResponseEntity<ErrorResponse> {
