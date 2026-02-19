@@ -18,14 +18,16 @@ class RateLimitFilter(
 ) : OncePerRequestFilter() {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val RESPONSE_BODY = """{"status":429,"error":"Too Many Requests","message":"Rate limit exceeded. Try again later."}"""
-    private val RESPONSE_STATUS = 429
-    private val RESPONSE_MESSAGE = "Rate limit exceeded. Try again later."
-    private val RESPONSE_LIMIT_HEADER = "X-RateLimit-Limit"
-    private val RESPONSE_REMAINING_HEADER = "X-RateLimit-Remaining"
-    private val RESPONSE_RETRY_AFTER_HEADER = "Retry-After"
-    private val RESPONSE_CONTENT_TYPE = "application/json"
-    private val RESPONSE_CHARACTER_ENCODING = "UTF-8"
+    companion object {
+        private const val RESPONSE_BODY =
+            """{"status":429,"error":"Too Many Requests","message":"Rate limit exceeded. Try again later."}"""
+        private const val RESPONSE_STATUS = 429
+        private const val RESPONSE_LIMIT_HEADER = "X-RateLimit-Limit"
+        private const val RESPONSE_REMAINING_HEADER = "X-RateLimit-Remaining"
+        private const val RESPONSE_RETRY_AFTER_HEADER = "Retry-After"
+        private const val RESPONSE_CONTENT_TYPE = "application/json"
+        private const val RESPONSE_CHARACTER_ENCODING = "UTF-8"
+    }
 
     private val buckets =
         Caffeine
