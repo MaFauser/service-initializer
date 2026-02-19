@@ -27,10 +27,6 @@
 - **Steps**: Pull dev image → Retag as version + latest → Push → Deploy to prod cluster with Helm
 - **Image tags**: `{version}` (e.g. `v1.0.0`) and `latest`
 
-### 4. Qodana (`qodana_code_quality.yml`)
-- **Trigger**: Manual, pull_request, or push to `main`
-- **Purpose**: JetBrains Qodana code analysis (optional; requires `QODANA_TOKEN` for full features)
-
 ## Quick Start
 
 See [SETUP.md](SETUP.md) for configuration.
