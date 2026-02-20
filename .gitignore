@@ -29,15 +29,10 @@ spring-boot-devtools.properties
 Thumbs.db
 
 # Local config (secrets, overrides)
-.env
-.env.local
 .kubeconfig-ci.yaml
 .kubeconfig-dev.b64
 scripts/oke-ci-sa-token.yaml
 .kubeconfig-prod.b64
-*.local.yaml
-application-local.yaml
-application-local.yml
 
 # Test / coverage
 coverage/

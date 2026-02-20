@@ -1,0 +1,91 @@
+---
+description: Code quality standards derived from PR review patterns — things to always check and enforce
+alwaysApply: true
+---
+
+# PR Review Standards
+
+These are code quality standards based on real PR review feedback. Apply them when writing, editing, or generating code.
+
+## 1. Remove Unused Code Aggressively
+
+- Delete unused imports, variables, methods, classes, and files — never leave dead code around.
+- If a method, parameter, or field is not referenced anywhere, remove it.
+- Remove leftover debugging code (e.g. temporary logs, commented-out blocks).
+
+## 2. No Unnecessary Comments
+
+- If the code explains itself, don't add a comment. Remove comments that just narrate what the code does.
+- Comments should only explain **why**, not **what** — non-obvious intent, trade-offs, or constraints.
+
+## 3. Explicit, Domain-Driven Naming
+
+- Avoid vague/generic method names like `handle...`, `finalize...`, `process...`, `audit...`. Name methods after their **specific domain action and outcome** (e.g. `preserveFallbackAsInactive` instead of `handleFallbackReactivation`).
+- Boolean-check methods should read like a question about the actual condition (e.g. `newReq.isInactive()` instead of `shouldPreserveFallbackStatus(newReq)`).
+- Split methods with misleading names into two with accurate names (e.g. `validateBasicStructure` → `validateValidationSchema` + `validateFields`).
+
+## 4. Avoid Magic Strings — Use Enums or Constants
+
+- Never hardcode domain values like `"reason"`, `"error"`, `"message"` as raw strings scattered in code.
+- Centralize known values in enums or constant classes (e.g. tag names, status reasons, event keys).
+- If a string is used in more than one place, extract it to a constant.
+
+## 5. Use Framework/Library Utilities
+
+- Prefer Spring's `CollectionUtils.isEmpty()` over `list == null || list.isEmpty()`.
+- Prefer Spring's `StringUtils.hasText()` over `str != null && !str.isEmpty()`.
+- Use Lombok annotations (`@Slf4j`, `@RequiredArgsConstructor`, `@Data`) instead of manually writing loggers, constructors, getters/setters.
+- Use `ObjectMapper` for deep copying instead of manual `toEntity()` / snapshot classes.
+- Before writing utility code, check if the framework already provides it (e.g. Flyway built-in features, Spring utilities).
+
+## 6. DRY — Extract Shared Logic
+
+- If two methods share ~90%+ identical code, extract the common logic into a shared method/service.
+- When the same object construction pattern (e.g. building a `RequirementKey`) appears in multiple places, extract a factory/builder method.
+- Duplicate string messages should be stored in a variable and reused.
+
+## 7. Single Responsibility — Methods Should Do One Thing
+
+- A method should not both **mutate state** and **control flow** via its return value. Separate status mutation from event-decision logic.
+- If a method name needs "and" to describe it, split it.
+
+## 8. Simplify Conditions and Control Flow
+
+- Don't add guard conditions that the callee already handles (e.g. checking `isEmpty()` before calling a method that already handles empty input).
+- Remove redundant `switch` cases that the `default` branch already covers.
+- Don't compute values at the top of a method if they're only used after early returns — compute right before use (lazy evaluation).
+- Prefer early returns over deeply nested `if/else` blocks to reduce indentation.
+- Use `else if` where appropriate instead of separate `if` blocks.
+
+## 9. Use Proper Types — Avoid `Object`
+
+- Declare explicit types instead of `Object` for maps, fields, and parameters. Define the actual shape (e.g. `Map<String, List<String>>` instead of `Object`).
+- Validate types at boundaries — check if an object is actually a `String` before calling `.toString()` to avoid converting maps/lists into garbage strings.
+- Validate that field values are known/expected (e.g. validate `fieldType` against a known set).
+
+## 10. Error Handling and Logging
+
+- Never silently swallow exceptions with empty catch blocks — at minimum, log the error.
+- Use specific, actionable error messages. Avoid overly generic messages like "Something went wrong".
+- When handling errors, prefer framework exception handling over manual connection verification with hardcoded values.
+
+## 11. Initialize with Proper Defaults
+
+- Initialize fields with sensible defaults (e.g. `scope = new RequirementScope()`) to avoid repetitive null checks throughout the codebase.
+- Use `Optional.ofNullable(...).orElse(...)` and `Map.of()` for safe, readable defaults.
+
+## 12. Avoid Mutating Parameters
+
+- Don't modify method parameters and return them. Instead, create a copy, apply changes to the copy, and return it.
+- Be explicit about whether a method is a pure function or has side effects.
+
+## 13. Prefer Real Databases in Tests
+
+- Use PostgreSQL (via Docker/Testcontainers) for integration tests, not H2 — H2's SQL dialect can produce false positives/negatives compared to production.
+- Each test should get isolated data (e.g. UUID-based databases) within a shared container.
+
+## 14. Challenge Risky or Over-Engineered Code
+
+- Question dangerous operations (e.g. `reset-db` commands) — if it's risky and not strictly necessary, suggest removal.
+- Prefer relying on deterministic, code-defined behavior over AI-generated specs for critical documentation (e.g. OpenAPI).
+- Don't add build resources (e.g. JAR resources) where they don't belong (tests, CLI tools).

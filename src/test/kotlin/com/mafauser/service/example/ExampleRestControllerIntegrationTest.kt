@@ -29,11 +29,19 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `GET examples returns 200 and paginated list`() {
         mockMvc
+            .perform(
+                post("/examples")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"name":"For List"}"""),
+            ).andExpect(status().isCreated)
+
+        mockMvc
             .perform(get("/examples"))
             .andExpect(status().isOk)
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.content").isArray)
-            .andExpect(jsonPath("$.totalElements").isNumber)
+            .andExpect(jsonPath("$.content").isNotEmpty)
+            .andExpect(jsonPath("$.page.totalElements").value(1))
     }
 
     @Test
@@ -81,7 +89,7 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
         mockMvc
             .perform(get("/examples/$id"))
             .andExpect(status().isNotFound)
-            .andExpect(jsonPath("$.error").value("Not Found"))
+            .andExpect(jsonPath("$.title").value("Not Found"))
     }
 
     @Test
@@ -165,7 +173,45 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"name":"","description":"Test"}"""),
             ).andExpect(status().isBadRequest)
-            .andExpect(jsonPath("$.error").value("Validation Failed"))
+            .andExpect(jsonPath("$.title").value("Bad Request"))
+    }
+
+    @Test
+    fun `POST examples with missing name returns 400`() {
+        mockMvc
+            .perform(
+                post("/examples")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{}"""),
+            ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.title").value("Bad Request"))
+    }
+
+    @Test
+    fun `GET examples with invalid UUID returns 400`() {
+        mockMvc
+            .perform(get("/examples/not-a-uuid"))
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.title").value("Bad Request"))
+    }
+
+    @Test
+    fun `PUT examples with invalid UUID returns 400`() {
+        mockMvc
+            .perform(
+                put("/examples/not-a-uuid")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"name":"Any"}"""),
+            ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.title").value("Bad Request"))
+    }
+
+    @Test
+    fun `DELETE examples with invalid UUID returns 400`() {
+        mockMvc
+            .perform(delete("/examples/not-a-uuid"))
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.title").value("Bad Request"))
     }
 
     @Test
@@ -184,7 +230,7 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body),
             ).andExpect(status().isConflict)
-            .andExpect(jsonPath("$.error").value("Conflict"))
+            .andExpect(jsonPath("$.title").value("Conflict"))
     }
 
     @Test

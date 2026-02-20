@@ -20,12 +20,12 @@ class RateLimitFilter(
 
     companion object {
         private const val RESPONSE_BODY =
-            """{"status":429,"error":"Too Many Requests","message":"Rate limit exceeded. Try again later."}"""
+            """{"type":"about:blank","title":"Too Many Requests","status":429,"detail":"Rate limit exceeded. Try again later."}"""
         private const val RESPONSE_STATUS = 429
         private const val RESPONSE_LIMIT_HEADER = "X-RateLimit-Limit"
         private const val RESPONSE_REMAINING_HEADER = "X-RateLimit-Remaining"
         private const val RESPONSE_RETRY_AFTER_HEADER = "Retry-After"
-        private const val RESPONSE_CONTENT_TYPE = "application/json"
+        private const val RESPONSE_CONTENT_TYPE = "application/problem+json"
         private const val RESPONSE_CHARACTER_ENCODING = "UTF-8"
     }
 

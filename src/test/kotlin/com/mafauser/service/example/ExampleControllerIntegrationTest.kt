@@ -34,14 +34,21 @@ class ExampleControllerIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `examples query returns a list`() {
+        graphQlTester
+            .document("""mutation { createExample(input: { name: "For List" }) { id } }""")
+            .execute()
+            .path("createExample.id")
+            .entity(String::class.java)
+            .get()
+
         val list =
             graphQlTester
-                .documentName("examples-query")
+                .document("""{ examples(page: 0, size: 10) { id name } }""")
                 .execute()
                 .path("examples")
                 .entityList(ExampleProjection::class.java)
                 .get()
-        assertNotNull(list)
+        assertTrue(list.isNotEmpty())
     }
 
     @Test
@@ -262,6 +269,25 @@ class ExampleControllerIntegrationTest : BaseIntegrationTest() {
                             msg.contains("UUID", ignoreCase = true)
                     }
                 assertTrue(hasError) { "Expected BAD_REQUEST or UUID error, got: ${errors.map { it.message }}" }
+            }
+    }
+
+    @Test
+    fun `updateExample with non-existent UUID returns NOT_FOUND error`() {
+        graphQlTester
+            .document(
+                """
+                mutation {
+                    updateExample(id: "00000000-0000-0000-0000-000000000000", input: { name: "Ghost" }) {
+                        id
+                    }
+                }
+                """.trimIndent(),
+            ).execute()
+            .errors()
+            .satisfy { errors ->
+                assertTrue(errors.isNotEmpty())
+                assertTrue(errors.any { it.message?.contains("not found", ignoreCase = true) == true })
             }
     }
 

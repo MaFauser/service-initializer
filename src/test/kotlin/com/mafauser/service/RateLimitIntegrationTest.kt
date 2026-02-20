@@ -36,7 +36,7 @@ class RateLimitIntegrationTest : BaseIntegrationTest() {
             .andExpect(status().isTooManyRequests)
             .andExpect(
                 content().json(
-                    """{"status":429,"error":"Too Many Requests","message":"Rate limit exceeded. Try again later."}""",
+                    """{"type":"about:blank","title":"Too Many Requests","status":429,"detail":"Rate limit exceeded. Try again later."}""",
                 ),
             ).andExpect(header().exists("Retry-After"))
             .andExpect(header().string("X-RateLimit-Remaining", "0"))

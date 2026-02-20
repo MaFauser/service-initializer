@@ -1,7 +1,7 @@
-package com.mafauser.service.config
+package com.mafauser.service.exception
 
 /**
- * Thrown when a resource does not exist. Mapped to 404 Not Found by [GlobalExceptionHandler].
+ * Thrown when a resource does not exist.
  *
  * @param resource Human-readable resource name (e.g. "Example", "Product")
  * @param identifier The ID or key that was not found
@@ -9,4 +9,6 @@ package com.mafauser.service.config
 class NotFoundException(
     resource: String,
     identifier: Any,
-) : RuntimeException("$resource not found: $identifier")
+) : RuntimeException("$resource not found: $identifier") {
+    override val message: String get() = super.message!!
+}

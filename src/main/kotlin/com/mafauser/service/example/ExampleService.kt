@@ -1,7 +1,7 @@
 package com.mafauser.service.example
 
-import com.mafauser.service.config.ConflictException
-import com.mafauser.service.config.NotFoundException
+import com.mafauser.service.exception.ConflictException
+import com.mafauser.service.exception.NotFoundException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service

@@ -6,6 +6,7 @@ plugins {
     id("org.springframework.boot") version "4.1.0-SNAPSHOT"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
+    id("co.uzzu.dotenv.gradle") version "4.0.0"
     jacoco
 }
 
@@ -82,6 +83,8 @@ allOpen {
 // already injected jdwp via JAVA_TOOL_OPTIONS (avoid "Cannot load JVM TI agent twice").
 // Use -PdebugPort=5006 if 5005 is in use.
 tasks.bootRun {
+    environment(env.allVariables())
+
     val javaToolOptions = System.getenv("JAVA_TOOL_OPTIONS") ?: ""
     val extensionProvidesDebug = javaToolOptions.contains("jdwp")
     val enableDebug = project.findProperty("debug") == "true" && !extensionProvidesDebug
@@ -143,7 +146,7 @@ tasks.jacocoTestReport {
     )
 }
 
-// JaCoCo: coverage verification (90% line minimum). Run explicitly or from CI job; not part of build/check.
+// JaCoCo: coverage verification. Run explicitly or from CI job; not part of build/check.
 tasks.jacocoTestCoverageVerification {
     dependsOn(tasks.jacocoTestReport)
     classDirectories.setFrom(
@@ -154,9 +157,14 @@ tasks.jacocoTestCoverageVerification {
     violationRules {
         rule {
             limit {
-                counter = "LINE"
+                counter = "INSTRUCTION"
                 value = "COVEREDRATIO"
-                minimum = "0.90".toBigDecimal()
+                minimum = "1.00".toBigDecimal()
+            }
+            limit {
+                counter = "BRANCH"
+                value = "COVEREDRATIO"
+                minimum = "1.00".toBigDecimal()
             }
         }
     }

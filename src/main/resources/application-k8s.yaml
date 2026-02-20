@@ -1,91 +1,32 @@
-# Kubernetes-specific application configuration
+# Kubernetes overrides — merged on top of application.yaml.
 # Activate with: spring.profiles.active=k8s
 
 spring:
   output:
     ansi:
       enabled: never
-  application:
-    name: service
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
-    driver-class-name: org.postgresql.Driver
     hikari:
       max-lifetime: 600000
       connection-timeout: 20000
       keepalive-time: 30000
 
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: false
-    properties:
-      hibernate:
-        '[format_sql]': true
-
   flyway:
-    enabled: true
-    locations: classpath:db/migration
-    # This setting controls whether Flyway will create a baseline schema history table when migrating an
-    # existing non-empty database for the first time.
-    # Setting to 'false' means Flyway will NOT baseline automatically; migrations expect that the schema_history table exists or the DB is empty.
     baseline-on-migrate: false
-
-  data:
-    redis:
-      host: ${SPRING_DATA_REDIS_HOST}
-      port: ${SPRING_DATA_REDIS_PORT}
-
-  cache:
-    type: redis
-    redis:
-      time-to-live: 600000
-
-  kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
-    consumer:
-      group-id: ${spring.application.name}
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
   graphql:
     graphiql:
       enabled: false
 
 management:
-  server:
-    port: 8082
-  metrics:
-    tags:
-      application: ${spring.application.name}
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
   prometheus:
     metrics:
       export:
         enabled: true
   tracing:
     sampling:
-      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:1.0}
-  opentelemetry:
-    tracing:
-      export:
-        otlp:
-          endpoint: ${MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT}
-  otlp:
-    metrics:
-      export:
-        enabled: false
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
 
 server:
-  port: 8081
   forward-headers-strategy: framework

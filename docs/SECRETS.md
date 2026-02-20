@@ -24,7 +24,7 @@ The chart expects **two** Secrets per environment. Names and key names must matc
 
 Used by:
 - **PostgreSQL** deployment (database user/password)
-- **Application** deployment (`SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`)
+- **Application** deployment (`POSTGRES_USER`, `POSTGRES_PASSWORD`)
 - **PostgreSQL backup** CronJob (when enabled in prod)
 
 | Env  | Secret name                     | Required keys | Values file reference |

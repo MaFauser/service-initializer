@@ -1,6 +1,6 @@
 package com.mafauser.service.example
 
-import com.mafauser.service.config.InvalidIdException
+import com.mafauser.service.exception.InvalidIdException
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest

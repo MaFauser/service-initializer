@@ -1,0 +1,44 @@
+---
+description: Test quality standards — no dumb tests, concise, non-repetitive, each test must justify its existence
+alwaysApply: true
+---
+
+# Testing Standards
+
+When writing, reviewing, or improving tests, follow these principles:
+
+## 1. Every Test Must Earn Its Place
+
+- **No dumb tests** — don't test trivial getters, setters, toString, or framework behavior that Spring/JPA already guarantees.
+- Each test must exercise a **genuinely different code path**, input class, or edge case. If two tests only differ by a string literal, merge them or delete one.
+- Before writing a test, ask: *"What new behavior does this prove that no existing test covers?"*
+
+## 2. Concise and Focused
+
+- One assertion concern per test. A test named `creates and returns 201` should not also verify pagination.
+- Minimize setup — only arrange what this specific test needs. Extract shared setup to `@BeforeEach` only when 3+ tests share it.
+- Prefer direct assertions (`assertEquals`, `assertThrows`) over verbose assertion chains.
+
+## 3. No Repetition
+
+- If multiple tests share identical request/response patterns differing only by one field, parameterize with `@ParameterizedTest` or extract a helper.
+- Don't re-test the same handler through both unit and integration tests unless they exercise **different layers** (e.g. unit tests handler logic, integration tests the full HTTP stack).
+
+## 4. Right Level of Testing
+
+- **Unit tests** for pure logic (services, exception handlers, mappers) — fast, no Spring context.
+- **Integration tests** for HTTP/GraphQL behavior and cross-layer flows — use Testcontainers + real database, never H2.
+- **Don't unit-test controllers** — their logic is routing; integration tests cover that better.
+- Skip coverage on JPA entities (excluded from JaCoCo — see `coverage.mdc`).
+
+## 5. Test Real Scenarios
+
+- Error paths matter as much as happy paths — test 400s, 404s, 409s, not just 200s.
+- Test boundary conditions: empty inputs, max-length values, invalid UUIDs, duplicate names.
+- For exception handlers: verify the **response shape and status**, not the internal exception message wording.
+
+## 6. Naming and Organization
+
+- Test names should describe the **scenario and expected outcome**: `` `POST with missing name returns 400` ``, not `` `testCreateValidation` ``.
+- Use `@DisplayName` for readable test report output.
+- Use `@Nested` inner classes to group related tests (e.g. `FindAll`, `Create`, `Update`) only in unit tests with many cases.

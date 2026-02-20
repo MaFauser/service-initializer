@@ -1,4 +1,4 @@
-package com.mafauser.service.config
+package com.mafauser.service.exception
 
 import graphql.ErrorClassification
 import graphql.GraphQLError
@@ -48,12 +48,12 @@ class GraphQLExceptionResolver : DataFetcherExceptionResolverAdapter() {
         }
 
     private fun toGraphQLError(
-        message: String?,
+        message: String,
         classification: ErrorClassification,
     ): GraphQLError =
         GraphQLError
             .newError()
-            .message(message ?: "Unknown error")
+            .message(message)
             .errorType(classification)
             .build()
 }

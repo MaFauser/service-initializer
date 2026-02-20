@@ -1,7 +1,7 @@
 package com.mafauser.service.example
 
-import com.mafauser.service.config.ConflictException
-import com.mafauser.service.config.NotFoundException
+import com.mafauser.service.exception.ConflictException
+import com.mafauser.service.exception.NotFoundException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull

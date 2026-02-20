@@ -1,4 +1,7 @@
 spring:
+  mvc:
+    problemdetails:
+      enabled: true
   output:
     ansi:
       enabled: detect
@@ -6,9 +9,9 @@ spring:
     name: service
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: ${POSTGRES_URL}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -26,8 +29,8 @@ spring:
 
   data:
     redis:
-      host: ${SPRING_DATA_REDIS_HOST}
-      port: ${SPRING_DATA_REDIS_PORT}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
     web:
       pageable:
         max-page-size: 100
@@ -43,7 +46,7 @@ spring:
       path: /graphiql
 
   kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       group-id: ${spring.application.name}
       auto-offset-reset: earliest
@@ -55,7 +58,7 @@ spring:
 
 logging:
   level:
-    '[com.mafauser.service]': INFO
+    '[com.mafauser.service]': DEBUG
 
 management:
   server:
@@ -77,11 +80,16 @@ management:
     tracing:
       export:
         otlp:
-          endpoint: ${MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT}
+          endpoint: ${OTLP_TRACES_ENDPOINT}
   otlp:
     metrics:
       export:
         enabled: false
+
+keycloak:
+  base-url: ${KEYCLOAK_BASE_URL:https://idp2.sefin.fortaleza.ce.gov.br}
+  realm: ${KEYCLOAK_REALM:sefin}
+  client-id: ${KEYCLOAK_CLIENT_ID:admin-cli}
 
 server:
   port: 8081
