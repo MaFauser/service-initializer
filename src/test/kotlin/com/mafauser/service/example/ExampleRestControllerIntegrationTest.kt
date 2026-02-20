@@ -188,7 +188,7 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `PUT with clearDescription clears the description`() {
+    fun `PUT with empty description clears the description`() {
         val createBody = """{"name":"Clear Desc Test","description":"Has description"}"""
         val createResult =
             mockMvc
@@ -205,7 +205,7 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
             .perform(
                 put("/examples/$id")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content("""{"clearDescription":true}"""),
+                    .content("""{"description":""}"""),
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.description").doesNotExist())
     }

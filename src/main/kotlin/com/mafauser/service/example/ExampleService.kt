@@ -43,11 +43,7 @@ class ExampleService(
             }
             example.name = name
         }
-        if (input.clearDescription) {
-            example.description = null
-        } else {
-            input.description?.let { example.description = it }
-        }
+        input.description?.let { example.description = it.ifBlank { null } }
         return exampleRepository.save(example)
     }
 

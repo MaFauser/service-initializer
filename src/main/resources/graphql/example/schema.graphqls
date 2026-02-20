@@ -40,5 +40,4 @@ input CreateExampleInput {
 input UpdateExampleInput {
   name: String
   description: String
-  clearDescription: Boolean
 }

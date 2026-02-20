@@ -225,13 +225,13 @@ class ExampleServiceTest {
         }
 
         @Test
-        fun `clears description when clearDescription is true`() {
+        fun `clears description when empty string is sent`() {
             val id = UUID.randomUUID()
             val existing = Example(id = id, name = "Test", description = "Old desc")
             whenever(exampleRepository.findById(id)).thenReturn(of(existing))
             whenever(exampleRepository.save(any<Example>())).thenReturn(existing)
 
-            val result = exampleService.update(id, UpdateExampleInput(clearDescription = true))
+            val result = exampleService.update(id, UpdateExampleInput(description = ""))
 
             assertEquals("Test", result.name)
             assertNull(result.description)

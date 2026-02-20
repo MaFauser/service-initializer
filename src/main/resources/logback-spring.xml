@@ -23,7 +23,7 @@
         <pattern>%clr(%d{HH:mm:ss.SSS}){faint} %clr(%5p) %clr([%10.10t]){faint} %clr(%-24.24logger{0}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}</pattern>
       </encoder>
     </appender>
-    <root level="INFO">
+    <root level="INFO,DEBUG">
       <appender-ref ref="CONSOLE"/>
     </root>
   </springProfile>
