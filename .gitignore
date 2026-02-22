@@ -41,7 +41,8 @@ test-output/
 
 # Generated config
 .env
-docker/prometheus.generated.yml
+infra/docker/prometheus.generated.yml
+infra/docker/pgadmin/servers.json
 
 # Misc
 *.orig

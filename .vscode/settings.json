@@ -43,15 +43,13 @@
     "**/.gradle": true,
     "**/node_modules": true,
     "**/bin": true,
-    "**/helm/stack/dashboards": true,
-    "**/grafana/dashboards": true
+    "**/.idea": true,
   },
   "search.exclude": {
     "**/build": true,
     "**/.gradle": true,
     "**/node_modules": true,
     "**/bin": true,
-    "**/helm/stack/dashboards": true,
-    "**/grafana/dashboards": true
+    "**/.idea": true,
   }
 }

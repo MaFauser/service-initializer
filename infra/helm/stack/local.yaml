@@ -1,5 +1,5 @@
 # Local environment: credentials inline (no Secrets).
-# helm install dev ./helm/stack -f helm/stack/config/images.yaml -f helm/stack/local.yaml -n development --create-namespace
+# helm install dev ./infra/helm/stack -f infra/helm/stack/config/images.yaml -f infra/helm/stack/local.yaml -n development --create-namespace
 
 postgresql:
   enabled: true

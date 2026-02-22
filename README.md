@@ -5,7 +5,7 @@ Spring Boot + PostgreSQL, Redis, Kafka, GraphQL. Template for adding your own do
 ## Run locally
 
 ```bash
-make config          # load .env based on default configs from helm/k8s locally
+make config          # load .env based on default configs from infra/helm locally
 make run             # app on :8081 (needs local Postgres/Redis/Kafka or use K8s)
 make test            # Testcontainers, needs Docker
 ```
@@ -38,7 +38,7 @@ src/main/resources/
 ├── application-k8s.yaml
 ├── graphql/example/schema.graphqls
 └── db/migration/                # Flyway
-helm/stack/
+infra/helm/stack/
 ├── config/images.yaml           # Image versions (single source of truth)
 ├── local.yaml                   # Local K8s: credentials inline
 ├── dev.yaml                     # Dev: credentials from Secrets

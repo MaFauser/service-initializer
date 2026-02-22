@@ -1,16 +1,16 @@
 #!/bin/bash
 # Generate .env from helm values (images.yaml + local.yaml + values.yaml).
 # Used by: docker-compose (auto-reads .env) and Makefile (include .env / export).
-# Single source of truth: helm/stack/config/images.yaml, helm/stack/local.yaml, helm/stack/values.yaml.
+# Single source of truth: infra/helm/stack/config/images.yaml, infra/helm/stack/local.yaml, infra/helm/stack/values.yaml.
 # Requires: yq (https://github.com/mikefarah/yq)
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-IMAGES="$PROJECT_ROOT/helm/stack/config/images.yaml"
-LOCAL="$PROJECT_ROOT/helm/stack/local.yaml"
-VALUES="$PROJECT_ROOT/helm/stack/values.yaml"
+IMAGES="$PROJECT_ROOT/infra/helm/stack/config/images.yaml"
+LOCAL="$PROJECT_ROOT/infra/helm/stack/local.yaml"
+VALUES="$PROJECT_ROOT/infra/helm/stack/values.yaml"
 OUT="$PROJECT_ROOT/.env"
 
 if ! command -v yq &>/dev/null; then
@@ -67,4 +67,22 @@ KAFKA_BOOTSTRAP_SERVERS=localhost:${KAFKA_PORT}
 OTLP_TRACES_ENDPOINT=http://localhost:${OTLP_PORT}/v1/traces
 EOF
 
-echo "Generated $OUT"
+PGADMIN_DIR="$PROJECT_ROOT/infra/docker/pgadmin"
+mkdir -p "$PGADMIN_DIR"
+cat > "$PGADMIN_DIR/servers.json" << SERVERS
+{
+  "Servers": {
+    "1": {
+      "Name": "PostgreSQL (${PG_DB})",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": ${PG_PORT},
+      "MaintenanceDB": "${PG_DB}",
+      "Username": "${PG_USER}",
+      "SSLMode": "prefer"
+    }
+  }
+}
+SERVERS
+
+echo "Generated $OUT, pgadmin/servers.json"

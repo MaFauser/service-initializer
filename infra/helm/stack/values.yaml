@@ -1,11 +1,10 @@
-# Chart defaults: structure, ports, services, persistence, resources.
+# Chart defaults: structure, ports, services, persistence.
 # Always combine with: -f config/images.yaml -f <env>.yaml (local.yaml | dev.yaml | prod.yaml)
 
 global:
   storageClass: ""
 
 ingress:
-  enabled: false
   className: ""
   annotations: {}
   hosts:
@@ -14,15 +13,10 @@ ingress:
       pathType: Prefix
   tls: []
 
-networkPolicy:
-  enabled: false
-
 postgresql:
-  enabled: true
   image:
     pullPolicy: IfNotPresent
   auth:
-    database: ""
     username: ""
     password: ""
     existingSecret: ""
@@ -31,24 +25,12 @@ postgresql:
   service:
     type: ClusterIP
     port: 5432
-  persistence:
-    enabled: true
-    size: 10Gi
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "250m"
-    limits:
-      memory: "1Gi"
-      cpu: "1000m"
   backup:
-    enabled: false
     schedule: "0 2 * * *"
     pvc:
       size: 10Gi
 
 redis:
-  enabled: true
   image:
     pullPolicy: IfNotPresent
   service:
@@ -56,17 +38,8 @@ redis:
     port: 6379
   persistence:
     enabled: true
-    size: 5Gi
-  resources:
-    requests:
-      memory: "128Mi"
-      cpu: "100m"
-    limits:
-      memory: "512Mi"
-      cpu: "500m"
 
 kafka:
-  enabled: true
   image:
     pullPolicy: IfNotPresent
   config:
@@ -78,17 +51,8 @@ kafka:
     port: 9092
   persistence:
     enabled: true
-    size: 20Gi
-  resources:
-    requests:
-      memory: "1Gi"
-      cpu: "500m"
-    limits:
-      memory: "2Gi"
-      cpu: "2000m"
 
 kafkaUi:
-  enabled: true
   image:
     pullPolicy: IfNotPresent
   service:
@@ -103,7 +67,6 @@ kafkaUi:
       cpu: "500m"
 
 grafana:
-  enabled: true
   image:
     pullPolicy: IfNotPresent
   auth:
@@ -117,17 +80,8 @@ grafana:
     port: 3000
   persistence:
     enabled: true
-    size: 5Gi
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "100m"
-    limits:
-      memory: "512Mi"
-      cpu: "500m"
 
 tempo:
-  enabled: true
   image:
     pullPolicy: IfNotPresent
   service:
@@ -138,17 +92,8 @@ tempo:
       otlpHttp: 4318
   persistence:
     enabled: true
-    size: 10Gi
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "100m"
-    limits:
-      memory: "1Gi"
-      cpu: "1000m"
 
 opensearch:
-  enabled: true
   image:
     pullPolicy: IfNotPresent
   service:
@@ -156,38 +101,19 @@ opensearch:
     port: 9200
   persistence:
     enabled: true
-    size: 10Gi
-  disableSecurity: true
   auth:
     existingSecret: ""
     adminPasswordKey: ""
     adminPassword: ""
-  resources:
-    requests:
-      memory: "1Gi"
-      cpu: "500m"
-    limits:
-      memory: "2Gi"
-      cpu: "2000m"
 
 opensearchDashboards:
-  enabled: true
-  indexPattern: "kubernetes-logs-*"
   image:
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
     port: 5601
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "100m"
-    limits:
-      memory: "512Mi"
-      cpu: "500m"
 
 fluentBit:
-  enabled: true
   image:
     pullPolicy: IfNotPresent
   resources:
@@ -199,7 +125,6 @@ fluentBit:
       cpu: "200m"
 
 prometheus:
-  enabled: true
   image:
     pullPolicy: IfNotPresent
   scrapeInterval: 15s
@@ -209,18 +134,8 @@ prometheus:
     port: 9090
   persistence:
     enabled: true
-    size: 10Gi
-  resources:
-    requests:
-      memory: "512Mi"
-      cpu: "250m"
-    limits:
-      memory: "2Gi"
-      cpu: "1000m"
 
 application:
-  enabled: false
-  otelServiceName: service
   image:
     repository: your-registry/service
     tag: "latest"
@@ -228,17 +143,7 @@ application:
   managementPort: 8082
   service:
     type: ClusterIP
-    port: 8081
-  resources:
-    requests:
-      memory: "512Mi"
-      cpu: "500m"
-    limits:
-      memory: "2Gi"
-      cpu: "2000m"
-  replicas: 1
   autoscaling:
-    enabled: false
     minReplicas: 2
     maxReplicas: 10
     targetCPUUtilizationPercentage: 70

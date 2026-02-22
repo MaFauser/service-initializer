@@ -86,11 +86,6 @@ management:
       export:
         enabled: false
 
-keycloak:
-  base-url: ${KEYCLOAK_BASE_URL:https://idp2.sefin.fortaleza.ce.gov.br}
-  realm: ${KEYCLOAK_REALM:sefin}
-  client-id: ${KEYCLOAK_CLIENT_ID:admin-cli}
-
 server:
   port: 8081
 

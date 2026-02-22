@@ -82,10 +82,10 @@ brew install helm
 #### 4. Deploy with Helm (local = raw credentials in local.yaml; no Secrets)
 
 ```bash
-helm install dev ./helm/stack \
-  -f ./helm/stack/config/images.yaml \
+helm install dev ./infra/helm/stack \
+  -f ./infra/helm/stack/config/images.yaml \
 
-  -f ./helm/stack/local.yaml \
+  -f ./infra/helm/stack/local.yaml \
   --set application.image.repository=service \
   --set application.image.tag=dev \
   --set application.image.pullPolicy=IfNotPresent \
@@ -154,10 +154,10 @@ kubectl create secret generic dev-grafana-credentials \
 
 ### Initial Deployment
 ```bash
-helm install dev ./helm/stack \
-  -f ./helm/stack/config/images.yaml \
+helm install dev ./infra/helm/stack \
+  -f ./infra/helm/stack/config/images.yaml \
 
-  -f ./helm/stack/dev.yaml \
+  -f ./infra/helm/stack/dev.yaml \
   --namespace development \
   --create-namespace
 
@@ -183,10 +183,10 @@ kubectl port-forward -n development svc/dev-stack-app 8081:8081
 docker push your-registry/service:v1.2.0
 
 # Update deployment
-helm upgrade dev ./helm/stack \
-  -f ./helm/stack/config/images.yaml \
+helm upgrade dev ./infra/helm/stack \
+  -f ./infra/helm/stack/config/images.yaml \
 
-  -f ./helm/stack/dev.yaml \
+  -f ./infra/helm/stack/dev.yaml \
   --set application.image.tag=v1.2.0 \
   --namespace development
 ```
@@ -219,10 +219,10 @@ kubectl create secret generic prod-grafana-credentials \
 
 ### Initial Deployment
 ```bash
-helm install prod ./helm/stack \
-  -f ./helm/stack/config/images.yaml \
+helm install prod ./infra/helm/stack \
+  -f ./infra/helm/stack/config/images.yaml \
 
-  -f ./helm/stack/prod.yaml \
+  -f ./infra/helm/stack/prod.yaml \
   --set application.image.tag=v1.0.0 \
   --namespace production
 
@@ -235,10 +235,10 @@ helm status prod -n production
 ### Production Updates (Rolling Deployment)
 ```bash
 # Update to new version
-helm upgrade prod ./helm/stack \
-  -f ./helm/stack/config/images.yaml \
+helm upgrade prod ./infra/helm/stack \
+  -f ./infra/helm/stack/config/images.yaml \
 
-  -f ./helm/stack/prod.yaml \
+  -f ./infra/helm/stack/prod.yaml \
   --set application.image.tag=v1.1.0 \
   --namespace production
 
@@ -286,8 +286,8 @@ jobs:
 
       - name: Deploy to Dev
         run: |
-          helm upgrade --install dev ./helm/stack \
-            -f ./helm/stack/dev.yaml \
+          helm upgrade --install dev ./infra/helm/stack \
+            -f ./infra/helm/stack/dev.yaml \
             --set application.image.tag=${{ github.sha }} \
             --namespace development
 ```
@@ -304,7 +304,7 @@ spec:
   source:
     repoURL: https://github.com/your-org/service-initializer
     targetRevision: main
-    path: helm/stack
+    path: infra/helm/stack
     helm:
       valueFiles:
         - prod.yaml
@@ -382,10 +382,10 @@ kubectl get all,pvc,configmap,secret -n <namespace>
 
 ```bash
 # Install
-helm install <name> ./helm/stack -f ./helm/stack/values-<env>.yaml --namespace <ns> --create-namespace
+helm install <name> ./infra/helm/stack -f ./infra/helm/stack/values-<env>.yaml --namespace <ns> --create-namespace
 
 # Upgrade
-helm upgrade <name> ./helm/stack -f ./helm/stack/values-<env>.yaml --namespace <ns>
+helm upgrade <name> ./infra/helm/stack -f ./infra/helm/stack/values-<env>.yaml --namespace <ns>
 
 # Uninstall
 helm uninstall <name> --namespace <ns>

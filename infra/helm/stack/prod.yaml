@@ -1,5 +1,5 @@
 # Prod environment: credentials from Secrets, HPA, backups.
-# helm install prod ./helm/stack -f helm/stack/config/images.yaml -f helm/stack/prod.yaml -n production --create-namespace
+# helm install prod ./infra/helm/stack -f infra/helm/stack/config/images.yaml -f infra/helm/stack/prod.yaml -n production --create-namespace
 
 postgresql:
   enabled: true

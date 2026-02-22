@@ -16,30 +16,30 @@ Deploys Spring Boot + PostgreSQL, Redis, Kafka, Grafana, Tempo, Prometheus, Open
 
 ```bash
 # Local
-helm install dev ./helm/stack \
-  -f ./helm/stack/config/images.yaml \
-  -f ./helm/stack/local.yaml \
+helm install dev ./infra/helm/stack \
+  -f ./infra/helm/stack/config/images.yaml \
+  -f ./infra/helm/stack/local.yaml \
   --namespace development --create-namespace
 
 # Dev (create Secrets first — see docs/SECRETS.md)
-helm install dev ./helm/stack \
-  -f ./helm/stack/config/images.yaml \
-  -f ./helm/stack/dev.yaml \
+helm install dev ./infra/helm/stack \
+  -f ./infra/helm/stack/config/images.yaml \
+  -f ./infra/helm/stack/dev.yaml \
   --namespace development --create-namespace
 
 # Prod
-helm install prod ./helm/stack \
-  -f ./helm/stack/config/images.yaml \
-  -f ./helm/stack/prod.yaml \
+helm install prod ./infra/helm/stack \
+  -f ./infra/helm/stack/config/images.yaml \
+  -f ./infra/helm/stack/prod.yaml \
   --namespace production --create-namespace
 ```
 
 ## Upgrade / Uninstall
 
 ```bash
-helm upgrade dev ./helm/stack \
-  -f ./helm/stack/config/images.yaml \
-  -f ./helm/stack/dev.yaml \
+helm upgrade dev ./infra/helm/stack \
+  -f ./infra/helm/stack/config/images.yaml \
+  -f ./infra/helm/stack/dev.yaml \
   --namespace development
 
 helm uninstall dev --namespace development
@@ -59,9 +59,9 @@ kubectl port-forward svc/dev-stack-prometheus 9090:9090 -n development
 ## Toggle services
 
 ```bash
-helm install dev ./helm/stack \
-  -f ./helm/stack/config/images.yaml \
-  -f ./helm/stack/local.yaml \
+helm install dev ./infra/helm/stack \
+  -f ./infra/helm/stack/config/images.yaml \
+  -f ./infra/helm/stack/local.yaml \
   --set kafka.enabled=false \
   --set kafkaUi.enabled=false
 ```

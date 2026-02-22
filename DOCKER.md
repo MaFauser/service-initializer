@@ -2,17 +2,17 @@
 
 This document describes the Docker Compose setup for local development.
 
-> **💡 Kubernetes Alternative**: For production deployments or if you prefer Kubernetes, see the [Helm Chart documentation](./helm/README.md) for deploying to any Kubernetes cluster (local or cloud).
+> **💡 Kubernetes Alternative**: For production deployments or if you prefer Kubernetes, see the [Helm Chart documentation](./infra/helm/README.md) for deploying to any Kubernetes cluster (local or cloud).
 
 ## Single Source of Truth
 
-Docker Compose and the Helm chart share config from **`helm/stack/config/images.yaml`** (images, credentials, Kafka cluster ID). Before first use, run:
+Docker Compose and the Helm chart share config from **`infra/helm/stack/config/images.yaml`** (images, credentials, Kafka cluster ID). Before first use, run:
 
 ```bash
 ./scripts/load-config.sh
 ```
 
-Requires [yq](https://github.com/mikefarah/yq). This generates `.env` and `docker/prometheus.generated.yml`.
+Requires [yq](https://github.com/mikefarah/yq). This generates `.env` and `infra/docker/prometheus.generated.yml`.
 
 ## Services
 
@@ -59,7 +59,7 @@ docker-compose down -v
 
 ## Service URLs
 
-- **pgAdmin**: http://localhost:5050 — Login with **admin@local.dev** / **admin**. The server **PostgreSQL (servicedb)** is pre-configured (connection is loaded on first startup when the pgAdmin config DB is created). If the server prompts for a password, run `chmod 600 docker/pgadmin/pgpass` and restart the pgadmin container.
+- **pgAdmin**: http://localhost:5050 — Login with **admin@local.dev** / **admin**. The server **PostgreSQL (servicedb)** is pre-configured (connection is loaded on first startup when the pgAdmin config DB is created). If the server prompts for a password, re-run `make config` and restart the pgadmin container (`docker compose restart pgadmin`).
 - **Kafka UI**: http://localhost:8080
 - **Grafana**: http://localhost:3000 (admin/admin)
 - **Prometheus**: http://localhost:9090

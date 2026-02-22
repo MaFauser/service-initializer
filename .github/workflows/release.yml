@@ -75,9 +75,9 @@ jobs:
         run: |
           for i in 1 2 3; do
             echo "Helm deploy attempt $i/3..."
-            if helm upgrade --install prod ./helm/stack \
-              -f ./helm/stack/config/images.yaml \
-              -f ./helm/stack/prod.yaml \
+            if helm upgrade --install prod ./infra/helm/stack \
+              -f ./infra/helm/stack/config/images.yaml \
+              -f ./infra/helm/stack/prod.yaml \
               --set application.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
               --set application.image.tag=${{ steps.version.outputs.version }} \
               --namespace production \

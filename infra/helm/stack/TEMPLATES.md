@@ -29,7 +29,7 @@ templates/
 │   ├── pvc.yaml
 │   ├── configmap-datasources.yaml   # Prometheus, Tempo, OpenSearch (when enabled)
 │   ├── configmap-dashboards-provider.yaml
-│   └── configmap-dashboards.yaml    # Dashboards from dashboards/*.json (symlink to grafana/dashboards)
+│   └── configmap-dashboards.yaml    # Dashboards from dashboards/*.json (symlink to infra/grafana/dashboards)
 ├── tempo/
 │   ├── deployment.yaml
 │   ├── service.yaml

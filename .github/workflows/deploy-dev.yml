@@ -97,9 +97,9 @@ jobs:
       - name: Deploy
         run: |
           IMAGE_REPO="${REGISTRY}/${IMAGE_NAME}"
-          helm upgrade --install dev ./helm/stack \
-            -f ./helm/stack/config/images.yaml \
-            -f ./helm/stack/dev.yaml \
+          helm upgrade --install dev ./infra/helm/stack \
+            -f ./infra/helm/stack/config/images.yaml \
+            -f ./infra/helm/stack/dev.yaml \
             --set application.image.repository="${IMAGE_REPO}" \
             --set application.image.tag=${{ needs.image.outputs.src_tag }} \
             --namespace development \

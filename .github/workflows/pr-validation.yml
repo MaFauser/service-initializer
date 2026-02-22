@@ -91,13 +91,13 @@ jobs:
 
       - name: Lint and validate
         run: |
-          helm lint ./helm/stack
-          helm lint ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/local.yaml
-          helm lint ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/dev.yaml
-          helm lint ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/prod.yaml
-          helm template test ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/local.yaml > /dev/null
-          helm template test ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/dev.yaml > /dev/null
-          helm template test ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/prod.yaml > /dev/null
+          helm lint ./infra/helm/stack
+          helm lint ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/local.yaml
+          helm lint ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/dev.yaml
+          helm lint ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/prod.yaml
+          helm template test ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/local.yaml > /dev/null
+          helm template test ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/dev.yaml > /dev/null
+          helm template test ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/prod.yaml > /dev/null
 
   push:
     name: Push Image

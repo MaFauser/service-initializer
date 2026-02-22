@@ -33,8 +33,7 @@ services:
       PGADMIN_CONFIG_SERVER_MODE: "False"
     volumes:
       - pgadmin-data:/var/lib/pgadmin
-      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
-      - ./docker/pgadmin/pgpass:/tmp/pgadmin/pgpass:ro
+      - ./infra/docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "-O", "-", "http://localhost:80/misc/ping"]
       interval: 10s
@@ -109,9 +108,9 @@ services:
       GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+      - ./infra/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./infra/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infra/grafana/dashboards:/etc/grafana/dashboards:ro
     depends_on:
       - tempo
       - prometheus
@@ -125,7 +124,7 @@ services:
       - "127.0.0.1:4317:4317"
       - "127.0.0.1:4318:4318"
     volumes:
-      - ./helm/stack/config/tempo.yaml:/etc/tempo.yaml:ro
+      - ./infra/helm/stack/config/tempo.yaml:/etc/tempo.yaml:ro
       - tempo-data:/tmp/tempo
 
   prometheus:
@@ -134,7 +133,7 @@ services:
     ports:
       - "127.0.0.1:9090:9090"
     volumes:
-      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'

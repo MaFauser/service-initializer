@@ -144,9 +144,9 @@ deploy() {
     local image_repo="${DEPLOY_IMAGE_REPO:-ghcr.io/mafauser/service-initializer}"
     local image_tag="${2:-dev-latest}"
     echo -e "${YELLOW}Helm upgrade (image: $image_repo:$image_tag)...${NC}"
-    helm upgrade --install $RELEASE_NAME "$PROJECT_ROOT/helm/stack" \
-      -f "$PROJECT_ROOT/helm/stack/config/images.yaml" \
-      -f "$PROJECT_ROOT/helm/stack/dev.yaml" \
+    helm upgrade --install $RELEASE_NAME "$PROJECT_ROOT/infra/helm/stack" \
+      -f "$PROJECT_ROOT/infra/helm/stack/config/images.yaml" \
+      -f "$PROJECT_ROOT/infra/helm/stack/dev.yaml" \
       --set application.image.repository="$image_repo" \
       --set application.image.tag="$image_tag" \
       --namespace $NAMESPACE \
@@ -227,9 +227,9 @@ recreate_db() {
     echo -e "${YELLOW}Helm upgrade (recreates PVC and Postgres deployment)...${NC}"
     local image_repo="${DEPLOY_IMAGE_REPO:-ghcr.io/mafauser/service-initializer}"
     local image_tag="${2:-dev-latest}"
-    helm upgrade --install $RELEASE_NAME "$PROJECT_ROOT/helm/stack" \
-      -f "$PROJECT_ROOT/helm/stack/config/images.yaml" \
-      -f "$PROJECT_ROOT/helm/stack/dev.yaml" \
+    helm upgrade --install $RELEASE_NAME "$PROJECT_ROOT/infra/helm/stack" \
+      -f "$PROJECT_ROOT/infra/helm/stack/config/images.yaml" \
+      -f "$PROJECT_ROOT/infra/helm/stack/dev.yaml" \
       --set application.image.repository="$image_repo" \
       --set application.image.tag="$image_tag" \
       --namespace $NAMESPACE \

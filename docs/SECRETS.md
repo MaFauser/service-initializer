@@ -114,10 +114,10 @@ Alternatively, use the script that already loads the kubeconfig and runs in a sh
 4. Deploy with Helm:
 
    ```bash
-   helm install dev ./helm/stack \
-     -f ./helm/stack/config/images.yaml \
+   helm install dev ./infra/helm/stack \
+     -f ./infra/helm/stack/config/images.yaml \
    
-     -f ./helm/stack/dev.yaml \
+     -f ./infra/helm/stack/dev.yaml \
      --namespace development \
      --create-namespace
    ```
@@ -151,10 +151,10 @@ Alternatively, use the script that already loads the kubeconfig and runs in a sh
 4. Deploy with Helm:
 
    ```bash
-   helm install prod ./helm/stack \
-     -f ./helm/stack/config/images.yaml \
+   helm install prod ./infra/helm/stack \
+     -f ./infra/helm/stack/config/images.yaml \
    
-     -f ./helm/stack/prod.yaml \
+     -f ./infra/helm/stack/prod.yaml \
      --namespace production \
      --create-namespace
    ```
@@ -357,4 +357,4 @@ After either fix, the app should start successfully.
 | Run **prod** with Secrets   | Create `prod-postgresql-credentials` and `prod-grafana-credentials` in `production`, then `helm install` with `prod.yaml`. |
 | Deploy via **GitHub Actions** | Set repository secrets `DEV_POSTGRESQL_PASSWORD`, `DEV_GRAFANA_PASSWORD`, `DB_PASSWORD`, `GRAFANA_PASSWORD` (and kubeconfig/PAT); workflows create the K8s Secrets. |
 
-For full deployment steps, see [DEPLOYMENT.md](../DEPLOYMENT.md) and [helm/README.md](../helm/README.md).
+For full deployment steps, see [DEPLOYMENT.md](../DEPLOYMENT.md) and [Helm README](../infra/helm/README.md).
