@@ -47,3 +47,4 @@ infra/docker/pgadmin/servers.json
 # Misc
 *.orig
 *.bak
+.ignore
