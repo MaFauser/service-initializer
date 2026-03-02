@@ -1,7 +1,7 @@
 package com.mafauser.service.exception
 
-import jakarta.validation.ConstraintViolationException
 import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.validation.ConstraintViolationException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode

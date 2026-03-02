@@ -3,8 +3,8 @@ package com.mafauser.service.exception
 import graphql.ErrorClassification
 import graphql.GraphQLError
 import graphql.schema.DataFetchingEnvironment
-import jakarta.validation.ConstraintViolationException
 import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.validation.ConstraintViolationException
 import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter
 import org.springframework.graphql.execution.ErrorType
 import org.springframework.stereotype.Component

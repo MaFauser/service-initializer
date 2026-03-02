@@ -1,6 +1,5 @@
 package com.mafauser.service.config
 
-import tools.jackson.databind.ObjectMapper
 import jakarta.servlet.DispatcherType
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -10,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import tools.jackson.databind.ObjectMapper
 
 @DisplayName("RateLimitFilter")
 class RateLimitFilterTest {

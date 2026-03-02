@@ -1,8 +1,8 @@
 package com.mafauser.service.example
 
 import com.mafauser.service.exception.InvalidIdException
-import jakarta.validation.Valid
 import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.validation.Valid
 import org.springframework.data.domain.PageRequest
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping

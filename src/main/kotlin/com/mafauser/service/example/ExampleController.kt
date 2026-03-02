@@ -1,8 +1,8 @@
 package com.mafauser.service.example
 
 import com.mafauser.service.exception.NotFoundException
-import jakarta.validation.Valid
 import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.validation.Valid
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
