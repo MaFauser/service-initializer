@@ -92,4 +92,4 @@ Create the Secret before install:
 
 ## Conclusion
 
-The chart is **production-oriented**: enable Secrets, Ingress, HPA, NetworkPolicy, and Postgres backup in `prod.yaml` (and set `existingSecret` and ingress hosts/tls). For very large scale or HA, use managed databases and message brokers. The [Production Checklist](../DEPLOYMENT.md#production-checklist) in DEPLOYMENT.md is the canonical list.
+The chart is **production-oriented**: enable Secrets, Ingress, HPA, NetworkPolicy, and Postgres backup in `prod.yaml` (and set `existingSecret` and ingress hosts/tls). For very large scale or HA, use managed databases and message brokers. The [Production Checklist](DEPLOYMENT.md#production-checklist) in DEPLOYMENT.md is the canonical list.

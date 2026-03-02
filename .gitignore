@@ -23,6 +23,7 @@ spring-boot-devtools.properties
 *.swp
 *.swo
 *~
+kls-classpath
 
 # OS
 .DS_Store

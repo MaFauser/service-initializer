@@ -4,14 +4,14 @@ import graphql.ErrorClassification
 import graphql.GraphQLError
 import graphql.schema.DataFetchingEnvironment
 import jakarta.validation.ConstraintViolationException
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter
 import org.springframework.graphql.execution.ErrorType
 import org.springframework.stereotype.Component
 
 @Component
 class GraphQLExceptionResolver : DataFetcherExceptionResolverAdapter() {
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val log = KotlinLogging.logger {}
 
     private enum class CustomErrorType : ErrorClassification {
         CONFLICT,
@@ -42,7 +42,7 @@ class GraphQLExceptionResolver : DataFetcherExceptionResolverAdapter() {
             }
 
             else -> {
-                log.error("Unhandled GraphQL exception on field {}", env.field.name, ex)
+                log.error(ex) { "Unhandled GraphQL exception on field ${env.field.name}" }
                 toGraphQLError("An unexpected error occurred", ErrorType.INTERNAL_ERROR)
             }
         }

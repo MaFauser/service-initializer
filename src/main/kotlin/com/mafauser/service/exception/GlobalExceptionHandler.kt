@@ -1,7 +1,7 @@
 package com.mafauser.service.exception
 
 import jakarta.validation.ConstraintViolationException
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
@@ -16,7 +16,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @RestControllerAdvice
 class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val log = KotlinLogging.logger {}
 
     override fun handleMethodArgumentNotValid(
         ex: MethodArgumentNotValidException,
@@ -35,7 +35,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         status: HttpStatusCode,
         request: WebRequest,
     ): ResponseEntity<Any>? {
-        log.debug("Unreadable request body: {}", ex.message)
+        log.debug { "Unreadable request body: ${ex.message}" }
         val body = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Malformed or incomplete request body")
         return handleExceptionInternal(ex, body, headers, status, request)
     }
@@ -60,13 +60,13 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
 
     @ExceptionHandler(UpstreamRateLimitException::class)
     fun handleUpstreamRateLimit(ex: UpstreamRateLimitException): ProblemDetail {
-        log.warn("Upstream rate limit: {}", ex.message)
+        log.warn { "Upstream rate limit: ${ex.message}" }
         return ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, ex.message)
     }
 
     @ExceptionHandler(Exception::class)
     fun handleGeneric(ex: Exception): ProblemDetail {
-        log.error("Unhandled exception", ex)
+        log.error(ex) { "Unhandled exception" }
         return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred")
     }
 }

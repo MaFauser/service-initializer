@@ -12,18 +12,10 @@ spring:
     bootstrap-servers: localhost:9092
 
 management:
-  server:
-    port: # same as server port in tests
   tracing:
-    enabled: false
-  opentelemetry:
-    tracing:
-      export:
-        otlp:
-          endpoint: http://localhost:4318/v1/traces
-  otlp:
-    tracing:
-      export:
+    export:
+      enabled: false
+      otlp:
         enabled: false
 
 rate-limit:

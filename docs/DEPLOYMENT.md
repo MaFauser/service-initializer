@@ -12,7 +12,7 @@ Quick reference for deploying the service across different environments.
 
 ### Cloud Provider Guides
 
-- **[Oracle Kubernetes Engine (OKE)](./docs/ORACLE.md)** – Local access, ServiceAccount setup, CI/CD deployment
+- **[Oracle Kubernetes Engine (OKE)](ORACLE.md)** – Local access, ServiceAccount setup, CI/CD deployment
 
 ---
 
@@ -141,7 +141,7 @@ kind load docker-image service:dev
 
 ### Create Secrets (once)
 
-Create the two required Secrets before the first deploy. **Full guide (key names, verification, CI/CD):** [Creating Secrets (docs/SECRETS.md)](docs/SECRETS.md).
+Create the two required Secrets before the first deploy. **Full guide (key names, verification, CI/CD):** [Creating Secrets](SECRETS.md).
 
 ```bash
 kubectl create namespace development --dry-run=client -o yaml | kubectl apply -f -
@@ -205,7 +205,7 @@ kubectl delete namespace development
 
 ### Prerequisites
 
-Create the two required Secrets before the first deploy. **Full guide:** [Creating Secrets (docs/SECRETS.md)](docs/SECRETS.md).
+Create the two required Secrets before the first deploy. **Full guide:** [Creating Secrets](SECRETS.md).
 
 ```bash
 kubectl create namespace production
@@ -326,7 +326,7 @@ spec:
 
 Before going to production, ensure:
 
-- [ ] Use **Kubernetes Secrets** for passwords: create `prod-postgresql-credentials` and `prod-grafana-credentials` before install (see [Creating Secrets](docs/SECRETS.md)).
+- [ ] Use **Kubernetes Secrets** for passwords: create `prod-postgresql-credentials` and `prod-grafana-credentials` before install (see [Creating Secrets](SECRETS.md)).
 - [ ] Configure **Ingress** with TLS: set `ingress.enabled: true`, `ingress.hosts`, and `ingress.tls` (requires an Ingress controller in the cluster).
 - [ ] Enable **PostgreSQL backups**: set `postgresql.backup.enabled: true` (CronJob writes to PVC; sync to object storage separately). See [Backups](#backups) below.
 - [ ] Configure **monitoring alerts** in Grafana (and runbooks).
@@ -338,7 +338,7 @@ Before going to production, ensure:
 - [ ] Test **disaster recovery** procedures (restore from backup).
 - [ ] Document **runbooks** for common issues.
 
-For a full picture of what the chart provides, see **[Production Readiness](docs/PRODUCTION-READINESS.md)**.
+For a full picture of what the chart provides, see **[Production Readiness](PRODUCTION-READINESS.md)**.
 
 ### Backups
 

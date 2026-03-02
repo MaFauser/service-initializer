@@ -1,5 +1,6 @@
 package com.mafauser.service.config
 
+import tools.jackson.databind.ObjectMapper
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
@@ -7,7 +8,9 @@ import io.github.bucket4j.ConsumptionProbe
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.http.HttpStatus
+import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import java.time.Duration
@@ -15,13 +18,13 @@ import java.time.Duration
 @Component
 class RateLimitFilter(
     private val properties: RateLimitProperties,
+    private val objectMapper: ObjectMapper,
 ) : OncePerRequestFilter() {
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val log = KotlinLogging.logger {}
 
     companion object {
-        private const val RESPONSE_BODY =
-            """{"type":"about:blank","title":"Too Many Requests","status":429,"detail":"Rate limit exceeded. Try again later."}"""
-        private const val RESPONSE_STATUS = 429
+        private val RATE_LIMIT_PROBLEM =
+            ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, "Rate limit exceeded. Try again later.")
         private const val RESPONSE_LIMIT_HEADER = "X-RateLimit-Limit"
         private const val RESPONSE_REMAINING_HEADER = "X-RateLimit-Remaining"
         private const val RESPONSE_RETRY_AFTER_HEADER = "Retry-After"
@@ -53,10 +56,10 @@ class RateLimitFilter(
         if (probe.isConsumed) {
             chain.doFilter(request, response)
         } else {
-            log.debug("Rate limit exceeded for {}", request.remoteAddr)
+            log.debug { "Rate limit exceeded for ${request.remoteAddr}" }
             val retryAfterSeconds = (probe.nanosToWaitForRefill / 1_000_000_000).coerceAtLeast(1)
-            val bytes = RESPONSE_BODY.toByteArray(Charsets.UTF_8)
-            response.status = RESPONSE_STATUS
+            val bytes = objectMapper.writeValueAsBytes(RATE_LIMIT_PROBLEM)
+            response.status = RATE_LIMIT_PROBLEM.status
             response.setHeader(RESPONSE_RETRY_AFTER_HEADER, retryAfterSeconds.toString())
             response.contentType = RESPONSE_CONTENT_TYPE
             response.characterEncoding = RESPONSE_CHARACTER_ENCODING

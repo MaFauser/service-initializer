@@ -12,9 +12,9 @@ make test            # Testcontainers, needs Docker
 
 ## Deploy
 
-- **Local K8s (Docker Desktop):** `./scripts/k8s-local.sh up` — see [DEPLOYMENT.md](DEPLOYMENT.md)
+- **Local K8s (Docker Desktop):** `./scripts/k8s-local.sh up` — see [DEPLOYMENT.md](docs/DEPLOYMENT.md)
 - **Dev (remote cluster):** `./scripts/k8s-dev.sh deploy` — port-forward: `./scripts/k8s-dev.sh forward`
-- **Prod:** [docs/SECRETS.md](docs/SECRETS.md) + [DEPLOYMENT.md](DEPLOYMENT.md)
+- **Prod:** [SECRETS.md](docs/SECRETS.md) + [DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 After port-forward:
 
@@ -45,10 +45,12 @@ infra/helm/stack/
 └── prod.yaml                    # Prod: Secrets, HPA, backups
 ```
 
-**Add a domain:** Copy `example` package and `graphql/example`, add Flyway migration. See [DOMAINS.md](DOMAINS.md).
+**Add a domain:** Copy `example` package and `graphql/example`, add Flyway migration. See [DOMAINS.md](docs/DOMAINS.md).
 
 ## Docs
 
+- [DEPLOYMENT.md](docs/DEPLOYMENT.md) — Helm install (local, dev, prod)
+- [DOCKER.md](docs/DOCKER.md) — Docker Compose local development
+- [DOMAINS.md](docs/DOMAINS.md) — Domain structure and adding new domains
 - [SECRETS.md](docs/SECRETS.md) — Kubernetes secrets for dev/prod
-- [DEPLOYMENT.md](DEPLOYMENT.md) — Helm install (local, dev, prod)
 - [OBSERVABILITY.md](docs/OBSERVABILITY.md) — Logs, metrics, traces (OpenSearch, Prometheus, Tempo)

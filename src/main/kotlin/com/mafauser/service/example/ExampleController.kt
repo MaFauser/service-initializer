@@ -2,7 +2,7 @@ package com.mafauser.service.example
 
 import com.mafauser.service.exception.NotFoundException
 import jakarta.validation.Valid
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
@@ -23,13 +23,13 @@ import java.util.UUID
 class ExampleController(
     private val exampleService: ExampleService,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val log = KotlinLogging.logger {}
 
     @GetMapping
     fun list(
         @PageableDefault(size = 20) pageable: Pageable,
     ): Page<ExampleResponse> {
-        log.debug("Examples list requested, page={}", pageable)
+        log.debug { "Examples list requested, page=$pageable" }
         return exampleService.findAll(pageable).map { it.toResponse() }
     }
 
@@ -37,7 +37,7 @@ class ExampleController(
     fun get(
         @PathVariable id: UUID,
     ): ExampleResponse {
-        log.debug("Example get requested: id={}", id)
+        log.debug { "Example get requested: id=$id" }
         return (exampleService.findById(id) ?: throw NotFoundException("Example", id)).toResponse()
     }
 
@@ -46,7 +46,7 @@ class ExampleController(
     fun create(
         @RequestBody @Valid input: CreateExampleInput,
     ): ExampleResponse {
-        log.debug("Example create requested: name={}", input.name)
+        log.debug { "Example create requested: name=${input.name}" }
         return exampleService.create(input).toResponse()
     }
 
@@ -55,7 +55,7 @@ class ExampleController(
         @PathVariable id: UUID,
         @RequestBody @Valid input: UpdateExampleInput,
     ): ExampleResponse {
-        log.debug("Example update requested: id={}", id)
+        log.debug { "Example update requested: id=$id" }
         return exampleService.update(id, input).toResponse()
     }
 
@@ -64,7 +64,7 @@ class ExampleController(
     fun delete(
         @PathVariable id: UUID,
     ) {
-        log.debug("Example delete requested: id={}", id)
+        log.debug { "Example delete requested: id=$id" }
         if (!exampleService.delete(id)) {
             throw NotFoundException("Example", id)
         }

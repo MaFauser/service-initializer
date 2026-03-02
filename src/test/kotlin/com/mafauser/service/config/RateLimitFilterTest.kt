@@ -1,5 +1,6 @@
 package com.mafauser.service.config
 
+import tools.jackson.databind.ObjectMapper
 import jakarta.servlet.DispatcherType
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -12,7 +13,7 @@ import org.mockito.kotlin.whenever
 
 @DisplayName("RateLimitFilter")
 class RateLimitFilterTest {
-    private val filter = RateLimitFilter(RateLimitProperties())
+    private val filter = RateLimitFilter(RateLimitProperties(), ObjectMapper())
 
     @Test
     fun `uses fallback key when remoteAddr is null`() {

@@ -1,5 +1,6 @@
 {
   "yaml.validate": false,
+  "spring-boot.ls.problem.yaml.YAML_UNKNOWN_PROPERTY": "IGNORE",
   "java.compile.nullAnalysis.mode": "automatic",
   "java.import.gradle.enabled": true,
   "kotlin.languageServer.enabled": true,

@@ -44,6 +44,7 @@ dependencies {
     implementation("tools.jackson.module:jackson-module-kotlin")
     implementation("com.bucket4j:bucket4j_jdk17-core:8.16.1")
     implementation("com.github.ben-manes.caffeine:caffeine")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")

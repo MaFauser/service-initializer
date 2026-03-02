@@ -2,7 +2,7 @@
 
 This document describes the Docker Compose setup for local development.
 
-> **💡 Kubernetes Alternative**: For production deployments or if you prefer Kubernetes, see the [Helm Chart documentation](./infra/helm/README.md) for deploying to any Kubernetes cluster (local or cloud).
+> **💡 Kubernetes Alternative**: For production deployments or if you prefer Kubernetes, see the [Helm Chart documentation](../infra/helm/README.md) for deploying to any Kubernetes cluster (local or cloud).
 
 ## Single Source of Truth
 
