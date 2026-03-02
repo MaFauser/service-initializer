@@ -47,6 +47,7 @@ dependencies {
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
     runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly("io.netty:netty-resolver-dns-native-macos::osx-aarch_64")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-actuator-test")
     testImplementation("org.springframework.boot:spring-boot-starter-cache-test")
