@@ -11,6 +11,10 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
 
+logging:
+  level:
+    "[com.mafauser.service]": debug
+
 management:
   tracing:
     export:
