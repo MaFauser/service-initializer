@@ -24,11 +24,13 @@ These are code quality standards based on real PR review feedback. Apply them wh
 - Boolean-check methods should read like a question about the actual condition (e.g. `newReq.isInactive()` instead of `shouldPreserveFallbackStatus(newReq)`).
 - Split methods with misleading names into two with accurate names (e.g. `validateBasicStructure` → `validateValidationSchema` + `validateFields`).
 
-## 4. Avoid Magic Strings — Use Enums or Constants
+## 4. Avoid Hardcoded Strings — Use Enums, Constants, or Framework Types
 
+- Never hardcode values when the framework or language already provides a constant, enum, or type for it (e.g. use `HttpMethod.GET` instead of `"GET"`, `HttpStatus.NOT_FOUND` instead of `404`, `MediaType.APPLICATION_JSON_VALUE` instead of `"application/json"`).
 - Never hardcode domain values like `"reason"`, `"error"`, `"message"` as raw strings scattered in code.
 - Centralize known values in enums or constant classes (e.g. tag names, status reasons, event keys).
 - If a string is used in more than one place, extract it to a constant.
+- Before writing any literal string or number, ask: *"Does the framework already define this?"*
 
 ## 5. Use Framework/Library Utilities
 

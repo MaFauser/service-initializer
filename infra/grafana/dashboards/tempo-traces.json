@@ -70,7 +70,7 @@
       "targets": [
         {
           "datasource": { "type": "tempo", "uid": "tempo" },
-          "queryType": "traceqlSearch",
+          "queryType": "traceql",
           "query": "{ resource.service.name=\"service\" }",
           "limit": 50,
           "refId": "A"
