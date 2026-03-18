@@ -1,12 +1,16 @@
 package com.mafauser.service.example
 
 import com.mafauser.service.BaseIntegrationTest
+import com.mafauser.service.security.Roles
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
+import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -15,14 +19,29 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import org.springframework.web.context.WebApplicationContext
 import tools.jackson.module.kotlin.jacksonObjectMapper
 import tools.jackson.module.kotlin.readValue
 import java.util.UUID
 
 @DisplayName("Example REST API (integration)")
+@WithMockUser(roles = [Roles.USER])
 class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
     @Autowired
+    private lateinit var context: WebApplicationContext
+
     private lateinit var mockMvc: MockMvc
+
+    @BeforeEach
+    fun setUp() {
+        mockMvc =
+            MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply<DefaultMockMvcBuilder>(SecurityMockMvcConfigurers.springSecurity())
+                .build()
+    }
 
     private val objectMapper = jacksonObjectMapper()
 
@@ -135,6 +154,7 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
+    @WithMockUser(roles = [Roles.ADMIN])
     fun `DELETE examples by id returns 204 when exists`() {
         val createBody = """{"name":"To Delete REST"}"""
         val createResult =
@@ -158,6 +178,7 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
+    @WithMockUser(roles = [Roles.ADMIN])
     fun `DELETE examples by id returns 404 when not found`() {
         val id = UUID.randomUUID()
         mockMvc
@@ -207,6 +228,7 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
+    @WithMockUser(roles = [Roles.ADMIN])
     fun `DELETE examples with invalid UUID returns 400`() {
         mockMvc
             .perform(delete("/examples/not-a-uuid"))

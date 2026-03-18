@@ -46,6 +46,12 @@ spring:
       enabled: true
       path: /graphiql
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:https://your-idp.example.com/realms/your-realm}
+
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     consumer:

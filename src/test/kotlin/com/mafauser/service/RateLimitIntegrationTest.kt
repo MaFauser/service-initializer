@@ -1,14 +1,22 @@
 package com.mafauser.service
 
+import com.mafauser.service.config.RateLimitFilter
+import com.mafauser.service.security.Roles
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import org.springframework.web.context.WebApplicationContext
 
 @TestPropertySource(
     properties = [
@@ -17,9 +25,25 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
     ],
 )
 @DisplayName("Rate Limiting (integration)")
+@WithMockUser(roles = [Roles.USER])
 class RateLimitIntegrationTest : BaseIntegrationTest() {
     @Autowired
+    private lateinit var context: WebApplicationContext
+
+    @Autowired
+    private lateinit var rateLimitFilter: RateLimitFilter
+
     private lateinit var mockMvc: MockMvc
+
+    @BeforeEach
+    fun setUp() {
+        mockMvc =
+            MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply<DefaultMockMvcBuilder>(SecurityMockMvcConfigurers.springSecurity())
+                .addFilter<DefaultMockMvcBuilder>(rateLimitFilter)
+                .build()
+    }
 
     @Test
     fun `returns 429 with proper body and headers when rate limit is exceeded`() {

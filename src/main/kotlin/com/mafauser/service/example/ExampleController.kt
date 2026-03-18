@@ -1,5 +1,7 @@
 package com.mafauser.service.example
 
+import com.mafauser.service.security.IsAdmin
+import com.mafauser.service.security.IsAuthenticated
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.validation.Valid
 import org.springframework.data.domain.Page
@@ -19,6 +21,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/examples")
+@IsAuthenticated
 class ExampleController(
     private val exampleService: ExampleService,
 ) {
@@ -60,6 +63,7 @@ class ExampleController(
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @IsAdmin
     fun delete(
         @PathVariable id: UUID,
     ) {

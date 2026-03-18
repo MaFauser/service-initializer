@@ -1,5 +1,11 @@
 # Test overrides: placeholders for properties that Testcontainers overrides via @ServiceConnection
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://mock-issuer.test
+
   datasource:
     url: jdbc:postgresql://localhost:5432/testdb
     username: test

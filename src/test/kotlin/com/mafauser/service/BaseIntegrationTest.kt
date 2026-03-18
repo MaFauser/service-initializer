@@ -5,7 +5,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
 import org.springframework.transaction.annotation.Transactional
 
-@Import(TestcontainersConfiguration::class)
+@Import(TestcontainersConfiguration::class, TestSecurityConfiguration::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @Transactional
