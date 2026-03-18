@@ -31,9 +31,9 @@ class ExampleGraphQLController(
     @QueryMapping
     fun example(
         @Argument id: String,
-    ): ExampleResponse? {
+    ): ExampleResponse {
         log.debug { "GraphQL query: example id=$id" }
-        return parseUuidOrNull(id)?.let { exampleService.findById(it)?.toResponse() }
+        return exampleService.findById(parseUuid(id, "example")).toResponse()
     }
 
     @MutationMapping
@@ -58,7 +58,8 @@ class ExampleGraphQLController(
         @Argument id: String,
     ): Boolean {
         log.debug { "GraphQL mutation: deleteExample id=$id" }
-        return exampleService.delete(parseUuid(id, "deleteExample"))
+        exampleService.delete(parseUuid(id, "deleteExample"))
+        return true
     }
 
     private fun parseUuidOrNull(id: String): UUID? =

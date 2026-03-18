@@ -3,7 +3,6 @@ package com.mafauser.service.example
 import com.mafauser.service.exception.ConflictException
 import com.mafauser.service.exception.NotFoundException
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
@@ -70,13 +69,14 @@ class ExampleServiceTest {
     @DisplayName("findById")
     inner class FindById {
         @Test
-        fun `returns null when not found`() {
+        fun `throws NotFoundException when not found`() {
             val id = UUID.randomUUID()
             whenever(exampleRepository.findById(id)).thenReturn(empty())
 
-            val result = exampleService.findById(id)
+            assertThrows<NotFoundException> {
+                exampleService.findById(id)
+            }
 
-            assertNull(result)
             verify(exampleRepository).findById(id)
         }
 
@@ -89,7 +89,7 @@ class ExampleServiceTest {
             val result = exampleService.findById(id)
 
             assertEquals(example, result)
-            assertEquals("Found", result!!.name)
+            assertEquals("Found", result.name)
             verify(exampleRepository).findById(id)
         }
     }
@@ -243,25 +243,25 @@ class ExampleServiceTest {
     @DisplayName("delete")
     inner class Delete {
         @Test
-        fun `returns true when example exists`() {
+        fun `deletes when example exists`() {
             val id = UUID.randomUUID()
             whenever(exampleRepository.existsById(id)).thenReturn(true)
 
-            val result = exampleService.delete(id)
+            exampleService.delete(id)
 
-            assertTrue(result)
             verify(exampleRepository).existsById(id)
             verify(exampleRepository).deleteById(id)
         }
 
         @Test
-        fun `returns false when example does not exist`() {
+        fun `throws NotFoundException when example does not exist`() {
             val id = UUID.randomUUID()
             whenever(exampleRepository.existsById(id)).thenReturn(false)
 
-            val result = exampleService.delete(id)
+            assertThrows<NotFoundException> {
+                exampleService.delete(id)
+            }
 
-            assertFalse(result)
             verify(exampleRepository).existsById(id)
             verify(exampleRepository, never()).deleteById(any<UUID>())
         }

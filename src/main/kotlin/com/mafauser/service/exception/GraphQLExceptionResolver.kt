@@ -43,7 +43,7 @@ class GraphQLExceptionResolver : DataFetcherExceptionResolverAdapter() {
 
             else -> {
                 log.error(ex) { "Unhandled GraphQL exception on field ${env.field.name}" }
-                toGraphQLError("An unexpected error occurred", ErrorType.INTERNAL_ERROR)
+                toGraphQLError(GlobalExceptionHandler.UNEXPECTED_ERROR, ErrorType.INTERNAL_ERROR)
             }
         }
 

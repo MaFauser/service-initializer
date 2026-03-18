@@ -67,6 +67,10 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
     @ExceptionHandler(Exception::class)
     fun handleGeneric(ex: Exception): ProblemDetail {
         log.error(ex) { "Unhandled exception" }
-        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred")
+        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, UNEXPECTED_ERROR)
+    }
+
+    companion object {
+        const val UNEXPECTED_ERROR = "An unexpected error occurred"
     }
 }

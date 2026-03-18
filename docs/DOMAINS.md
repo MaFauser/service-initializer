@@ -5,8 +5,8 @@ This project uses **package-by-feature** (domain-driven layout): each business d
 ## Example domain (reference)
 
 - **`com.mafauser.service.example.Example`** – JPA entity: UUID id, version (optimistic locking), name, description, createdAt, updatedAt.
-- **`ExampleRepository`** – `JpaRepository<Example, UUID>` with `findByName` and `existsByName`.
-- **`ExampleService`** – `@Transactional` CRUD; uses `CreateExampleInput` / `UpdateExampleInput` (Bean Validation); throws shared `NotFoundException`, `ConflictException`, `InvalidIdException` from `config/`.
+- **`ExampleRepository`** – `JpaRepository<Example, UUID>` with `existsByName`.
+- **`ExampleService`** – `@Transactional` CRUD; uses `CreateExampleInput` / `UpdateExampleInput` (Bean Validation); throws shared `NotFoundException`, `ConflictException`, `InvalidIdException` from `exception/`.
 - **`ExampleController`** – REST `@RestController`: CRUD at `/examples` (GET, POST, PUT, DELETE).
 - **`ExampleGraphQLController`** – GraphQL `@Controller`: queries `examples`, `example(id)`; mutations `createExample`, `updateExample`, `deleteExample`.
 - **`graphql/example/schema.graphqls`** – Type `Example`, inputs `CreateExampleInput`, `UpdateExampleInput`, and `extend type Query` / `extend type Mutation`.
@@ -30,7 +30,7 @@ This project uses **package-by-feature** (domain-driven layout): each business d
    - `extend type Mutation { createProduct(...): Product!, ... }`
 
 3. **Database**  
-   Add a Flyway migration under `src/main/resources/db/migration/`, e.g. `V2__create_product_table.sql`, with `CREATE TABLE products (...)` and any indexes.
+   Add a Flyway migration under `src/main/resources/db/migration/`, e.g. `V3__create_product_table.sql`, with `CREATE TABLE products (...)` and any indexes. Use the next available version number (`V3__`, `V4__`, etc.).
 
 4. **Conventions**
    - Use **UUID** for primary keys.

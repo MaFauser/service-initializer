@@ -203,28 +203,37 @@ class ExampleControllerIntegrationTest : BaseIntegrationTest() {
             .documentName("example-by-id-query")
             .variable("id", id)
             .execute()
-            .path("example")
-            .valueIsNull()
+            .errors()
+            .satisfy { errors ->
+                assertTrue(errors.isNotEmpty())
+                assertTrue(errors.any { it.message?.contains("not found", ignoreCase = true) == true })
+            }
     }
 
     @Test
-    fun `example query returns null for unknown id`() {
+    fun `example query returns NOT_FOUND for unknown id`() {
         graphQlTester
             .documentName("example-by-id-query")
             .variable("id", "00000000-0000-0000-0000-000000000000")
             .execute()
-            .path("example")
-            .valueIsNull()
+            .errors()
+            .satisfy { errors ->
+                assertTrue(errors.isNotEmpty())
+                assertTrue(errors.any { it.message?.contains("not found", ignoreCase = true) == true })
+            }
     }
 
     @Test
-    fun `example query returns null for invalid UUID string`() {
+    fun `example query returns error for invalid UUID string`() {
         graphQlTester
             .documentName("example-by-id-query")
             .variable("id", "not-a-valid-uuid")
             .execute()
-            .path("example")
-            .valueIsNull()
+            .errors()
+            .satisfy { errors ->
+                assertTrue(errors.isNotEmpty())
+                assertTrue(errors.any { it.message?.contains("UUID", ignoreCase = true) == true })
+            }
     }
 
     @Test

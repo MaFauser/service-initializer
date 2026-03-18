@@ -8,7 +8,5 @@ import java.util.UUID
  * Add custom query methods here; they are implemented automatically by Spring.
  */
 interface ExampleRepository : JpaRepository<Example, UUID> {
-    fun findByName(name: String): Example?
-
     fun existsByName(name: String): Boolean
 }

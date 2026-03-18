@@ -16,7 +16,7 @@ class ExampleService(
     fun findAll(pageable: Pageable): Page<Example> = exampleRepository.findAll(pageable)
 
     @Transactional(readOnly = true)
-    fun findById(id: UUID): Example? = exampleRepository.findById(id).orElse(null)
+    fun findById(id: UUID): Example = exampleRepository.findById(id).orElseThrow { NotFoundException("Example", id) }
 
     @Transactional
     fun create(input: CreateExampleInput): Example {
@@ -48,11 +48,10 @@ class ExampleService(
     }
 
     @Transactional
-    fun delete(id: UUID): Boolean =
-        if (exampleRepository.existsById(id)) {
-            exampleRepository.deleteById(id)
-            true
-        } else {
-            false
+    fun delete(id: UUID) {
+        if (!exampleRepository.existsById(id)) {
+            throw NotFoundException("Example", id)
         }
+        exampleRepository.deleteById(id)
+    }
 }

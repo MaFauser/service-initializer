@@ -8,7 +8,6 @@ set -e
 
 BOLD='\033[1m'
 DIM='\033[2m'
-ITALIC='\033[3m'
 CYAN='\033[1;36m'
 GREEN='\033[1;32m'
 YELLOW='\033[1;33m'

@@ -1,6 +1,5 @@
 package com.mafauser.service.example
 
-import com.mafauser.service.exception.NotFoundException
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.validation.Valid
 import org.springframework.data.domain.Page
@@ -38,7 +37,7 @@ class ExampleController(
         @PathVariable id: UUID,
     ): ExampleResponse {
         log.debug { "Example get requested: id=$id" }
-        return (exampleService.findById(id) ?: throw NotFoundException("Example", id)).toResponse()
+        return exampleService.findById(id).toResponse()
     }
 
     @PostMapping
@@ -65,8 +64,6 @@ class ExampleController(
         @PathVariable id: UUID,
     ) {
         log.debug { "Example delete requested: id=$id" }
-        if (!exampleService.delete(id)) {
-            throw NotFoundException("Example", id)
-        }
+        exampleService.delete(id)
     }
 }

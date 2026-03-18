@@ -10,7 +10,7 @@ This guide shows how to set up the GitHub Actions workflows for this application
 | Push Dev Image | Push to `dev` | Build + push image tagged `dev-latest` |
 | Release Image | GitHub Release published | Retag image with version + `latest` |
 
-Deployment to Kubernetes is handled by the [platform-infra](../../platform-infra) repo.
+Deployment to Kubernetes is handled by the [platform-infra](https://github.com/MaFauser/platform-infra) repo.
 
 ## Prerequisites
 
@@ -27,6 +27,9 @@ Go to: **Settings -> Secrets and variables -> Actions -> New repository secret**
 | Secret Name | Description |
 |-------------|-------------|
 | *(none required for basic image push)* | GHCR uses `GITHUB_TOKEN` automatically |
+| `PLATFORM_DEPLOY_TOKEN` | GitHub PAT with `repo` scope for accessing `platform-infra` Helm charts (required for deploy jobs) |
+| `KUBECONFIG_DEV` | Base64-encoded kubeconfig for the dev cluster (required for dev deploy) |
+| `KUBECONFIG_PROD` | Base64-encoded kubeconfig for the prod cluster (required for prod deploy) |
 
 ## Enable GitHub Packages
 
@@ -47,10 +50,10 @@ git push origin dev    # builds + pushes image tagged dev-latest
 
 ### Production release
 
+Create a GitHub Release from the [Releases page](../../releases) or use the CLI:
+
 ```bash
-git checkout main
-git merge dev
-./scripts/release.sh v1.0.0    # creates GitHub release, triggers image retag
+gh release create v1.0.0 --generate-notes
 ```
 
 ## Monitoring

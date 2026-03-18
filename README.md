@@ -25,7 +25,7 @@ make test               # Testcontainers, needs Docker
 | Service    | URL                          |
 |------------|------------------------------|
 | GraphiQL   | http://localhost:8081/graphiql |
-| Health     | http://localhost:8081/actuator/health |
+| Health     | http://localhost:8082/actuator/health |
 | pgAdmin    | http://localhost:5050         |
 | Kafka UI   | http://localhost:8080         |
 
