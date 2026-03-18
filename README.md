@@ -53,6 +53,8 @@ GitHub Actions workflows build, test, and push container images to GHCR:
 - **Dev push** — build + push image tagged `dev-latest`
 - **Release** — retag image with version + `latest`
 
+To release, create a GitHub Release from the [Releases page](../../releases) (or `gh release create v1.0.0 --generate-notes`).
+
 Deployment to Kubernetes is handled by the [platform-infra](https://github.com/MaFauser/platform-infra) repo.
 
 ## Docs

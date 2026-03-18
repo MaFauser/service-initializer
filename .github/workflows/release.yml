@@ -56,6 +56,14 @@ jobs:
             -t "${IMAGE}:latest" \
             "${IMAGE}:${SRC_TAG}"
 
+      - name: Trigger platform deploy
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.PLATFORM_DEPLOY_TOKEN }}
+          repository: MaFauser/platform-infra
+          event-type: deploy-prod
+          client-payload: '{"image_tag": "${{ steps.version.outputs.version }}", "image_repo": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"}'
+
       - name: Release Summary
         run: |
           echo "## Image Released" >> $GITHUB_STEP_SUMMARY

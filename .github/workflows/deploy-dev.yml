@@ -68,3 +68,11 @@ jobs:
         run: |
           IMAGE="${REGISTRY}/${IMAGE_NAME}"
           docker buildx imagetools create -t "${IMAGE}:dev-latest" "${IMAGE}:${{ steps.resolve.outputs.src_tag }}"
+
+      - name: Trigger platform deploy
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.PLATFORM_DEPLOY_TOKEN }}
+          repository: MaFauser/platform-infra
+          event-type: deploy-dev
+          client-payload: '{"image_tag": "${{ steps.resolve.outputs.src_tag }}", "image_repo": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"}'
