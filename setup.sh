@@ -120,7 +120,13 @@ if [ "$TEMPLATE_PACKAGE_DIR" != "$PACKAGE_DIR" ]; then
     if [ -d "$base/$TEMPLATE_PACKAGE_DIR" ]; then
       mkdir -p "$base/$PACKAGE_DIR"
       cp -R "$base/$TEMPLATE_PACKAGE_DIR/"* "$base/$PACKAGE_DIR/" 2>/dev/null || true
-      rm -rf "$base/${TEMPLATE_PACKAGE_DIR%%/*}"
+      rm -rf "$base/$TEMPLATE_PACKAGE_DIR"
+      # Clean up empty parent dirs left behind (but not shared ancestors)
+      _cleanup_dir="$base/$(dirname "$TEMPLATE_PACKAGE_DIR")"
+      while [ "$_cleanup_dir" != "$base" ] && [ -d "$_cleanup_dir" ] && [ -z "$(ls -A "$_cleanup_dir" 2>/dev/null)" ]; do
+        rmdir "$_cleanup_dir"
+        _cleanup_dir="$(dirname "$_cleanup_dir")"
+      done
     fi
   done
   step "Moved source packages to ${DIM}${PACKAGE_DIR}${NC}"
@@ -164,8 +170,8 @@ step "Updated project description"
 replace_in_files "rootProject.name = \"$TEMPLATE_SERVICE_NAME\"" "rootProject.name = \"${SERVICE_NAME}\""
 step "Updated settings.gradle.kts"
 
-# spring.application.name
-replace_in_files "name: $TEMPLATE_SERVICE_NAME" "name: ${SERVICE_NAME}"
+# spring.application.name (targeted — generic "name: service" matches container_name:, Username:, etc.)
+sed -i '' "s|name: ${TEMPLATE_SERVICE_NAME}|name: ${SERVICE_NAME}|g" src/main/resources/application.yaml
 step "Updated Spring application name"
 
 # Database name
@@ -179,10 +185,6 @@ step "Updated Docker container names"
 # JaCoCo exclude path
 replace_in_files "**/com/mafauser/service/Application" "**/${PACKAGE_DIR}/Application"
 step "Updated JaCoCo excludes"
-
-# Logging config
-replace_in_files "com.mafauser.service" "$BASE_PACKAGE"
-step "Updated logging configuration"
 
 # Also handle the .env file
 if [ -f ".env" ]; then
