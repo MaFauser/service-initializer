@@ -28,8 +28,8 @@ clear
 echo ""
 echo -e "${CYAN}  ╭─────────────────────────────────────────╮${NC}"
 echo -e "${CYAN}  │                                         │${NC}"
-echo -e "${CYAN}  │${NC}   ${BOLD}Service Initializer Setup${NC}              ${CYAN}│${NC}"
-echo -e "${CYAN}  │${NC}   ${DIM}Configure your new microservice${NC}        ${CYAN}│${NC}"
+echo -e "${CYAN}  │${NC}   ${BOLD}Service Initializer Setup${NC}             ${CYAN}│${NC}"
+echo -e "${CYAN}  │${NC}   ${DIM}Configure your new microservice${NC}       ${CYAN}│${NC}"
 echo -e "${CYAN}  │                                         │${NC}"
 echo -e "${CYAN}  ╰─────────────────────────────────────────╯${NC}"
 echo ""
@@ -69,10 +69,10 @@ echo ""
 
 prompt "Service name" "my-service" SERVICE_NAME "e.g. order-service, user-api"
 
-DEFAULT_DB="${SERVICE_NAME//-/_}db"
+DEFAULT_DB="${SERVICE_NAME//-/_}_db"
 prompt "Database name" "$DEFAULT_DB" DB_NAME "PostgreSQL database"
 
-prompt "Group ID" "com.example" GROUP_ID "e.g. com.yourcompany"
+GROUP_ID="com.mafauser"
 
 DEFAULT_PACKAGE="${GROUP_ID}.${SERVICE_NAME//-/.}"
 prompt "Base package" "$DEFAULT_PACKAGE" BASE_PACKAGE "Java/Kotlin package"
@@ -92,9 +92,7 @@ echo -e "  ${BOLD}Review your configuration:${NC}"
 echo ""
 echo -e "  ${DOT} Service name     ${ARROW}  ${GREEN}${SERVICE_NAME}${NC}"
 echo -e "  ${DOT} Database         ${ARROW}  ${GREEN}${DB_NAME}${NC}"
-echo -e "  ${DOT} Group ID         ${ARROW}  ${GREEN}${GROUP_ID}${NC}"
 echo -e "  ${DOT} Base package     ${ARROW}  ${GREEN}${BASE_PACKAGE}${NC}"
-echo -e "  ${DOT} Package dir      ${ARROW}  ${GREEN}${PACKAGE_DIR}${NC}"
 echo -e "  ${DOT} Description      ${ARROW}  ${GREEN}${DESCRIPTION}${NC}"
 echo ""
 
