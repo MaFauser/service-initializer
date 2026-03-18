@@ -1,4 +1,4 @@
-name: Release Image
+name: Release & Deploy Prod
 
 on:
   release:
@@ -14,13 +14,20 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      image_repo: ${{ steps.names.outputs.image_repo }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set image name
-        run: echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+        id: names
+        run: |
+          IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
+          echo "image_repo=${REGISTRY}/${IMAGE_NAME}" >> $GITHUB_OUTPUT
 
       - name: Get version from tag
         id: version
@@ -56,18 +63,66 @@ jobs:
             -t "${IMAGE}:latest" \
             "${IMAGE}:${SRC_TAG}"
 
-      - name: Trigger platform deploy
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          token: ${{ secrets.PLATFORM_DEPLOY_TOKEN }}
-          repository: MaFauser/platform-infra
-          event-type: deploy-prod
-          client-payload: '{"image_tag": "${{ steps.version.outputs.version }}", "image_repo": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"}'
+  deploy:
+    name: Deploy to Production
+    needs: promote
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
-      - name: Release Summary
+    steps:
+      - name: Checkout platform-infra
+        uses: actions/checkout@v4
+        with:
+          repository: MaFauser/platform-infra
+          token: ${{ secrets.PLATFORM_DEPLOY_TOKEN }}
+
+      - name: Set up kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG_PROD }}
+          kubeconfig-encoding: base64
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Ensure namespace exists
+        run: kubectl create namespace production --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy
         run: |
-          echo "## Image Released" >> $GITHUB_STEP_SUMMARY
+          for i in 1 2 3; do
+            echo "Helm deploy attempt $i/3..."
+            if helm upgrade --install prod ./helm/stack \
+              -f ./helm/stack/config/images.yaml \
+              -f ./helm/stack/prod.yaml \
+              --set application.image.repository="${{ needs.promote.outputs.image_repo }}" \
+              --set application.image.tag="${{ needs.promote.outputs.version }}" \
+              --namespace production \
+              --create-namespace \
+              --timeout 10m \
+              --wait; then
+              echo "Deploy succeeded"
+              break
+            fi
+            if [ $i -lt 3 ]; then
+              echo "Deploy failed, retrying in 60s..."
+              sleep 60
+            else
+              echo "::error::All deploy attempts failed"
+              exit 1
+            fi
+          done
+
+      - name: Verify deployment
+        run: |
+          kubectl rollout status deployment/prod-stack-app --namespace production --timeout=180s
+          echo "Production deployment rolled out successfully"
+
+      - name: Deployment Summary
+        run: |
+          echo "## Deployed to Production" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** \`${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Source tag:** \`${{ steps.srchash.outputs.src_tag }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** \`${{ needs.promote.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`${{ needs.promote.outputs.image_repo }}:${{ needs.promote.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY

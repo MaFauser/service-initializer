@@ -1,4 +1,4 @@
-name: Push Dev Image
+name: Push & Deploy Dev
 
 on:
   push:
@@ -19,13 +19,20 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      src_tag: ${{ steps.resolve.outputs.src_tag }}
+      image_repo: ${{ steps.names.outputs.image_repo }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set image name
-        run: echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+        id: names
+        run: |
+          IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
+          echo "image_repo=${REGISTRY}/${IMAGE_NAME}" >> $GITHUB_OUTPUT
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -69,10 +76,43 @@ jobs:
           IMAGE="${REGISTRY}/${IMAGE_NAME}"
           docker buildx imagetools create -t "${IMAGE}:dev-latest" "${IMAGE}:${{ steps.resolve.outputs.src_tag }}"
 
-      - name: Trigger platform deploy
-        uses: peter-evans/repository-dispatch@v3
+  deploy:
+    name: Deploy to Dev
+    needs: image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout platform-infra
+        uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PLATFORM_DEPLOY_TOKEN }}
           repository: MaFauser/platform-infra
-          event-type: deploy-dev
-          client-payload: '{"image_tag": "${{ steps.resolve.outputs.src_tag }}", "image_repo": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"}'
+          token: ${{ secrets.PLATFORM_DEPLOY_TOKEN }}
+
+      - name: Set up kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG_DEV }}
+          kubeconfig-encoding: base64
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Deploy
+        run: |
+          helm upgrade --install dev ./helm/stack \
+            -f ./helm/stack/config/images.yaml \
+            -f ./helm/stack/dev.yaml \
+            --set application.image.repository="${{ needs.image.outputs.image_repo }}" \
+            --set application.image.tag="${{ needs.image.outputs.src_tag }}" \
+            --namespace development \
+            --create-namespace \
+            --timeout 10m \
+            --wait
+
+      - name: Verify deployment
+        run: |
+          kubectl rollout status deployment/dev-stack-app --namespace development --timeout=120s
+          echo "Deployment rolled out successfully"
