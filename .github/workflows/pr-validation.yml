@@ -75,33 +75,9 @@ jobs:
           path: build/reports/jacoco/test/html/
           retention-days: 7
 
-  helm:
-
-    name: Helm
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Helm
-        uses: azure/setup-helm@v4
-
-      - name: Lint and validate
-        run: |
-          helm lint ./infra/helm/stack
-          helm lint ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/local.yaml
-          helm lint ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/dev.yaml
-          helm lint ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/prod.yaml
-          helm template test ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/local.yaml > /dev/null
-          helm template test ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/dev.yaml > /dev/null
-          helm template test ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/prod.yaml > /dev/null
-
   push:
     name: Push Image
-    needs: [build, helm]
+    needs: [build]
     if: needs.build.outputs.hit != 'true'
     runs-on: ubuntu-latest
     permissions:

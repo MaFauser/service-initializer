@@ -1,4 +1,4 @@
-name: Release to Production
+name: Release Image
 
 on:
   release:
@@ -8,7 +8,8 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  promote-and-deploy:
+  promote:
+    name: Tag Release Image
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -18,7 +19,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set image name (lowercase for OCI spec)
+      - name: Set image name
         run: echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Get version from tag
@@ -26,23 +27,21 @@ jobs:
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
 
       - name: Compute source content hash
         id: srchash
         run: |
           SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts', 'settings.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}"
           echo "src_tag=${SRC_TAG}" >> $GITHUB_OUTPUT
-          echo "Source tag: ${SRC_TAG}"
 
-      - name: Log in to GitHub Container Registry
+      - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Retag image for production
+      - name: Retag image for release
         run: |
           IMAGE="${REGISTRY}/${IMAGE_NAME}"
           SRC_TAG="${{ steps.srchash.outputs.src_tag }}"
@@ -57,53 +56,9 @@ jobs:
             -t "${IMAGE}:latest" \
             "${IMAGE}:${SRC_TAG}"
 
-      - name: Deploy to Production Cluster
-        uses: azure/k8s-set-context@v4
-        with:
-          method: kubeconfig
-          kubeconfig: ${{ secrets.KUBECONFIG_PROD }}
-          kubeconfig-encoding: base64
-
-      - name: Install Helm
-        uses: azure/setup-helm@v4
-
-      - name: Ensure namespace exists
+      - name: Release Summary
         run: |
-          kubectl create namespace production --dry-run=client -o yaml | kubectl apply -f -
-
-      - name: Deploy with Helm
-        run: |
-          for i in 1 2 3; do
-            echo "Helm deploy attempt $i/3..."
-            if helm upgrade --install prod ./infra/helm/stack \
-              -f ./infra/helm/stack/config/images.yaml \
-              -f ./infra/helm/stack/prod.yaml \
-              --set application.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-              --set application.image.tag=${{ steps.version.outputs.version }} \
-              --namespace production \
-              --create-namespace \
-              --timeout 10m \
-              --wait; then
-              echo "Deploy succeeded"
-              break
-            fi
-            if [ $i -lt 3 ]; then
-              echo "Deploy failed, retrying in 60s..."
-              sleep 60
-            else
-              echo "::error::All deploy attempts failed"
-              exit 1
-            fi
-          done
-
-      - name: Verify deployment
-        run: |
-          kubectl rollout status deployment/prod-stack-app --namespace production --timeout=180s
-          echo "Production deployment rolled out successfully"
-
-      - name: Deployment Summary
-        run: |
-          echo "## Promoted to Production" >> $GITHUB_STEP_SUMMARY
+          echo "## Image Released" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** \`${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Source tag:** \`${{ steps.srchash.outputs.src_tag }}\`" >> $GITHUB_STEP_SUMMARY

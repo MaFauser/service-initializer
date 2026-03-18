@@ -1,56 +1,61 @@
 # Service Initializer
 
-Spring Boot + PostgreSQL, Redis, Kafka, GraphQL. Template for adding your own domains.
+Spring Boot + PostgreSQL, Redis, Kafka, GraphQL. Template for building microservices.
+
+## Getting started
+
+After creating a repo from this template, run the interactive setup to configure your project:
+
+```bash
+./setup.sh
+```
+
+This will prompt for your service name, package, database name, and update everything across the codebase. The script removes itself after running.
 
 ## Run locally
 
 ```bash
-make config          # load .env based on default configs from infra/helm locally
-make run             # app on :8081 (needs local Postgres/Redis/Kafka or use K8s)
-make test            # Testcontainers, needs Docker
+docker compose up -d    # start Postgres, Redis, Kafka
+make run                # app on :8081
+make test               # Testcontainers, needs Docker
 ```
 
-## Deploy
+## Services (local dev)
 
-- **Local K8s (Docker Desktop):** `./scripts/k8s-local.sh up` — see [DEPLOYMENT.md](docs/DEPLOYMENT.md)
-- **Dev (remote cluster):** `./scripts/k8s-dev.sh deploy` — port-forward: `./scripts/k8s-dev.sh forward`
-- **Prod:** [SECRETS.md](docs/SECRETS.md) + [DEPLOYMENT.md](docs/DEPLOYMENT.md)
-
-After port-forward:
-
-| Service | URL |
-|---------|-----|
-| GraphiQL | http://localhost:8081/graphiql |
-| Health | http://localhost:8081/actuator/health |
-| Grafana | http://localhost:3000 |
-| Kafka UI | http://localhost:8080 |
-| Prometheus | http://localhost:9090 |
-| OpenSearch Dashboards | http://localhost:5601 |
+| Service    | URL                          |
+|------------|------------------------------|
+| GraphiQL   | http://localhost:8081/graphiql |
+| Health     | http://localhost:8081/actuator/health |
+| pgAdmin    | http://localhost:5050         |
+| Kafka UI   | http://localhost:8080         |
 
 ## Project layout
 
 ```
 src/main/kotlin/.../service/
-├── config/                      # Exception handlers, tracing
+├── config/                      # Web, tracing, rate limiting, GraphQL
 ├── example/                     # Example domain (entity, repo, service, REST, GraphQL)
+├── exception/                   # Global exception handlers
 src/main/resources/
 ├── application.yaml
 ├── application-k8s.yaml
 ├── graphql/example/schema.graphqls
 └── db/migration/                # Flyway
-infra/helm/stack/
-├── config/images.yaml           # Image versions (single source of truth)
-├── local.yaml                   # Local K8s: credentials inline
-├── dev.yaml                     # Dev: credentials from Secrets
-└── prod.yaml                    # Prod: Secrets, HPA, backups
 ```
 
 **Add a domain:** Copy `example` package and `graphql/example`, add Flyway migration. See [DOMAINS.md](docs/DOMAINS.md).
 
+## CI/CD
+
+GitHub Actions workflows build, test, and push container images to GHCR:
+
+- **PR validation** — build + test + coverage + image push
+- **Dev push** — build + push image tagged `dev-latest`
+- **Release** — retag image with version + `latest`
+
+Deployment to Kubernetes is handled by the [platform-infra](../platform-infra) repo.
+
 ## Docs
 
-- [DEPLOYMENT.md](docs/DEPLOYMENT.md) — Helm install (local, dev, prod)
-- [DOCKER.md](docs/DOCKER.md) — Docker Compose local development
 - [DOMAINS.md](docs/DOMAINS.md) — Domain structure and adding new domains
-- [SECRETS.md](docs/SECRETS.md) — Kubernetes secrets for dev/prod
-- [OBSERVABILITY.md](docs/OBSERVABILITY.md) — Logs, metrics, traces (OpenSearch, Prometheus, Tempo)
+- [DOCKER.md](docs/DOCKER.md) — Docker Compose local development
