@@ -5,7 +5,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-HELM_CHART="$PROJECT_ROOT/helm/stack"
+HELM_CHART="$PROJECT_ROOT/infra/helm/stack"
 NAMESPACE="development"
 RELEASE_NAME="dev"
 

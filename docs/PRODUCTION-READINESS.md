@@ -35,7 +35,7 @@ Prod defaults: `prod.yaml` enables backup, autoscaling, and networkPolicy; set `
 ### 1. Secrets
 
 - **PostgreSQL:** Set `postgresql.auth.existingSecret` to the name of a Secret containing `username` and `password` (or custom keys via `usernameKey` / `passwordKey`). The Postgres deployment and backup CronJob use it.
-- **App datasource:** Set `application.datasource.existingSecret` so the app gets `SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD` from that Secret. Can be the same Secret as Postgres.
+- **App datasource:** Set `application.datasource.existingSecret` so the app gets `POSTGRES_USER` and `POSTGRES_PASSWORD` from that Secret. Can be the same Secret as Postgres.
 
 Create the Secret before install:  
 `kubectl create secret generic prod-postgresql-credentials --from-literal=username=service --from-literal=password=<secret> -n production`
@@ -92,4 +92,4 @@ Create the Secret before install:
 
 ## Conclusion
 
-The chart is **production-oriented**: enable Secrets, Ingress, HPA, NetworkPolicy, and Postgres backup in `prod.yaml` (and set `existingSecret` and ingress hosts/tls). For very large scale or HA, use managed databases and message brokers. The [Production Checklist](../DEPLOYMENT.md#production-checklist) in DEPLOYMENT.md is the canonical list.
+The chart is **production-oriented**: enable Secrets, Ingress, HPA, NetworkPolicy, and Postgres backup in `prod.yaml` (and set `existingSecret` and ingress hosts/tls). For very large scale or HA, use managed databases and message brokers. The [Production Checklist](DEPLOYMENT.md#production-checklist) in DEPLOYMENT.md is the canonical list.

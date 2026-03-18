@@ -1,88 +1,32 @@
-# Kubernetes-specific application configuration
-# Use this profile when running the app inside Kubernetes
+# Kubernetes overrides — merged on top of application.yaml.
 # Activate with: spring.profiles.active=k8s
 
 spring:
   output:
     ansi:
-      enabled: never  # Plain text for Fluent Bit → OpenSearch (no escape codes)
-  application:
-    name: service  # Keep in sync with rootProject.name in settings.gradle.kts
+      enabled: never
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://myservice-stack-postgresql:5432/servicedb}
-    username: ${SPRING_DATASOURCE_USERNAME:service}
-    password: ${SPRING_DATASOURCE_PASSWORD:service123}
-    driver-class-name: org.postgresql.Driver
     hikari:
-      # Retire connections before Postgres or K8s network closes them (avoids "connection has been closed" validation failures)
-      max-lifetime: 600000   # 10 minutes
+      max-lifetime: 600000
       connection-timeout: 20000
-      keepalive-time: 30000   # TCP keepalive every 30s so idle connections are not dropped
-
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: false
-    properties:
-      hibernate:
-        '[format_sql]': true
+      keepalive-time: 30000
 
   flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-
-  data:
-    redis:
-      host: ${SPRING_DATA_REDIS_HOST:myservice-stack-redis}
-      port: ${SPRING_DATA_REDIS_PORT:6379}
-
-  cache:
-    type: redis
-    redis:
-      time-to-live: 600000
-
-  kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:myservice-stack-kafka:9092}
-    consumer:
-      group-id: ${spring.application.name}
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    baseline-on-migrate: false
 
   graphql:
     graphiql:
-      enabled: true
-      path: /graphiql
+      enabled: false
 
 management:
-  metrics:
-    tags:
-      application: ${spring.application.name}
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
   prometheus:
     metrics:
       export:
         enabled: true
   tracing:
     sampling:
-      probability: 1.0
-  opentelemetry:
-    tracing:
-      export:
-        otlp:
-          endpoint: http://myservice-stack-tempo:4318/v1/traces
-  otlp:
-    metrics:
-      export:
-        enabled: false
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
 
 server:
-  port: 8081
+  forward-headers-strategy: framework

@@ -6,10 +6,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.MethodOrderer
-import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.graphql.test.tester.GraphQlTester
 import org.springframework.graphql.test.tester.HttpGraphQlTester
@@ -17,7 +14,6 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.servlet.client.MockMvcWebTestClient
 import org.springframework.web.context.WebApplicationContext
 
-@TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 @DisplayName("Example GraphQL API (integration)")
 class ExampleControllerIntegrationTest : BaseIntegrationTest() {
     @Autowired
@@ -37,17 +33,22 @@ class ExampleControllerIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    @Order(1)
     fun `examples query returns a list`() {
+        graphQlTester
+            .document("""mutation { createExample(input: { name: "For List" }) { id } }""")
+            .execute()
+            .path("createExample.id")
+            .entity(String::class.java)
+            .get()
+
         val list =
             graphQlTester
-                .documentName("examples-query")
+                .document("""{ examples(page: 0, size: 10) { id name } }""")
                 .execute()
                 .path("examples")
                 .entityList(ExampleProjection::class.java)
                 .get()
-        assertNotNull(list)
-        // List may be empty or contain data from other tests; we only verify the query works
+        assertTrue(list.isNotEmpty())
     }
 
     @Test
@@ -244,11 +245,9 @@ class ExampleControllerIntegrationTest : BaseIntegrationTest() {
                 val hasRelevantError =
                     errors.any {
                         val msg = it.message ?: ""
-                        val ext = it.extensions?.toString() ?: ""
                         msg.contains("UUID", ignoreCase = true) ||
                             msg.contains("invalid", ignoreCase = true) ||
-                            msg.contains("INTERNAL_ERROR") ||
-                            ext.contains("InvalidIdException")
+                            msg.contains("BAD_REQUEST", ignoreCase = true)
                     }
                 assertTrue(hasRelevantError) { "Expected error for invalid UUID, got: ${errors.map { it.message }}" }
             }
@@ -263,13 +262,32 @@ class ExampleControllerIntegrationTest : BaseIntegrationTest() {
             .errors()
             .satisfy { errors ->
                 assertTrue(errors.isNotEmpty()) { "Expected error for invalid UUID, got: $errors" }
-                // GraphQL may return INTERNAL_ERROR when parseUuid throws
                 val hasError =
                     errors.any {
                         val msg = it.message ?: ""
-                        msg.contains("INTERNAL_ERROR") || msg.contains("UUID", ignoreCase = true)
+                        msg.contains("BAD_REQUEST", ignoreCase = true) ||
+                            msg.contains("UUID", ignoreCase = true)
                     }
-                assertTrue(hasError) { "Expected INTERNAL_ERROR or UUID error, got: ${errors.map { it.message }}" }
+                assertTrue(hasError) { "Expected BAD_REQUEST or UUID error, got: ${errors.map { it.message }}" }
+            }
+    }
+
+    @Test
+    fun `updateExample with non-existent UUID returns NOT_FOUND error`() {
+        graphQlTester
+            .document(
+                """
+                mutation {
+                    updateExample(id: "00000000-0000-0000-0000-000000000000", input: { name: "Ghost" }) {
+                        id
+                    }
+                }
+                """.trimIndent(),
+            ).execute()
+            .errors()
+            .satisfy { errors ->
+                assertTrue(errors.isNotEmpty())
+                assertTrue(errors.any { it.message?.contains("not found", ignoreCase = true) == true })
             }
     }
 
@@ -297,23 +315,16 @@ class ExampleControllerIntegrationTest : BaseIntegrationTest() {
             .errors()
             .satisfy { errors ->
                 assertTrue(errors.isNotEmpty()) { "Expected at least one error for duplicate name, got: $errors" }
-                // Server may return INTERNAL_ERROR or a message containing duplicate/conflict
                 val hasRelevantError =
                     errors.any {
                         val msg = it.message ?: ""
-                        msg.contains("ConflictException") ||
-                            msg.contains("already exists") ||
-                            msg.contains("duplicate", ignoreCase = true) ||
-                            msg.contains("INTERNAL_ERROR")
+                        msg.contains("already exists", ignoreCase = true) ||
+                            msg.contains("CONFLICT", ignoreCase = true)
                     }
                 assertTrue(hasRelevantError) { "Expected error for duplicate name, got: ${errors.map { it.message }}" }
             }
     }
 
-    /**
-     * Minimal projection for GraphQL response (id, name, description, version, createdAt,
-     * updatedAt).
-     */
     data class ExampleProjection(
         val id: String? = null,
         val name: String? = null,

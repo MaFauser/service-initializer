@@ -15,10 +15,14 @@
     </root>
   </springProfile>
 
-  <!-- Local: human-readable pattern with colors in TTY -->
+  <!-- Local: human-readable pattern without the wide empty trace/span correlation block -->
   <springProfile name="!k8s">
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder>
+        <pattern>%clr(%d{HH:mm:ss.SSS}){faint} %clr(%5p) %clr([%10.10t]){faint} %clr(%-24.24logger{0}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}</pattern>
+      </encoder>
+    </appender>
     <root level="INFO">
       <appender-ref ref="CONSOLE"/>
     </root>

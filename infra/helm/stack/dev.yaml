@@ -1,0 +1,153 @@
+# Dev environment: credentials from Secrets, minimal resources (OCI Always Free A1.Flex).
+# helm install dev ./infra/helm/stack -f infra/helm/stack/config/images.yaml -f infra/helm/stack/dev.yaml -n development --create-namespace
+
+postgresql:
+  enabled: true
+  auth:
+    database: servicedb
+    existingSecret: dev-postgresql-credentials
+    usernameKey: username
+    passwordKey: password
+  persistence:
+    enabled: true
+    size: 50Gi
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+  backup:
+    enabled: false
+
+redis:
+  enabled: true
+  persistence:
+    size: 50Gi
+  resources:
+    requests:
+      memory: "32Mi"
+      cpu: "25m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"
+
+kafka:
+  enabled: true
+  persistence:
+    size: 50Gi
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+kafkaUi:
+  enabled: true
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+
+grafana:
+  enabled: true
+  auth:
+    existingSecret: dev-grafana-credentials
+    adminUserKey: adminUser
+    adminPasswordKey: adminPassword
+  persistence:
+    size: 50Gi
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+
+tempo:
+  enabled: true
+  persistence:
+    size: 50Gi
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+
+opensearch:
+  enabled: true
+  disableSecurity: true
+  persistence:
+    size: 50Gi
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+
+opensearchDashboards:
+  enabled: true
+  indexPattern: "kubernetes-logs-*"
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+
+fluentBit:
+  enabled: true
+
+prometheus:
+  enabled: true
+  persistence:
+    size: 50Gi
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+
+application:
+  enabled: true
+  otelServiceName: service
+  imagePullSecrets:
+    - name: ghcr-registry
+  image:
+    pullPolicy: Always
+  replicas: 1
+  datasource:
+    existingSecret: dev-postgresql-credentials
+    usernameKey: username
+    passwordKey: password
+  service:
+    port: 8081
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  autoscaling:
+    enabled: false
+
+ingress:
+  enabled: false
+
+networkPolicy:
+  enabled: false

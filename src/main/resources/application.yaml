@@ -1,17 +1,21 @@
 spring:
+  mvc:
+    problemdetails:
+      enabled: true
   output:
     ansi:
-      enabled: detect  # Colors in TTY (local), plain text in containers (clean logs for OpenSearch)
+      enabled: detect
   application:
     name: service
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/servicedb}
-    username: ${SPRING_DATASOURCE_USERNAME:service}
-    password: ${SPRING_DATASOURCE_PASSWORD:service123}
+    url: ${POSTGRES_URL}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: validate
     show-sql: false
@@ -26,8 +30,11 @@ spring:
 
   data:
     redis:
-      host: ${SPRING_DATA_REDIS_HOST:localhost}
-      port: ${SPRING_DATA_REDIS_PORT:6379}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+    web:
+      pageable:
+        max-page-size: 100
 
   cache:
     type: redis
@@ -40,7 +47,7 @@ spring:
       path: /graphiql
 
   kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       group-id: ${spring.application.name}
       auto-offset-reset: earliest
@@ -52,9 +59,11 @@ spring:
 
 logging:
   level:
-    '[com.mafauser.service]': INFO
+    '[com.mafauser.service]': DEBUG
 
 management:
+  server:
+    port: 8082
   metrics:
     tags:
       application: ${spring.application.name}
@@ -72,7 +81,7 @@ management:
     tracing:
       export:
         otlp:
-          endpoint: http://localhost:4318/v1/traces
+          endpoint: ${OTLP_TRACES_ENDPOINT}
   otlp:
     metrics:
       export:
@@ -80,3 +89,7 @@ management:
 
 server:
   port: 8081
+
+rate-limit:
+  enabled: true
+  requests-per-minute: 60

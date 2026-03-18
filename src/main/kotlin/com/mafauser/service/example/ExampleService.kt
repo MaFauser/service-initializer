@@ -1,23 +1,19 @@
 package com.mafauser.service.example
 
-import com.mafauser.service.config.ConflictException
-import com.mafauser.service.config.NotFoundException
-import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.Size
+import com.mafauser.service.exception.ConflictException
+import com.mafauser.service.exception.NotFoundException
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
-/**
- * Application service for the Example domain. Holds business logic and coordinates
- * [ExampleRepository]. Use constructor injection.
- */
 @Service
 class ExampleService(
     private val exampleRepository: ExampleRepository,
 ) {
     @Transactional(readOnly = true)
-    fun findAll(): List<Example> = exampleRepository.findAll()
+    fun findAll(pageable: Pageable): Page<Example> = exampleRepository.findAll(pageable)
 
     @Transactional(readOnly = true)
     fun findById(id: UUID): Example? = exampleRepository.findById(id).orElse(null)
@@ -47,7 +43,7 @@ class ExampleService(
             }
             example.name = name
         }
-        input.description?.let { example.description = it }
+        input.description?.let { example.description = it.ifBlank { null } }
         return exampleRepository.save(example)
     }
 
@@ -60,15 +56,3 @@ class ExampleService(
             false
         }
 }
-
-/** Input for creating a new [Example]. */
-data class CreateExampleInput(
-    @field:NotBlank @field:Size(max = 255) val name: String,
-    @field:Size(max = 1024) val description: String? = null,
-)
-
-/** Input for updating an existing [Example]. Only non-null fields are applied. */
-data class UpdateExampleInput(
-    @field:Size(max = 255) val name: String? = null,
-    @field:Size(max = 1024) val description: String? = null,
-)

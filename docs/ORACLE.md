@@ -118,7 +118,7 @@ So **yes**: you access everything locally via port-forward; there are no public 
   ```bash
   kubectl port-forward -n development svc/dev-stack-postgresql 5432:5432
   ```
-  Then connect with DBeaver, psql, or any client to `localhost:5432` (user/password from `helm/stack/config/images.yaml`).
+  Then connect with DBeaver, psql, or any client to `localhost:5432` (user/password from `infra/helm/stack/config/images.yaml`).
 - **Option B:** Add pgAdmin (or another DB UI) to the Helm stack and port-forward it; then you get a web UI like locally with Docker Compose.
 
 **If you wanted “RDS-style”:** You’d use OCI managed database services (e.g. Oracle MySQL Database Service or Oracle Autonomous Database) and use the OCI Console for the DB. This repo’s stack keeps **everything in Kubernetes** (Postgres, Redis, Kafka as pods), so you get UIs by port-forwarding, not from a cloud console.
@@ -207,7 +207,7 @@ If your cluster has **only** a private API endpoint (no public):
 | `Invalid value for --token-version` | Use `2.0.0` not `2.0` |
 | CI: `couldn't get version/kind` | Use ServiceAccount kubeconfig (Part 2), not OCI exec kubeconfig. Ensure `KUBECONFIG_DEV` contains base64-encoded kubeconfig and workflow uses `kubeconfig-encoding: base64`. |
 | CI: App pod stuck "0/1 ready" | Often **ErrImagePull** / **ImagePullBackOff**: ghcr.io package is private. **Option A**: Make package public: GitHub → Your profile → Packages → service-initializer → Package settings → Change visibility. **Option B**: Create `imagePullSecrets` (see [GHCR image pull](#ghcr-image-pull) below). |
-| `ImageInspectError` / "short name mode is enforcing" | OKE/CRI-O requires fully qualified image names. Use `docker.io/...` prefixes (already set in `helm/stack/values.yaml`). |
+| `ImageInspectError` / "short name mode is enforcing" | OKE/CRI-O requires fully qualified image names. Use `docker.io/...` prefixes (already set in `infra/helm/stack/values.yaml`). |
 
 ### GHCR image pull
 

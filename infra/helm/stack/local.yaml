@@ -1,0 +1,144 @@
+# Local environment: credentials inline (no Secrets).
+# helm install dev ./infra/helm/stack -f infra/helm/stack/config/images.yaml -f infra/helm/stack/local.yaml -n development --create-namespace
+
+postgresql:
+  enabled: true
+  auth:
+    database: servicedb
+    username: service
+    password: service123
+  persistence:
+    enabled: true
+    size: 5Gi
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  backup:
+    enabled: false
+
+redis:
+  enabled: true
+  persistence:
+    size: 5Gi
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+kafka:
+  enabled: true
+  persistence:
+    size: 20Gi
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+
+kafkaUi:
+  enabled: true
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+grafana:
+  enabled: true
+  auth:
+    adminUser: admin
+    adminPassword: admin
+  persistence:
+    size: 5Gi
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+tempo:
+  enabled: true
+  persistence:
+    size: 10Gi
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+opensearch:
+  enabled: true
+  disableSecurity: true
+  persistence:
+    size: 10Gi
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+
+opensearchDashboards:
+  enabled: true
+  indexPattern: "kubernetes-logs-*"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+fluentBit:
+  enabled: true
+
+prometheus:
+  enabled: true
+  persistence:
+    size: 10Gi
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+
+application:
+  enabled: true
+  otelServiceName: service
+  replicas: 1
+  service:
+    port: 8081
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+  autoscaling:
+    enabled: false
+  # No datasource.existingSecret: app uses postgresql.auth.username/password from values
+
+ingress:
+  enabled: false
+
+networkPolicy:
+  enabled: false

@@ -6,14 +6,12 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-  HELM_VERSION: "v3.14.2"
 
 jobs:
   promote-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       packages: write
 
     steps:
@@ -30,6 +28,13 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
 
+      - name: Compute source content hash
+        id: srchash
+        run: |
+          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts', 'settings.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}"
+          echo "src_tag=${SRC_TAG}" >> $GITHUB_OUTPUT
+          echo "Source tag: ${SRC_TAG}"
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -37,40 +42,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get commit SHA
-        id: commit
-        run: |
-          COMMIT_SHA=$(git rev-parse HEAD)
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          echo "sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
-          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
-          echo "Commit SHA: $COMMIT_SHA"
-
-      - name: Pull dev image (from merged commit)
-        run: |
-          # Try to pull the image built from this commit when it was on dev
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ steps.commit.outputs.sha }} || \
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-latest
-
       - name: Retag image for production
         run: |
-          # Retag the dev image as the version and latest
-          SOURCE_TAG=dev-${{ steps.commit.outputs.sha }}
+          IMAGE="${REGISTRY}/${IMAGE_NAME}"
+          SRC_TAG="${{ steps.srchash.outputs.src_tag }}"
 
-          # If exact sha image doesn't exist, use dev-latest
-          if ! docker image inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$SOURCE_TAG >/dev/null 2>&1; then
-            SOURCE_TAG=dev-latest
+          if ! docker manifest inspect "${IMAGE}:${SRC_TAG}" > /dev/null 2>&1; then
+            echo "::error::Image ${IMAGE}:${SRC_TAG} not found. Ensure the PR was merged and the image was built."
+            exit 1
           fi
 
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$SOURCE_TAG \
-                     ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$SOURCE_TAG \
-                     ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
-      - name: Push production tags
-        run: |
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker buildx imagetools create \
+            -t "${IMAGE}:${{ steps.version.outputs.version }}" \
+            -t "${IMAGE}:latest" \
+            "${IMAGE}:${SRC_TAG}"
 
       - name: Deploy to Production Cluster
         uses: azure/k8s-set-context@v4
@@ -80,24 +65,19 @@ jobs:
           kubeconfig-encoding: base64
 
       - name: Install Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: ${{ env.HELM_VERSION }}
+        uses: azure/setup-helm@v4
 
       - name: Ensure namespace exists
         run: |
           kubectl create namespace production --dry-run=client -o yaml | kubectl apply -f -
 
-      # Image pull secret and prod Postgres/Grafana credentials must already exist
-      # in the cluster (e.g. from External Secrets / key manager). The workflow does not inject passwords.
-
       - name: Deploy with Helm
         run: |
           for i in 1 2 3; do
             echo "Helm deploy attempt $i/3..."
-            if helm upgrade --install prod ./helm/stack \
-              -f ./helm/stack/config/images.yaml \
-              -f ./helm/stack/prod.yaml \
+            if helm upgrade --install prod ./infra/helm/stack \
+              -f ./infra/helm/stack/config/images.yaml \
+              -f ./infra/helm/stack/prod.yaml \
               --set application.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
               --set application.image.tag=${{ steps.version.outputs.version }} \
               --namespace production \
@@ -105,22 +85,26 @@ jobs:
               --timeout 10m \
               --wait; then
               echo "Deploy succeeded"
-              exit 0
+              break
             fi
             if [ $i -lt 3 ]; then
-              echo "Deploy failed, retrying in 60s (often due to API rate limiting)..."
+              echo "Deploy failed, retrying in 60s..."
               sleep 60
+            else
+              echo "::error::All deploy attempts failed"
+              exit 1
             fi
           done
-          exit 1
+
+      - name: Verify deployment
+        run: |
+          kubectl rollout status deployment/prod-stack-app --namespace production --timeout=180s
+          echo "Production deployment rolled out successfully"
 
       - name: Deployment Summary
         run: |
-          echo "## 🚀 Promoted to Production" >> $GITHUB_STEP_SUMMARY
+          echo "## Promoted to Production" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** \`${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Promoted from:** \`dev-${{ steps.commit.outputs.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Source tag:** \`${{ steps.srchash.outputs.src_tag }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** \`${{ steps.commit.outputs.short_sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ **Same artifact tested in dev is now in production**" >> $GITHUB_STEP_SUMMARY

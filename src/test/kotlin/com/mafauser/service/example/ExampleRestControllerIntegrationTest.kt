@@ -1,7 +1,5 @@
 package com.mafauser.service.example
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.mafauser.service.BaseIntegrationTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -9,14 +7,16 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
-import org.springframework.test.json.JsonCompareMode
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import tools.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.readValue
 import java.util.UUID
 
 @DisplayName("Example REST API (integration)")
@@ -27,11 +27,21 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = jacksonObjectMapper()
 
     @Test
-    fun `GET examples returns 200 and list`() {
+    fun `GET examples returns 200 and paginated list`() {
+        mockMvc
+            .perform(
+                post("/examples")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"name":"For List"}"""),
+            ).andExpect(status().isCreated)
+
         mockMvc
             .perform(get("/examples"))
             .andExpect(status().isOk)
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.content").isArray)
+            .andExpect(jsonPath("$.content").isNotEmpty)
+            .andExpect(jsonPath("$.page.totalElements").value(1))
     }
 
     @Test
@@ -64,12 +74,13 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
                 ).andExpect(status().isCreated)
                 .andReturn()
         val created: ExampleResponse = objectMapper.readValue<ExampleResponse>(createResult.response.contentAsString)
-        val id = created.id!!
+        val id = created.id
 
         mockMvc
             .perform(get("/examples/$id"))
             .andExpect(status().isOk)
-            .andExpect(content().json("""{"id":"$id","name":"For Get By Id"}""", JsonCompareMode.LENIENT))
+            .andExpect(jsonPath("$.id").value(id.toString()))
+            .andExpect(jsonPath("$.name").value("For Get By Id"))
     }
 
     @Test
@@ -78,6 +89,7 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
         mockMvc
             .perform(get("/examples/$id"))
             .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.title").value("Not Found"))
     }
 
     @Test
@@ -92,7 +104,7 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
                 ).andExpect(status().isCreated)
                 .andReturn()
         val created: ExampleResponse = objectMapper.readValue<ExampleResponse>(createResult.response.contentAsString)
-        val id = created.id!!
+        val id = created.id
 
         val updateBody = """{"name":"Updated REST","description":"Updated desc"}"""
         mockMvc
@@ -101,19 +113,13 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(updateBody),
             ).andExpect(status().isOk)
-            .andExpect(
-                content().json(
-                    """{"name":"Updated REST","description":"Updated desc"}""",
-                    JsonCompareMode.LENIENT,
-                ),
-            )
+            .andExpect(jsonPath("$.name").value("Updated REST"))
+            .andExpect(jsonPath("$.description").value("Updated desc"))
 
         mockMvc
             .perform(get("/examples/$id"))
             .andExpect(status().isOk)
-            .andExpect(
-                content().json("""{"name":"Updated REST"}""", JsonCompareMode.LENIENT),
-            )
+            .andExpect(jsonPath("$.name").value("Updated REST"))
     }
 
     @Test
@@ -140,7 +146,7 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
                 ).andExpect(status().isCreated)
                 .andReturn()
         val created: ExampleResponse = objectMapper.readValue<ExampleResponse>(createResult.response.contentAsString)
-        val id = created.id!!
+        val id = created.id
 
         mockMvc
             .perform(delete("/examples/$id"))
@@ -167,6 +173,45 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"name":"","description":"Test"}"""),
             ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.title").value("Bad Request"))
+    }
+
+    @Test
+    fun `POST examples with missing name returns 400`() {
+        mockMvc
+            .perform(
+                post("/examples")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{}"""),
+            ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.title").value("Bad Request"))
+    }
+
+    @Test
+    fun `GET examples with invalid UUID returns 400`() {
+        mockMvc
+            .perform(get("/examples/not-a-uuid"))
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.title").value("Bad Request"))
+    }
+
+    @Test
+    fun `PUT examples with invalid UUID returns 400`() {
+        mockMvc
+            .perform(
+                put("/examples/not-a-uuid")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"name":"Any"}"""),
+            ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.title").value("Bad Request"))
+    }
+
+    @Test
+    fun `DELETE examples with invalid UUID returns 400`() {
+        mockMvc
+            .perform(delete("/examples/not-a-uuid"))
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.title").value("Bad Request"))
     }
 
     @Test
@@ -185,10 +230,34 @@ class ExampleRestControllerIntegrationTest : BaseIntegrationTest() {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body),
             ).andExpect(status().isConflict)
+            .andExpect(jsonPath("$.title").value("Conflict"))
+    }
+
+    @Test
+    fun `PUT with empty description clears the description`() {
+        val createBody = """{"name":"Clear Desc Test","description":"Has description"}"""
+        val createResult =
+            mockMvc
+                .perform(
+                    post("/examples")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createBody),
+                ).andExpect(status().isCreated)
+                .andReturn()
+        val created: ExampleResponse = objectMapper.readValue<ExampleResponse>(createResult.response.contentAsString)
+        val id = created.id
+
+        mockMvc
+            .perform(
+                put("/examples/$id")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"description":""}"""),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.description").doesNotExist())
     }
 
     private data class ExampleResponse(
-        val id: String? = null,
+        val id: UUID? = null,
         val name: String? = null,
         val description: String? = null,
         val version: Long? = null,

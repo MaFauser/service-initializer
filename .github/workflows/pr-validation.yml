@@ -43,7 +43,7 @@ jobs:
         id: cache
         run: |
           IMAGE="${REGISTRY}/${IMAGE_NAME}"
-          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts') }}"
+          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts', 'settings.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}"
           echo "src_tag=${SRC_TAG}" >> $GITHUB_OUTPUT
           if docker manifest inspect "${IMAGE}:${SRC_TAG}" > /dev/null 2>&1; then
             echo "hit=true" >> $GITHUB_OUTPUT
@@ -76,6 +76,7 @@ jobs:
           retention-days: 7
 
   helm:
+
     name: Helm
     runs-on: ubuntu-latest
     permissions:
@@ -86,17 +87,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Helm
-        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        uses: azure/setup-helm@v4
 
       - name: Lint and validate
         run: |
-          helm lint ./helm/stack
-          helm lint ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/local.yaml
-          helm lint ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/dev.yaml
-          helm lint ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/prod.yaml
-          helm template test ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/local.yaml > /dev/null
-          helm template test ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/dev.yaml > /dev/null
-          helm template test ./helm/stack -f ./helm/stack/config/images.yaml -f ./helm/stack/prod.yaml > /dev/null
+          helm lint ./infra/helm/stack
+          helm lint ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/local.yaml
+          helm lint ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/dev.yaml
+          helm lint ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/prod.yaml
+          helm template test ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/local.yaml > /dev/null
+          helm template test ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/dev.yaml > /dev/null
+          helm template test ./infra/helm/stack -f ./infra/helm/stack/config/images.yaml -f ./infra/helm/stack/prod.yaml > /dev/null
 
   push:
     name: Push Image

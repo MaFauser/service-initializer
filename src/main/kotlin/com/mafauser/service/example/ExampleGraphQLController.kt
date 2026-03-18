@@ -1,60 +1,63 @@
 package com.mafauser.service.example
 
-import com.mafauser.service.config.InvalidIdException
-import org.slf4j.LoggerFactory
+import com.mafauser.service.exception.InvalidIdException
+import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.validation.Valid
+import org.springframework.data.domain.PageRequest
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
 import org.springframework.stereotype.Controller
+import org.springframework.validation.annotation.Validated
 import java.util.UUID
 
-/**
- * GraphQL controller for the Example domain. Exposes queries and mutations for [Example] via
- * [graphql/example/schema.graphqls]. ID arguments are accepted as String (GraphQL ID) and parsed to
- * UUID for a clear error when invalid.
- */
 @Controller
+@Validated
 class ExampleGraphQLController(
     private val exampleService: ExampleService,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val log = KotlinLogging.logger {}
 
     @QueryMapping
-    fun examples(): List<Example> {
-        log.info("GraphQL query: examples")
-        return exampleService.findAll()
+    fun examples(
+        @Argument page: Int?,
+        @Argument size: Int?,
+    ): List<ExampleResponse> {
+        log.debug { "GraphQL query: examples page=$page size=$size" }
+        val pageable = PageRequest.of(page ?: 0, (size ?: 20).coerceIn(1, 100))
+        return exampleService.findAll(pageable).content.map { it.toResponse() }
     }
 
     @QueryMapping
     fun example(
         @Argument id: String,
-    ): Example? {
-        log.info("GraphQL query: example id={}", id)
-        return parseUuidOrNull(id)?.let { exampleService.findById(it) }
+    ): ExampleResponse? {
+        log.debug { "GraphQL query: example id=$id" }
+        return parseUuidOrNull(id)?.let { exampleService.findById(it)?.toResponse() }
     }
 
     @MutationMapping
     fun createExample(
-        @Argument input: CreateExampleInput,
-    ): Example {
-        log.info("GraphQL mutation: createExample name={}", input.name)
-        return exampleService.create(input)
+        @Argument @Valid input: CreateExampleInput,
+    ): ExampleResponse {
+        log.debug { "GraphQL mutation: createExample name=${input.name}" }
+        return exampleService.create(input).toResponse()
     }
 
     @MutationMapping
     fun updateExample(
         @Argument id: String,
-        @Argument input: UpdateExampleInput,
-    ): Example {
-        log.info("GraphQL mutation: updateExample id={}", id)
-        return exampleService.update(parseUuid(id, "updateExample"), input)
+        @Argument @Valid input: UpdateExampleInput,
+    ): ExampleResponse {
+        log.debug { "GraphQL mutation: updateExample id=$id" }
+        return exampleService.update(parseUuid(id, "updateExample"), input).toResponse()
     }
 
     @MutationMapping
     fun deleteExample(
         @Argument id: String,
     ): Boolean {
-        log.info("GraphQL mutation: deleteExample id={}", id)
+        log.debug { "GraphQL mutation: deleteExample id=$id" }
         return exampleService.delete(parseUuid(id, "deleteExample"))
     }
 

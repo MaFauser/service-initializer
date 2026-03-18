@@ -1,4 +1,7 @@
-.PHONY: config build run run-debug test check clean lint format coverage deps bootjar
+.PHONY: config build run run-debug test check clean lint format coverage deps bootjar api
+
+-include .env
+export
 
 config:
 	./scripts/load-config.sh
@@ -36,3 +39,6 @@ deps:
 
 bootjar:
 	./gradlew bootJar -x test
+
+api:
+	./scripts/api-test.sh

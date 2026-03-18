@@ -7,11 +7,10 @@ on:
 
 concurrency:
   group: deploy-dev
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   image:
@@ -27,6 +26,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set image name
+        run: echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -37,8 +39,8 @@ jobs:
       - name: Resolve image tag
         id: resolve
         run: |
-          IMAGE="${REGISTRY}/${IMAGE_NAME,,}"
-          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts') }}"
+          IMAGE="${REGISTRY}/${IMAGE_NAME}"
+          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts', 'settings.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}"
           echo "src_tag=${SRC_TAG}" >> $GITHUB_OUTPUT
           if docker manifest inspect "${IMAGE}:${SRC_TAG}" > /dev/null 2>&1; then
             echo "found=true" >> $GITHUB_OUTPUT
@@ -52,18 +54,21 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
-          cache: "gradle"
+
+      - name: Set up Gradle
+        if: steps.resolve.outputs.found != 'true'
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Build and push image
         if: steps.resolve.outputs.found != 'true'
         run: |
-          IMAGE="${REGISTRY}/${IMAGE_NAME,,}"
-          ./gradlew bootBuildImage --imageName="${IMAGE}:${{ steps.resolve.outputs.src_tag }}" -x test
+          IMAGE="${REGISTRY}/${IMAGE_NAME}"
+          ./gradlew bootBuildImage --imageName="${IMAGE}:${{ steps.resolve.outputs.src_tag }}" -x test --build-cache
           docker push "${IMAGE}:${{ steps.resolve.outputs.src_tag }}"
 
       - name: Tag as dev-latest
         run: |
-          IMAGE="${REGISTRY}/${IMAGE_NAME,,}"
+          IMAGE="${REGISTRY}/${IMAGE_NAME}"
           docker buildx imagetools create -t "${IMAGE}:dev-latest" "${IMAGE}:${{ steps.resolve.outputs.src_tag }}"
 
   deploy:
@@ -84,17 +89,25 @@ jobs:
           kubeconfig: ${{ secrets.KUBECONFIG_DEV }}
           kubeconfig-encoding: base64
 
-      - uses: azure/setup-helm@v3
-        with:
-          version: v3.14.2
+      - name: Set image name
+        run: echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - uses: azure/setup-helm@v4
 
       - name: Deploy
         run: |
-          IMAGE_REPO="${REGISTRY}/${IMAGE_NAME,,}"
-          helm upgrade --install dev ./helm/stack \
-            -f ./helm/stack/config/images.yaml \
-            -f ./helm/stack/dev.yaml \
+          IMAGE_REPO="${REGISTRY}/${IMAGE_NAME}"
+          helm upgrade --install dev ./infra/helm/stack \
+            -f ./infra/helm/stack/config/images.yaml \
+            -f ./infra/helm/stack/dev.yaml \
             --set application.image.repository="${IMAGE_REPO}" \
             --set application.image.tag=${{ needs.image.outputs.src_tag }} \
             --namespace development \
-            --create-namespace
+            --create-namespace \
+            --timeout 10m \
+            --wait
+
+      - name: Verify deployment
+        run: |
+          kubectl rollout status deployment/dev-stack-app --namespace development --timeout=120s
+          echo "Deployment rolled out successfully"

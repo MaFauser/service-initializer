@@ -6,6 +6,7 @@ plugins {
     id("org.springframework.boot") version "4.1.0-SNAPSHOT"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
+    id("co.uzzu.dotenv.gradle") version "4.0.0"
     jacoco
 }
 
@@ -41,8 +42,12 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("tools.jackson.module:jackson-module-kotlin")
+    implementation("com.bucket4j:bucket4j_jdk17-core:8.16.1")
+    implementation("com.github.ben-manes.caffeine:caffeine")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
     runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly("io.netty:netty-resolver-dns-native-macos::osx-aarch_64")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-actuator-test")
     testImplementation("org.springframework.boot:spring-boot-starter-cache-test")
@@ -56,7 +61,6 @@ dependencies {
     testImplementation("org.springframework:spring-webflux")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     testImplementation("org.mockito.kotlin:mockito-kotlin:6.2.3")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("org.testcontainers:testcontainers-kafka")
@@ -81,6 +85,8 @@ allOpen {
 // already injected jdwp via JAVA_TOOL_OPTIONS (avoid "Cannot load JVM TI agent twice").
 // Use -PdebugPort=5006 if 5005 is in use.
 tasks.bootRun {
+    environment(env.allVariables())
+
     val javaToolOptions = System.getenv("JAVA_TOOL_OPTIONS") ?: ""
     val extensionProvidesDebug = javaToolOptions.contains("jdwp")
     val enableDebug = project.findProperty("debug") == "true" && !extensionProvidesDebug
@@ -113,6 +119,7 @@ tasks.test {
         events("passed", "skipped", "failed")
         showExceptions = true
         showStackTraces = true
+        showCauses = true
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
         displayGranularity = 0
     }
@@ -142,7 +149,7 @@ tasks.jacocoTestReport {
     )
 }
 
-// JaCoCo: coverage verification (90% line minimum). Run explicitly or from CI job; not part of build/check.
+// JaCoCo: coverage verification. Run explicitly or from CI job; not part of build/check.
 tasks.jacocoTestCoverageVerification {
     dependsOn(tasks.jacocoTestReport)
     classDirectories.setFrom(
@@ -153,9 +160,14 @@ tasks.jacocoTestCoverageVerification {
     violationRules {
         rule {
             limit {
-                counter = "LINE"
+                counter = "INSTRUCTION"
                 value = "COVEREDRATIO"
-                minimum = "0.90".toBigDecimal()
+                minimum = "0.95".toBigDecimal()
+            }
+            limit {
+                counter = "BRANCH"
+                value = "COVEREDRATIO"
+                minimum = "0.95".toBigDecimal()
             }
         }
     }

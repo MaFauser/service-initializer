@@ -8,7 +8,7 @@
       "projectRoot": "${workspaceFolder}",
       "hostName": "localhost",
       "port": 5005,
-      "timeout": 2000,
+      "timeout": 5000,
       "preLaunchTask": "bootRun (debug)"
     }
   ]

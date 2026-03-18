@@ -1,0 +1,162 @@
+# Prod environment: credentials from Secrets, HPA, backups.
+# helm install prod ./infra/helm/stack -f infra/helm/stack/config/images.yaml -f infra/helm/stack/prod.yaml -n production --create-namespace
+
+postgresql:
+  enabled: true
+  auth:
+    database: servicedb
+    existingSecret: prod-postgresql-credentials
+    usernameKey: username
+    passwordKey: password
+  persistence:
+    enabled: true
+    size: 50Gi
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"
+    pvc:
+      size: 10Gi
+
+redis:
+  enabled: true
+  persistence:
+    size: 20Gi
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+kafka:
+  enabled: true
+  persistence:
+    size: 100Gi
+  config:
+    replicationFactor: 3
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "1000m"
+    limits:
+      memory: "4Gi"
+      cpu: "4000m"
+
+kafkaUi:
+  enabled: false
+
+grafana:
+  enabled: true
+  auth:
+    existingSecret: prod-grafana-credentials
+    adminUserKey: adminUser
+    adminPasswordKey: adminPassword
+  persistence:
+    size: 20Gi
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+
+tempo:
+  enabled: true
+  persistence:
+    size: 50Gi
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
+
+opensearch:
+  enabled: true
+  disableSecurity: false
+  persistence:
+    size: 50Gi
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "1000m"
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
+
+opensearchDashboards:
+  enabled: true
+  indexPattern: "kubernetes-logs-*"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+fluentBit:
+  enabled: true
+
+prometheus:
+  enabled: true
+  persistence:
+    size: 50Gi
+  scrapeInterval: 30s
+  evaluationInterval: 30s
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
+
+application:
+  enabled: true
+  otelServiceName: service
+  imagePullSecrets:
+    - name: ghcr-registry
+  image:
+    pullPolicy: IfNotPresent  # prod uses versioned tags (e.g. v1.2.0)
+  replicas: 3
+  datasource:
+    existingSecret: prod-postgresql-credentials
+    usernameKey: username
+    passwordKey: password
+  service:
+    port: 8081
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "1000m"
+    limits:
+      memory: "4Gi"
+      cpu: "4000m"
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+ingress:
+  enabled: false
+  className: nginx
+  hosts:
+    - host: app.example.com
+      path: /
+      pathType: Prefix
+  tls: []
+
+networkPolicy:
+  enabled: true
