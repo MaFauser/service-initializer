@@ -18,13 +18,14 @@ class WebConfiguration {
         val config =
             CorsConfiguration().apply {
                 allowedOriginPatterns = listOf("*")
-                allowedMethods = listOf(
-                    HttpMethod.GET,
-                    HttpMethod.POST,
-                    HttpMethod.PUT,
-                    HttpMethod.DELETE,
-                    HttpMethod.OPTIONS,
-                ).map { it.name() }
+                allowedMethods =
+                    listOf(
+                        HttpMethod.GET,
+                        HttpMethod.POST,
+                        HttpMethod.PUT,
+                        HttpMethod.DELETE,
+                        HttpMethod.OPTIONS,
+                    ).map { it.name() }
                 allowedHeaders = listOf("*")
                 allowCredentials = true
                 maxAge = 3600
