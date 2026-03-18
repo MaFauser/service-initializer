@@ -138,18 +138,21 @@ replace_in_files() {
   local old="$1" new="$2"
   if [ "$old" = "$new" ]; then return; fi
 
+  local sed_old
+  sed_old=$(printf '%s' "$old" | sed 's/[.[\*^$()|]/\\&/g')
+
   if command -v rg &>/dev/null; then
-    rg -l --no-messages "$old" --type-add 'cfg:*.{kt,kts,yaml,yml,xml,json,properties,env,graphqls,sh,md,sql}' -t cfg . 2>/dev/null | while read -r file; do
+    rg -l --no-messages --fixed-strings "$old" --type-add 'cfg:*.{kt,kts,yaml,yml,xml,json,properties,env,graphqls,sh,md,sql}' -t cfg . 2>/dev/null | while read -r file; do
       if [[ "$file" == *"setup.sh" ]]; then continue; fi
       if [[ "$file" == *".git/"* ]]; then continue; fi
-      sed -i '' "s|${old}|${new}|g" "$file"
+      sed -i '' "s|${sed_old}|${new}|g" "$file"
     done
   else
     find . -type f \( -name '*.kt' -o -name '*.kts' -o -name '*.yaml' -o -name '*.yml' \
       -o -name '*.xml' -o -name '*.json' -o -name '*.properties' -o -name '*.env' \
       -o -name '*.graphqls' -o -name '*.sh' -o -name '*.md' -o -name '*.sql' \) \
       -not -path './.git/*' -not -name 'setup.sh' | while read -r file; do
-      sed -i '' "s|${old}|${new}|g" "$file"
+      sed -i '' "s|${sed_old}|${new}|g" "$file"
     done
   fi
 }
