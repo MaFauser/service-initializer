@@ -1,0 +1,26 @@
+# Test overrides: placeholders for properties that Testcontainers overrides via @ServiceConnection
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/testdb
+    username: test
+    password: test
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  kafka:
+    bootstrap-servers: localhost:9092
+
+logging:
+  level:
+    "[com.mafauser.service]": debug
+
+management:
+  tracing:
+    export:
+      enabled: false
+      otlp:
+        enabled: false
+
+rate-limit:
+  enabled: false

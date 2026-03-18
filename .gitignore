@@ -1,10 +1,12 @@
 # Gradle
 .gradle/
 build/
+bin/
 
 # Kotlin
 *.class
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.log
 *.iml
@@ -21,17 +23,16 @@ spring-boot-devtools.properties
 *.swp
 *.swo
 *~
+kls-classpath
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Local config (secrets, overrides)
-.env
-.env.local
-*.local.yaml
-application-local.yaml
-application-local.yml
+# Local config (secrets)
+.kubeconfig-ci.yaml
+.kubeconfig-dev.b64
+.kubeconfig-prod.b64
 
 # Test / coverage
 coverage/
@@ -41,3 +42,4 @@ test-output/
 # Misc
 *.orig
 *.bak
+.ignore

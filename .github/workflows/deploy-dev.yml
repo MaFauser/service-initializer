@@ -1,0 +1,70 @@
+name: Push Dev Image
+
+on:
+  push:
+    branches:
+      - dev
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  image:
+    name: Build & Push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set image name
+        run: echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve image tag
+        id: resolve
+        run: |
+          IMAGE="${REGISTRY}/${IMAGE_NAME}"
+          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts', 'settings.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}"
+          echo "src_tag=${SRC_TAG}" >> $GITHUB_OUTPUT
+          if docker manifest inspect "${IMAGE}:${SRC_TAG}" > /dev/null 2>&1; then
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up JDK 21
+        if: steps.resolve.outputs.found != 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Set up Gradle
+        if: steps.resolve.outputs.found != 'true'
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build and push image
+        if: steps.resolve.outputs.found != 'true'
+        run: |
+          IMAGE="${REGISTRY}/${IMAGE_NAME}"
+          ./gradlew bootBuildImage --imageName="${IMAGE}:${{ steps.resolve.outputs.src_tag }}" -x test --build-cache
+          docker push "${IMAGE}:${{ steps.resolve.outputs.src_tag }}"
+
+      - name: Tag as dev-latest
+        run: |
+          IMAGE="${REGISTRY}/${IMAGE_NAME}"
+          docker buildx imagetools create -t "${IMAGE}:dev-latest" "${IMAGE}:${{ steps.resolve.outputs.src_tag }}"

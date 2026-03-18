@@ -1,3 +1,95 @@
 spring:
+  mvc:
+    problemdetails:
+      enabled: true
+  output:
+    ansi:
+      enabled: detect
   application:
     name: service
+
+  datasource:
+    url: ${POSTGRES_URL}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        '[format_sql]': true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+    web:
+      pageable:
+        max-page-size: 100
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+
+  graphql:
+    graphiql:
+      enabled: true
+      path: /graphiql
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    consumer:
+      group-id: ${spring.application.name}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+logging:
+  level:
+    '[com.mafauser.service]': DEBUG
+
+management:
+  server:
+    port: 8082
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        '[http.server.requests]': true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  tracing:
+    sampling:
+      probability: 1.0
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTLP_TRACES_ENDPOINT}
+  otlp:
+    metrics:
+      export:
+        enabled: false
+
+server:
+  port: 8081
+
+rate-limit:
+  enabled: true
+  requests-per-minute: 60

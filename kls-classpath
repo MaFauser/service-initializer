@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+# Feeds Gradle's compile classpath to the Kotlin Language Server (fwcd.kotlin) so Cursor/VS Code
+# can resolve Spring and other dependencies. After adding or changing this file, run
+# Cmd+Shift+P -> "Kotlin: Restart Language Server" so the IDE picks it up.
+cd "$(dirname "$0")"
+./gradlew -q printClasspath --no-configuration-cache 2>/dev/null || true

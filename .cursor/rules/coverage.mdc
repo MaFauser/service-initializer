@@ -1,0 +1,12 @@
+---
+description: Exclude JPA entities from test coverage
+alwaysApply: true
+---
+
+# Skip Entities in Test Coverage
+
+- **Do not require or push for test coverage on JPA entities** (`@Entity` classes).
+- Entities are data/domain models with getters, setters, equals, hashCode, toString; covering them adds little value.
+- **Exclude entity classes from the JaCoCo report** (see `build.gradle.kts` exclusions) so coverage targets apply only to services, controllers, and business logic.
+- When adding or improving test coverage, focus on controllers, services, exception handlers, and use cases — not on entity classes.
+- **Conventions** (in `build.gradle.kts`): entity classes are excluded from the report if they either (1) are named `*Entity` (e.g. `UserEntity`, `ExampleEntity`), or (2) live in a package segment `entity` (e.g. `com.foo.entity.User`, `com.foo.bar.entity.Example`). Prefer one of these so new entities are excluded automatically in any application.

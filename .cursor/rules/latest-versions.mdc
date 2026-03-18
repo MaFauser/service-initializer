@@ -1,0 +1,15 @@
+---
+description: Prefer latest versions for dependencies, plugins, and tools
+alwaysApply: true
+---
+
+# Use Latest Versions
+
+When adding or updating dependencies, plugins, Gradle/Wrapper, or any tooling:
+
+- **Always prefer the latest stable (or latest available) version** — check current releases, changelogs, or plugin portals rather than using an older version.
+- **Dependencies**: Use the newest compatible version (e.g. Kotlin, Spring Boot, ktlint, ktlint-gradle, testcontainers, etc.).
+- **Gradle / plugins**: Prefer the latest plugin and Gradle wrapper versions that work with the project.
+- **Tools / extensions**: When suggesting tools or IDE extensions, recommend the latest version or “latest today” unless there is a known compatibility issue (e.g. Kotlin LS and Java 25).
+
+If the user asks for “latest” or “everything latest”, interpret that as: latest stable versions available at the time, and optionally verify with a quick search or check of official sources.

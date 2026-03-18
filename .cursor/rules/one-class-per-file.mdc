@@ -1,0 +1,11 @@
+---
+description: Enforce one top-level class/data class per Kotlin file to avoid KLS resolution issues
+globs: **/*.kt
+alwaysApply: false
+---
+
+# One Top-Level Class Per Kotlin File
+
+- **Each public class or data class must live in its own file**, with the filename matching the class name (e.g. `RateLimitProperties` → `RateLimitProperties.kt`).
+- Do **not** define multiple top-level classes in a single `.kt` file. The Kotlin Language Server cannot reliably resolve types whose name doesn't match the filename, causing false "Unresolved reference" and "annotation argument must be a compile-time constant" errors.
+- Private helper classes or sealed-class subtypes co-located in the same file are fine.

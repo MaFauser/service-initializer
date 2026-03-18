@@ -1,0 +1,32 @@
+# Kubernetes overrides — merged on top of application.yaml.
+# Activate with: spring.profiles.active=k8s
+
+spring:
+  output:
+    ansi:
+      enabled: never
+
+  datasource:
+    hikari:
+      max-lifetime: 600000
+      connection-timeout: 20000
+      keepalive-time: 30000
+
+  flyway:
+    baseline-on-migrate: false
+
+  graphql:
+    graphiql:
+      enabled: false
+
+management:
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+
+server:
+  forward-headers-strategy: framework

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <springProperty scope="context" name="appName" source="spring.application.name"/>
+
+  <!-- K8s: JSON only (no ANSI). Fluent Bit parses with logstash_json and sends to OpenSearch. -->
+  <springProfile name="k8s">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <includeMdcKeyName>traceId</includeMdcKeyName>
+        <includeMdcKeyName>spanId</includeMdcKeyName>
+      </encoder>
+    </appender>
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+    </root>
+  </springProfile>
+
+  <!-- Local: human-readable pattern without the wide empty trace/span correlation block -->
+  <springProfile name="!k8s">
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder>
+        <pattern>%clr(%d{HH:mm:ss.SSS}){faint} %clr(%5p) %clr([%10.10t]){faint} %clr(%-24.24logger{0}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}</pattern>
+      </encoder>
+    </appender>
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+    </root>
+  </springProfile>
+
+  <!-- Application loggers: INFO so log.info() from controllers/services appears in OpenSearch -->
+  <logger name="com.mafauser.service" level="INFO"/>
+</configuration>

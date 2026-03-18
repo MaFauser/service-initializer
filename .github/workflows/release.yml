@@ -1,0 +1,65 @@
+name: Release Image
+
+on:
+  release:
+    types: [published]
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  promote:
+    name: Tag Release Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set image name
+        run: echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Get version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Compute source content hash
+        id: srchash
+        run: |
+          SRC_TAG="src-${{ hashFiles('src/**', 'build.gradle.kts', 'settings.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}"
+          echo "src_tag=${SRC_TAG}" >> $GITHUB_OUTPUT
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Retag image for release
+        run: |
+          IMAGE="${REGISTRY}/${IMAGE_NAME}"
+          SRC_TAG="${{ steps.srchash.outputs.src_tag }}"
+
+          if ! docker manifest inspect "${IMAGE}:${SRC_TAG}" > /dev/null 2>&1; then
+            echo "::error::Image ${IMAGE}:${SRC_TAG} not found. Ensure the PR was merged and the image was built."
+            exit 1
+          fi
+
+          docker buildx imagetools create \
+            -t "${IMAGE}:${{ steps.version.outputs.version }}" \
+            -t "${IMAGE}:latest" \
+            "${IMAGE}:${SRC_TAG}"
+
+      - name: Release Summary
+        run: |
+          echo "## Image Released" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** \`${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Source tag:** \`${{ steps.srchash.outputs.src_tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY

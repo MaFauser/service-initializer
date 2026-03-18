@@ -1,0 +1,10 @@
+query exampleById($id: ID!) {
+  example(id: $id) {
+    id
+    name
+    description
+    version
+    createdAt
+    updatedAt
+  }
+}
