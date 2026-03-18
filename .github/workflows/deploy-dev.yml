@@ -1,4 +1,4 @@
-name: Deploy to Dev
+name: Push Dev Image
 
 on:
   push:
@@ -14,13 +14,11 @@ env:
 
 jobs:
   image:
-    name: Resolve Image
+    name: Build & Push
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-    outputs:
-      src_tag: ${{ steps.resolve.outputs.src_tag }}
 
     steps:
       - name: Checkout code
@@ -71,43 +69,10 @@ jobs:
           IMAGE="${REGISTRY}/${IMAGE_NAME}"
           docker buildx imagetools create -t "${IMAGE}:dev-latest" "${IMAGE}:${{ steps.resolve.outputs.src_tag }}"
 
-  deploy:
-    name: Deploy
-    needs: image
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up kubectl
-        uses: azure/k8s-set-context@v4
+      - name: Trigger platform deploy
+        uses: peter-evans/repository-dispatch@v3
         with:
-          method: kubeconfig
-          kubeconfig: ${{ secrets.KUBECONFIG_DEV }}
-          kubeconfig-encoding: base64
-
-      - name: Set image name
-        run: echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
-
-      - uses: azure/setup-helm@v4
-
-      - name: Deploy
-        run: |
-          IMAGE_REPO="${REGISTRY}/${IMAGE_NAME}"
-          helm upgrade --install dev ./infra/helm/stack \
-            -f ./infra/helm/stack/config/images.yaml \
-            -f ./infra/helm/stack/dev.yaml \
-            --set application.image.repository="${IMAGE_REPO}" \
-            --set application.image.tag=${{ needs.image.outputs.src_tag }} \
-            --namespace development \
-            --create-namespace \
-            --timeout 10m \
-            --wait
-
-      - name: Verify deployment
-        run: |
-          kubectl rollout status deployment/dev-stack-app --namespace development --timeout=120s
-          echo "Deployment rolled out successfully"
+          token: ${{ secrets.PLATFORM_DEPLOY_TOKEN }}
+          repository: MaFauser/platform-infra
+          event-type: deploy-dev
+          client-payload: '{"image_tag": "${{ steps.resolve.outputs.src_tag }}", "image_repo": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"}'
