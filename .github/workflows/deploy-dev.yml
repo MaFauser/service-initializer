@@ -83,92 +83,11 @@ jobs:
   deploy:
     name: Deploy to Dev
     needs: image
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    uses: mafauser/platform-infra/.github/workflows/deploy-k8s-dev-reusable.yml@main
+    with:
+      image_repo: ${{ needs.image.outputs.image_repo }}
+      image_tag: ${{ needs.image.outputs.src_tag }}
+      namespace: development
+    secrets:
+      KUBECONFIG_DEV: ${{ secrets.KUBECONFIG_DEV }}
 
-    steps:
-      - name: Set up kubectl
-        uses: azure/k8s-set-context@v4
-        with:
-          method: kubeconfig
-          kubeconfig: ${{ secrets.KUBECONFIG_DEV }}
-          kubeconfig-encoding: base64
-
-      - name: Bootstrap deployment if missing
-        run: |
-          if kubectl get deployment/dev-stack-app --namespace development >/dev/null 2>&1; then
-            echo "dev-stack-app already exists, skipping bootstrap"
-            exit 0
-          fi
-
-          echo "Bootstrapping dev-stack-app deployment and service"
-          kubectl apply --namespace development -f - <<EOF
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: dev-stack-app
-            labels:
-              app.kubernetes.io/component: app
-          spec:
-            replicas: 1
-            selector:
-              matchLabels:
-                app.kubernetes.io/component: app
-            template:
-              metadata:
-                labels:
-                  app.kubernetes.io/component: app
-              spec:
-                imagePullSecrets:
-                  - name: ghcr-registry
-                containers:
-                  - name: app
-                    image: ${{ needs.image.outputs.image_repo }}:${{ needs.image.outputs.src_tag }}
-                    ports:
-                      - name: http
-                        containerPort: 8081
-                      - name: management
-                        containerPort: 8082
-                    env:
-                      - name: SPRING_PROFILES_ACTIVE
-                        value: k8s
-                      - name: POSTGRES_URL
-                        value: jdbc:postgresql://dev-stack-postgresql:5432/servicedb
-                      - name: POSTGRES_USER
-                        valueFrom:
-                          secretKeyRef:
-                            name: dev-stack-postgresql-credentials
-                            key: username
-                      - name: POSTGRES_PASSWORD
-                        valueFrom:
-                          secretKeyRef:
-                            name: dev-stack-postgresql-credentials
-                            key: password
-          ---
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: dev-stack-app
-          spec:
-            selector:
-              app.kubernetes.io/component: app
-            ports:
-              - name: http
-                port: 8081
-                targetPort: http
-              - name: management
-                port: 8082
-                targetPort: management
-          EOF
-
-      - name: Deploy new image
-        run: |
-          kubectl set image deployment/dev-stack-app \
-            app="${{ needs.image.outputs.image_repo }}:${{ needs.image.outputs.src_tag }}" \
-            --namespace development
-
-      - name: Verify deployment
-        run: |
-          kubectl rollout status deployment/dev-stack-app --namespace development --timeout=120s
-          echo "Deployment rolled out successfully"
