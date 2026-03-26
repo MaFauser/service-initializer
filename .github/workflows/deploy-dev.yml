@@ -83,7 +83,7 @@ jobs:
   deploy:
     name: Deploy to Dev
     needs: image
-    uses: mafauser/platform-infra/.github/workflows/deploy-k8s-dev-reusable.yml@main
+    uses: MaFauser/platform-infra/.github/workflows/deploy-k8s-dev-reusable.yml@main
     with:
       image_repo: ${{ needs.image.outputs.image_repo }}
       image_tag: ${{ needs.image.outputs.src_tag }}
