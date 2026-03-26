@@ -6,6 +6,11 @@ type Query {
   examples(page: Int, size: Int): [Example!]!
   """Get one example by id."""
   example(id: ID!): Example
+
+  """[Secure] List examples — requires authentication."""
+  secureExamples(page: Int, size: Int): [Example!]!
+  """[Secure] Get example by id — requires USER or ADMIN role."""
+  secureExample(id: ID!): Example
 }
 
 type Mutation {
@@ -15,6 +20,9 @@ type Mutation {
   updateExample(id: ID!, input: UpdateExampleInput!): Example!
   """Delete an example. Returns true if deleted."""
   deleteExample(id: ID!): Boolean!
+
+  """[Secure] Delete an example — requires ADMIN role."""
+  secureDeleteExample(id: ID!): Boolean!
 }
 
 type Example {

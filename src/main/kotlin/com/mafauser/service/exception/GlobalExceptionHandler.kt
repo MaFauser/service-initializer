@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatusCode
 import org.springframework.http.ProblemDetail
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -63,6 +64,10 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         log.warn { "Upstream rate limit: ${ex.message}" }
         return ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, ex.message)
     }
+
+    @ExceptionHandler(AccessDeniedException::class)
+    fun handleAccessDenied(ex: AccessDeniedException): ProblemDetail =
+        ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Access denied")
 
     @ExceptionHandler(Exception::class)
     fun handleGeneric(ex: Exception): ProblemDetail {

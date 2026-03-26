@@ -1,8 +1,6 @@
 package com.mafauser.service.example
 
 import com.mafauser.service.exception.InvalidIdException
-import com.mafauser.service.security.IsAdmin
-import com.mafauser.service.security.IsAuthenticated
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.validation.Valid
 import org.springframework.data.domain.PageRequest
@@ -15,7 +13,6 @@ import java.util.UUID
 
 @Controller
 @Validated
-@IsAuthenticated
 class ExampleGraphQLController(
     private val exampleService: ExampleService,
 ) {
@@ -57,7 +54,6 @@ class ExampleGraphQLController(
     }
 
     @MutationMapping
-    @IsAdmin
     fun deleteExample(
         @Argument id: String,
     ): Boolean {

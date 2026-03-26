@@ -1,7 +1,6 @@
 package com.mafauser.service.example
 
 import com.mafauser.service.BaseIntegrationTest
-import com.mafauser.service.security.Roles
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -11,14 +10,12 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.graphql.test.tester.GraphQlTester
 import org.springframework.graphql.test.tester.HttpGraphQlTester
-import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.servlet.client.MockMvcWebTestClient
 import org.springframework.web.context.WebApplicationContext
 
 @DisplayName("Example GraphQL API (integration)")
-@WithMockUser(roles = [Roles.ADMIN])
 class ExampleControllerIntegrationTest : BaseIntegrationTest() {
     @Autowired
     private lateinit var applicationContext: WebApplicationContext

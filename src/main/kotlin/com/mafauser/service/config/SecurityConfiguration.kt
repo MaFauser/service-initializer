@@ -13,7 +13,7 @@ import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
-@EnableMethodSecurity
+@EnableMethodSecurity(securedEnabled = true)
 class SecurityConfiguration {
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain =
@@ -28,7 +28,7 @@ class SecurityConfiguration {
                     .requestMatchers("/graphiql/**")
                     .permitAll()
                     .anyRequest()
-                    .authenticated()
+                    .permitAll()
             }.oauth2ResourceServer { oauth2 ->
                 oauth2.jwt { it.jwtAuthenticationConverter(JwtClaimsConverter.authenticationConverter()) }
             }.build()

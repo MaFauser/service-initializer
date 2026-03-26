@@ -1,12 +1,10 @@
 package com.mafauser.service
 
 import com.mafauser.service.config.RateLimitFilter
-import com.mafauser.service.security.Roles
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
@@ -25,7 +23,6 @@ import org.springframework.web.context.WebApplicationContext
     ],
 )
 @DisplayName("Rate Limiting (integration)")
-@WithMockUser(roles = [Roles.USER])
 class RateLimitIntegrationTest : BaseIntegrationTest() {
     @Autowired
     private lateinit var context: WebApplicationContext

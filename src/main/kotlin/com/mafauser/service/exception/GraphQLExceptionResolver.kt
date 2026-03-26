@@ -7,6 +7,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.validation.ConstraintViolationException
 import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter
 import org.springframework.graphql.execution.ErrorType
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Component
 
 @Component
@@ -39,6 +40,10 @@ class GraphQLExceptionResolver : DataFetcherExceptionResolverAdapter() {
                     ex.constraintViolations.joinToString("; ") { "${it.propertyPath}: ${it.message}" },
                     ErrorType.BAD_REQUEST,
                 )
+            }
+
+            is AccessDeniedException -> {
+                toGraphQLError("Access denied", ErrorType.FORBIDDEN)
             }
 
             else -> {
