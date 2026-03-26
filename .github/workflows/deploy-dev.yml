@@ -81,13 +81,15 @@ jobs:
           docker buildx imagetools create -t "${IMAGE}:dev-latest" "${IMAGE}:${{ steps.resolve.outputs.src_tag }}"
 
   deploy:
-    name: Deploy to Dev
+    name: Trigger Deploy
     needs: image
-    uses: MaFauser/platform-infra/.github/workflows/deploy-k8s-dev-reusable.yml@main
-    with:
-      image_repo: ${{ needs.image.outputs.image_repo }}
-      image_tag: ${{ needs.image.outputs.src_tag }}
-      namespace: development
-    secrets:
-      KUBECONFIG_DEV: ${{ secrets.KUBECONFIG_DEV }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch deploy to platform-infra
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.PLATFORM_DISPATCH_TOKEN }}" \
+            https://api.github.com/repos/MaFauser/platform-infra/dispatches \
+            -d '{"event_type":"deploy-dev","client_payload":{"service_name":"${{ github.event.repository.name }}","image_repo":"${{ needs.image.outputs.image_repo }}","image_tag":"${{ needs.image.outputs.src_tag }}","namespace":"development"}}'
 
