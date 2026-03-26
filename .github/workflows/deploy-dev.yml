@@ -88,12 +88,6 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout platform-infra
-        uses: actions/checkout@v4
-        with:
-          repository: MaFauser/platform-infra
-          token: ${{ secrets.PLATFORM_DEPLOY_TOKEN }}
-
       - name: Set up kubectl
         uses: azure/k8s-set-context@v4
         with:
@@ -101,20 +95,11 @@ jobs:
           kubeconfig: ${{ secrets.KUBECONFIG_DEV }}
           kubeconfig-encoding: base64
 
-      - name: Install Helm
-        uses: azure/setup-helm@v4
-
-      - name: Deploy
+      - name: Deploy new image
         run: |
-          helm upgrade --install dev ./helm/stack \
-            -f ./helm/stack/config/images.yaml \
-            -f ./helm/stack/dev.yaml \
-            --set application.image.repository="${{ needs.image.outputs.image_repo }}" \
-            --set application.image.tag="${{ needs.image.outputs.src_tag }}" \
-            --namespace development \
-            --create-namespace \
-            --timeout 10m \
-            --wait
+          kubectl set image deployment/dev-stack-app \
+            app="${{ needs.image.outputs.image_repo }}:${{ needs.image.outputs.src_tag }}" \
+            --namespace development
 
       - name: Verify deployment
         run: |

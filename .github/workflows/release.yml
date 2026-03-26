@@ -71,12 +71,6 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout platform-infra
-        uses: actions/checkout@v4
-        with:
-          repository: MaFauser/platform-infra
-          token: ${{ secrets.PLATFORM_DEPLOY_TOKEN }}
-
       - name: Set up kubectl
         uses: azure/k8s-set-context@v4
         with:
@@ -84,25 +78,16 @@ jobs:
           kubeconfig: ${{ secrets.KUBECONFIG_PROD }}
           kubeconfig-encoding: base64
 
-      - name: Install Helm
-        uses: azure/setup-helm@v4
-
       - name: Ensure namespace exists
         run: kubectl create namespace production --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Deploy
+      - name: Deploy new image
         run: |
           for i in 1 2 3; do
-            echo "Helm deploy attempt $i/3..."
-            if helm upgrade --install prod ./helm/stack \
-              -f ./helm/stack/config/images.yaml \
-              -f ./helm/stack/prod.yaml \
-              --set application.image.repository="${{ needs.promote.outputs.image_repo }}" \
-              --set application.image.tag="${{ needs.promote.outputs.version }}" \
-              --namespace production \
-              --create-namespace \
-              --timeout 10m \
-              --wait; then
+            echo "kubectl rollout attempt $i/3..."
+            if kubectl set image deployment/prod-stack-app \
+              app="${{ needs.promote.outputs.image_repo }}:${{ needs.promote.outputs.version }}" \
+              --namespace production; then
               echo "Deploy succeeded"
               break
             fi
