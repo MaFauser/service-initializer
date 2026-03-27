@@ -1,0 +1,361 @@
+{
+  "info": {
+    "name": "Service Initializer",
+    "description": "All REST and GraphQL endpoints for the service-initializer app.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:18081"
+    },
+    {
+      "key": "managementUrl",
+      "value": "http://localhost:18082"
+    },
+    {
+      "key": "exampleId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "REST — Examples",
+      "item": [
+        {
+          "name": "List examples",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/examples?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["examples"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get example by id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/examples/{{exampleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["examples", "{{exampleId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create example",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var json = pm.response.json();",
+                  "  pm.collectionVariables.set('exampleId', json.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/examples",
+              "host": ["{{baseUrl}}"],
+              "path": ["examples"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"my-example\",\n  \"description\": \"Created from Postman\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update example",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/examples/{{exampleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["examples", "{{exampleId}}"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"updated-example\",\n  \"description\": \"Updated from Postman\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete example",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/examples/{{exampleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["examples", "{{exampleId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GraphQL — Examples",
+      "item": [
+        {
+          "name": "List examples",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query ListExamples($page: Int, $size: Int) {\n  examples(page: $page, size: $size) {\n    id\n    name\n    description\n    version\n    createdAt\n    updatedAt\n  }\n}",
+                "variables": "{\n  \"page\": 0,\n  \"size\": 20\n}"
+              }
+            }
+          }
+        },
+        {
+          "name": "Get example by id",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query GetExample($id: ID!) {\n  example(id: $id) {\n    id\n    name\n    description\n    version\n    createdAt\n    updatedAt\n  }\n}",
+                "variables": "{\n  \"id\": \"{{exampleId}}\"\n}"
+              }
+            }
+          }
+        },
+        {
+          "name": "Create example",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var json = pm.response.json();",
+                  "  if (json.data && json.data.createExample) {",
+                  "    pm.collectionVariables.set('exampleId', json.data.createExample.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateExample($input: CreateExampleInput!) {\n  createExample(input: $input) {\n    id\n    name\n    description\n    version\n    createdAt\n    updatedAt\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"name\": \"graphql-example\",\n    \"description\": \"Created via GraphQL\"\n  }\n}"
+              }
+            }
+          }
+        },
+        {
+          "name": "Update example",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateExample($id: ID!, $input: UpdateExampleInput!) {\n  updateExample(id: $id, input: $input) {\n    id\n    name\n    description\n    version\n    createdAt\n    updatedAt\n  }\n}",
+                "variables": "{\n  \"id\": \"{{exampleId}}\",\n  \"input\": {\n    \"name\": \"updated-graphql\",\n    \"description\": \"Updated via GraphQL\"\n  }\n}"
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete example",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation DeleteExample($id: ID!) {\n  deleteExample(id: $id)\n}",
+                "variables": "{\n  \"id\": \"{{exampleId}}\"\n}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GraphQL — Secure Examples",
+      "item": [
+        {
+          "name": "List secure examples",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query SecureExamples($page: Int, $size: Int) {\n  secureExamples(page: $page, size: $size) {\n    id\n    name\n    description\n    version\n    createdAt\n    updatedAt\n  }\n}",
+                "variables": "{\n  \"page\": 0,\n  \"size\": 20\n}"
+              }
+            }
+          }
+        },
+        {
+          "name": "Get secure example by id",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query SecureExample($id: ID!) {\n  secureExample(id: $id) {\n    id\n    name\n    description\n    version\n    createdAt\n    updatedAt\n  }\n}",
+                "variables": "{\n  \"id\": \"{{exampleId}}\"\n}"
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete secure example (admin)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation SecureDeleteExample($id: ID!) {\n  secureDeleteExample(id: $id)\n}",
+                "variables": "{\n  \"id\": \"{{exampleId}}\"\n}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Actuator",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{managementUrl}}/actuator/health",
+              "host": ["{{managementUrl}}"],
+              "path": ["actuator", "health"]
+            }
+          }
+        },
+        {
+          "name": "Info",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{managementUrl}}/actuator/info",
+              "host": ["{{managementUrl}}"],
+              "path": ["actuator", "info"]
+            }
+          }
+        },
+        {
+          "name": "Metrics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{managementUrl}}/actuator/metrics",
+              "host": ["{{managementUrl}}"],
+              "path": ["actuator", "metrics"]
+            }
+          }
+        },
+        {
+          "name": "Prometheus",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{managementUrl}}/actuator/prometheus",
+              "host": ["{{managementUrl}}"],
+              "path": ["actuator", "prometheus"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
