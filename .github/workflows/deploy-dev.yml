@@ -81,15 +81,23 @@ jobs:
           docker buildx imagetools create -t "${IMAGE}:dev-latest" "${IMAGE}:${{ steps.resolve.outputs.src_tag }}"
 
   deploy:
-    name: Trigger Deploy
+    name: Deploy
     needs: image
     runs-on: ubuntu-latest
     steps:
-      - name: Dispatch deploy to platform-infra
-        run: |
-          curl -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.PLATFORM_DEPLOY_TOKEN }}" \
-            https://api.github.com/repos/MaFauser/platform-infra/dispatches \
-            -d '{"event_type":"deploy-dev","client_payload":{"service_name":"${{ github.event.repository.name }}","image_repo":"${{ needs.image.outputs.image_repo }}","image_tag":"${{ needs.image.outputs.src_tag }}","namespace":"development"}}'
+      - name: Checkout platform-infra actions
+        uses: actions/checkout@v4
+        with:
+          repository: MaFauser/platform-infra
+          token: ${{ secrets.PLATFORM_DEPLOY_TOKEN }}
+          sparse-checkout: .github/actions
+          path: .infra
+
+      - name: Deploy to dev
+        uses: ./.infra/.github/actions/deploy-dev
+        with:
+          service_name: ${{ github.event.repository.name }}
+          image_repo: ${{ needs.image.outputs.image_repo }}
+          image_tag: ${{ needs.image.outputs.src_tag }}
+          token: ${{ secrets.PLATFORM_DEPLOY_TOKEN }}
 
