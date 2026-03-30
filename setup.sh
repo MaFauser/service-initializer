@@ -39,7 +39,7 @@ TEMPLATE_GROUP="com.mafauser"
 TEMPLATE_PACKAGE="com.mafauser.service"
 TEMPLATE_PACKAGE_DIR="com/mafauser/service"
 TEMPLATE_SERVICE_NAME="service"
-TEMPLATE_DB_NAME="defaultdb"
+TEMPLATE_DB_NAME="initializer"
 TEMPLATE_CONTAINER_PREFIX="service"
 TEMPLATE_DESCRIPTION="Default Backend Service Initializer"
 
