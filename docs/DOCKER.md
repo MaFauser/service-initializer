@@ -41,7 +41,7 @@ docker compose down -v
 ```
 Host:     localhost
 Port:     5432
-Database: servicedb
+Database: defaultdb
 Username: service
 Password: service123
 ```
