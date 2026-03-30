@@ -30,11 +30,12 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-cache")
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-flyway")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-graphql")
-    implementation("org.springframework.boot:spring-boot-starter-kafka")
+    // Not packaged in bootJar; bootRun and tests still get them (see developmentOnly + testImplementation).
+    developmentOnly("org.springframework.boot:spring-boot-starter-data-redis")
+    developmentOnly("org.springframework.boot:spring-boot-starter-kafka")
     implementation("org.springframework.boot:spring-boot-starter-opentelemetry")
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
@@ -88,6 +89,9 @@ allOpen {
 // Use -PdebugPort=5006 if 5005 is in use.
 tasks.bootRun {
     environment(env.allVariables())
+    if (!env.allVariables().containsKey("SPRING_PROFILES_ACTIVE")) {
+        environment("SPRING_PROFILES_ACTIVE", "local")
+    }
 
     val javaToolOptions = System.getenv("JAVA_TOOL_OPTIONS") ?: ""
     val extensionProvidesDebug = javaToolOptions.contains("jdwp")

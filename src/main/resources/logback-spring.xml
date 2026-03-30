@@ -2,8 +2,8 @@
 <configuration>
   <springProperty scope="context" name="appName" source="spring.application.name"/>
 
-  <!-- K8s: JSON only (no ANSI). Fluent Bit parses with logstash_json and sends to OpenSearch. -->
-  <springProfile name="k8s">
+  <!-- k8s (OKE) or vps: JSON only (no ANSI). Fluent Bit / agents parse logstash_json. -->
+  <springProfile name="k8s,vps">
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <includeMdcKeyName>traceId</includeMdcKeyName>
@@ -16,7 +16,7 @@
   </springProfile>
 
   <!-- Local: human-readable pattern without the wide empty trace/span correlation block -->
-  <springProfile name="!k8s">
+  <springProfile name="!k8s &amp; !vps">
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
       <encoder>

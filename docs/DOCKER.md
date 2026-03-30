@@ -4,7 +4,7 @@ Local development uses Docker Compose for infrastructure dependencies.
 
 ## Services
 
-- **PostgreSQL** (port 5432) — Main database
+- **PostgreSQL** (host port **5433** → container 5432) — avoids clashing with Windows PostgreSQL on 5432
 - **pgAdmin** (port 5050) — PostgreSQL admin UI (admin@local.dev / admin)
 - **Redis** (port 6379) — Caching layer
 - **Kafka** (port 9092) — Message broker (KRaft mode, no Zookeeper)
@@ -40,7 +40,7 @@ docker compose down -v
 
 ```
 Host:     localhost
-Port:     5432
+Port:     5433
 Database: initializer
 Username: service
 Password: service123

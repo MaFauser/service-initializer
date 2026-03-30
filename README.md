@@ -37,8 +37,8 @@ src/main/kotlin/.../service/
 ├── example/                     # Example domain (entity, repo, service, REST, GraphQL)
 ├── exception/                   # Global exception handlers
 src/main/resources/
-├── application.yaml
-├── application-k8s.yaml
+├── application.yaml          # default app (no Redis/Kafka on classpath in prod image)
+├── application-local.yaml    # profile local: Redis + Kafka (docker compose + bootRun)
 ├── graphql/example/schema.graphqls
 └── db/migration/                # Flyway
 ```
@@ -56,6 +56,8 @@ GitHub Actions workflows build, test, and push container images to GHCR:
 To release, create a GitHub Release from the [Releases page](../../releases) (or `gh release create v1.0.0 --generate-notes`).
 
 Deployment to Kubernetes is handled by the [platform-infra](https://github.com/MaFauser/platform-infra) repo.
+
+**Spring profiles:** Production images omit Redis/Kafka starters (`developmentOnly` in Gradle). OKE/VPS use `k8s` or `vps`. Local `make run` / `bootRun` uses profile **`local`** (see `.env` `SPRING_PROFILES_ACTIVE=local`) so Redis/Kafka from Docker Compose apply.
 
 ## Docs
 

@@ -29,17 +29,12 @@ spring:
     baseline-on-migrate: true
 
   data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
     web:
       pageable:
         max-page-size: 100
 
   cache:
-    type: redis
-    redis:
-      time-to-live: 600000
+    type: simple
 
   graphql:
     graphiql:
@@ -51,17 +46,6 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${JWT_ISSUER_URI:https://your-idp.example.com/realms/your-realm}
-
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
-    consumer:
-      group-id: ${spring.application.name}
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
 logging:
   level:
@@ -99,3 +83,38 @@ server:
 rate-limit:
   enabled: true
   requests-per-minute: 60
+
+---
+# Profile k8s = Kubernetes (OKE). Profile vps = server/VM deploy. Redis/Kafka are not on the prod image; use profile local + Docker Compose for those.
+spring:
+  config:
+    activate:
+      on-profile: k8s,vps
+  output:
+    ansi:
+      enabled: never
+
+  datasource:
+    hikari:
+      max-lifetime: 600000
+      connection-timeout: 20000
+      keepalive-time: 30000
+
+  flyway:
+    baseline-on-migrate: false
+
+  graphql:
+    graphiql:
+      enabled: false
+
+management:
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+
+server:
+  forward-headers-strategy: framework
