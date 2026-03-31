@@ -3,39 +3,45 @@
 -include .env
 export
 
+ifeq ($(OS),Windows_NT)
+GRADLEW := gradlew.bat
+else
+GRADLEW := ./gradlew
+endif
+
 build:
-	./gradlew build -x test
+	$(GRADLEW) build -x test
 
 run:
-	./gradlew bootRun
+	$(GRADLEW) bootRun
 
 run-debug:
-	./gradlew bootRun -Pdebug=true $(if $(DEBUG_PORT),-PdebugPort=$(DEBUG_PORT),)
+	$(GRADLEW) bootRun -Pdebug=true $(if $(DEBUG_PORT),-PdebugPort=$(DEBUG_PORT),)
 
 test:
-	./gradlew test
+	$(GRADLEW) test
 
 check:
-	./gradlew check
+	$(GRADLEW) check
 
 clean:
-	./gradlew clean
+	$(GRADLEW) clean
 
 lint:
-	./gradlew ktlintCheck
+	$(GRADLEW) ktlintCheck
 
 format:
-	./gradlew ktlintFormat
+	$(GRADLEW) ktlintFormat
 
 coverage:
-	./gradlew test jacocoTestReport
+	$(GRADLEW) test jacocoTestReport
 	@open build/reports/jacoco/test/html/index.html 2>/dev/null || true
 
 deps:
-	./gradlew build --refresh-dependencies
+	$(GRADLEW) build --refresh-dependencies
 
 bootjar:
-	./gradlew bootJar -x test
+	$(GRADLEW) bootJar -x test
 
 api:
 	./scripts/api-test.sh
