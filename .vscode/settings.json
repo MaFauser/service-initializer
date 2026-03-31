@@ -36,5 +36,21 @@
     "**/node_modules": true,
     "**/bin": true,
     "**/.idea": true,
-  }
+  },
+  "java.compile.nullAnalysis.mode": "automatic",
+  "java.server.launchMode": "Standard",
+  "java.import.gradle.enabled": true,
+  "java.import.gradle.wrapper.enabled": true,
+  "java.import.gradle.java.home": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.7.6-hotspot",
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-21",
+      "path": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.7.6-hotspot",
+      "default": true
+    }
+  ],
+  "kotlin.languageServer.enabled": true,
+  "kotlin.trace.server": "messages",
+  "kotlin.java.home": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.7.6-hotspot",
+  "java.jdt.ls.java.home": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.7.6-hotspot"
 }

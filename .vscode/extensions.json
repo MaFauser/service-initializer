@@ -3,5 +3,10 @@
         "fwcd.kotlin",
         "vscjava.vscode-java-pack",
         "vscjava.vscode-gradle"
+    ],
+    "unwantedRecommendations": [
+        "kylinideteam.java",
+        "oracle.oracle-java",
+        "mathiasfrohlich.kotlin"
     ]
 }
